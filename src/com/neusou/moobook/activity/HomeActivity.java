@@ -223,10 +223,10 @@ public class HomeActivity extends BaseActivity {
 		
 	}
 
-	/*
+	
 	protected void bindViews() {
 		
-		mAdView = (AdView) findViewById(R.id.ad);
+		
 		//mStatusUpdateBtn = (Button) findViewById(R.id.poststatus);
 		mProfileImage = (ImageView) findViewById(R.id.profilepic);
 		mStatusBox = (TextView) findViewById(R.id.message); 
@@ -243,12 +243,9 @@ public class HomeActivity extends BaseActivity {
 		//mViewTaggedPhotosBtn = (Button) findViewById(R.id.viewtaggedphotos);
 		mTestBtn = (Button) findViewById(R.id.test);
 		mListView = (ListView) findViewById(R.id.list);
-
-		
-		
-		
+		mAdView = (AdView) findViewById(R.id.ad);
 	}
-	*/
+
 	protected void initViews() {
 		mTopHeader.setFactory(mTopHeaderViewFactory);
 		mTopHeader.setText("Dashboard");		
