@@ -331,7 +331,9 @@ public class HomeActivity extends BaseActivity {
 			}
 		};
 				
-		mFacebook = Facebook.getInstance();
+		mFacebook = Facebook.getInstance(); 
+		
+		///
 		
 		mTopHeaderViewFactory = new ViewFactory() {
 			@Override
