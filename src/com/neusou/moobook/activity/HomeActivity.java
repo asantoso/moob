@@ -238,8 +238,8 @@ public class HomeActivity extends BaseActivity {
 		mTestBtn = (Button) findViewById(R.id.test);
 		mListView = (ListView) findViewById(R.id.list);
 		mAdView = (AdView) findViewById(R.id.ad);
-		
-		
+		mAdView = (AdView) findViewById(R.id.ad);
+		mAdView = (AdView) findViewById(R.id.ad);
 		
 	}
 	
