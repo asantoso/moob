@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <!-- Base application theme is the default theme. -->
+    <style name="Theme" parent="android:Theme">
+    </style>
+
+    <!-- Variation on our application theme that forces a plain
+        text style. -->
+    <style name="Theme.PlainText">
+        <item name="android:textAppearance">@style/TextAppearance.Theme.PlainText</item>
+    </style>
+
+
+    <!-- A theme for a custom dialog appearance.  Here we use an ugly
+         custom frame. -->
+    <style name="Theme.CustomDialog" parent="android:style/Theme.Dialog">
+        <item name="android:windowBackground">@drawable/filled_box</item>
+    </style>
+
+    <!-- Variation on our application theme that has a transparent
+         background; this example completely removes the background,
+         allowing the activity to decide how to composite.  Also here we
+         force the translucency ourself rather than making use of the built-in
+         translucent theme. -->
+    <style name="Theme.Transparent">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@anim/bottom_to_middle</item>
+        <!-- 
+        <item name="android:windowBackground">@drawable/transparent_background</item>
+         -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorForeground">#fff</item>
+    </style>
+    
+        <!-- A theme that has a translucent background.  Here we explicitly specify
+         that this theme is to inherit from the system's translucent theme,
+         which sets up various attributes correctly.. -->
+    <style name="Theme.Translucent" parent="android:style/Theme.Translucent">
+        <item name="android:windowBackground">@drawable/translucent_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorForeground">#fff</item>
+    </style>
+    
+    <style name="TextAppearance.Theme.PlainText" parent="android:TextAppearance.Theme">
+        <item name="android:textStyle">normal</item>
+    </style>
+   
+     <style name="text.name" parent="android:TextAppearance.Theme">
+		<item name="android:textScaleX">1.07</item>      
+      	<item name="android:textSize">13dp</item>
+      	<item name="android:textStyle">bold</item>
+      	<item name="android:textColor">#FF001111</item>
+      	<item name="android:singleLine">false</item>
+      	<item name="android:maxLines">2</item>  	
+      	<item name="android:shadowColor">#44000000</item>
+      	<item name="android:shadowRadius">1</item>
+      	<item name="android:shadowDx">0</item>
+      	<item name="android:shadowDy">1</item>
+      	<!-- 
+      	<item name="android:background">@drawable/event_title</item>
+      	 -->
+    </style>
+    
+    
+     <style name="text.whatisonyourmind" parent="android:TextAppearance.Theme">
+		<item name="android:textScaleX">1.07</item>      
+      	<item name="android:textSize">13dp</item>
+      	<item name="android:textStyle">bold</item>
+      	<item name="android:textColor">#FF000000</item>
+      	<item name="android:singleLine">false</item>
+      	<item name="android:maxLines">2</item>  	
+      	<item name="android:shadowColor">#44000000</item>
+      	<item name="android:shadowRadius">1</item>
+      	<item name="android:shadowDx">0</item>
+      	<item name="android:shadowDy">1</item>
+      	<item name="android:background">@drawable/message_box</item>      	
+    </style>
+    
+      <style name="home.button" parent="android:style/Theme">		
+      	<item name="android:textScaleX">1.07</item>      
+      	<item name="android:textSize">13dp</item>
+      	<item name="android:textStyle">bold</item>
+      	<item name="android:textColor">#FF000000</item>
+      	
+    </style>
+    
+    <style name="text.since" parent="android:TextAppearance.Theme">
+     	<item name="android:textScaleX">1.06</item>   
+    	<item name="android:textStyle">bold</item>
+    	<item name="android:textSize">10.5dp</item>  
+  		<item name="android:background">#00000000</item>    
+    	<item name="android:textColor">#FF404060</item>    	
+    </style>
+    
+    
+</resources>

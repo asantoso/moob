@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- 
+    <item
+        android:drawable="@drawable/progress_circular_background" />
+
+    <item><rotate
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:fromDegrees="0"
+        android:toDegrees="360"
+        android:drawable="@drawable/moobook" />
+    </item>
+     --> 
+</layer-list>
+

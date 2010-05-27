@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:background="#00000000"
+>
+        
+<include layout="@layout/custom_title"/>
+    
+<com.neusou.moobook.view.MyExpandableList 
+	android:id="@+id/list" 
+	android:layout_width="fill_parent" 
+    android:layout_height="fill_parent" 
+    android:layout_marginBottom="0dp"
+    android:layout_below="@+id/topheader"   
+    android:layout_above="@+id/ad"
+    android:background="#00000000"     
+/>
+
+<!-- 
+<ListView android:layoutAnimation="@anim/fade_in"
+
+>
+</ListView>
+ -->
+ 
+ <!-- 
+<Button android:id="@+id/ok"
+	android:layout_width="wrap_content" 
+    android:layout_height="32dp"
+    android:layout_alignParentBottom="false"
+    android:layout_alignParentRight="true"
+    android:text="continue"
+    android:textSize="18dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+   	android:paddingTop="0dp"
+    android:paddingBottom="0dp" 
+    android:singleLine="true"
+        
+    android:gravity="center_vertical|center_horizontal"
+    android:visibility="gone"
+    >
+    
+</Button>
+ -->
+<!-- 
+<Button android:id="@+id/ok2"
+	android:layout_width="wrap_content" 
+    android:layout_height="32dp"
+    android:layout_alignParentBottom="false"
+    android:layout_alignTop="@+id/ok"
+    android:layout_toLeftOf="@+id/ok"
+    android:text="tts"
+    android:textSize="18dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+   	android:paddingTop="0dp"
+    android:paddingBottom="0dp" 
+    android:singleLine="true"
+    android:gravity="center_vertical|center_horizontal"
+    android:visibility="gone"
+    > 
+    
+</Button>
+-->
+
+
+<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
+android:id="@+id/ad" 
+android:visibility="visible" 
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content" 
+android:layout_alignParentBottom="true" 
+app:backgroundColor="#00000000" 
+app:textColor="#FFffffff" 
+app:keywords="" 
+app:testing="false"/>
+
+
+
+    
+</RelativeLayout>
+
+
+

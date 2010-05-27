@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="photos">
+	[{"name":"photos","fql_result_set":[{"pid":"3627058392097452612","aid":"3627058392088255953","owner":844490340,"src":"http:\/\/photos-a.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302509560340_844490340_9531972_5633325_s.jpg","src_big":"http:\/\/photos-a.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302509560340_844490340_9531972_5633325_n.jpg","src_small":"http:\/\/photos-a.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302509560340_844490340_9531972_5633325_t.jpg","caption":"","created":1256117112,"modified":1256494402,"object_id":302509560340,"src_big_width":401,"src_big_height":604},{"pid":"3627058392097452601","aid":"3627058392088255953","owner":844490340,"src":"http:\/\/photos-d.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302508700340_844490340_9531961_958088_s.jpg","src_big":"http:\/\/photos-d.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302508700340_844490340_9531961_958088_n.jpg","src_small":"http:\/\/photos-d.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302508700340_844490340_9531961_958088_t.jpg","caption":"Laughter is the best medicine","created":1256116996,"modified":1256494402,"object_id":302508700340,"src_big_width":604,"src_big_height":400},{"pid":"3627058392097452596","aid":"3627058392088255953","owner":844490340,"src":"http:\/\/photos-d.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302508080340_844490340_9531956_3864830_s.jpg","src_big":"http:\/\/photos-d.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302508080340_844490340_9531956_3864830_n.jpg","src_small":"http:\/\/photos-d.ak.fbcdn.net\/hphotos-ak-snc1\/hs242.snc1\/8926_302508080340_844490340_9531956_3864830_t.jpg","caption":"","created":1256116906,"modified":1256494402,"object_id":302508080340,"src_big_width":604,"src_big_height":400}]
+	</string>
+	<string name="tags1">
+	[{"pid":"3627058392097452612","subject":"661216551","text":"Theresia Natalia Wijono","xcoord":55.8313,"ycoord":44.3894,"created":1256126882},{"pid":"3627058392097452612","subject":"1385970470","text":"Heromeo Setiago","xcoord":20.0993,"ycoord":35.6436,"created":1256126893},{"pid":"3627058392097452612","subject":"1625301333","text":"Shelfie Tjong","xcoord":65.5087,"ycoord":42.5743,"created":1256248602}]}]
+	</string>
+	<string name="tags2">
+	[{"pid":"3627058392097452601","subject":"661216551","text":"Theresia Natalia Wijono","xcoord":48.6799,"ycoord":30.0995,"created":1256126834},{"pid":"3627058392097452601","subject":"1625301333","text":"Shelfie Tjong","xcoord":21.2871,"ycoord":30.8458,"created":1256248582},{"pid":"3627058392097452601","subject":"","text":"Elwin Jacob","xcoord":71.2871,"ycoord":32.8358,"created":1256317829}]}]
+	</string>
+	<string name="tags3">
+	[{"pid":"3627058392097452596","subject":"661216551","text":"Theresia Natalia Wijono","xcoord":50.6601,"ycoord":41.791,"created":1256126651},{"pid":"3627058392097452596","subject":"685928134","text":"Elwin Jacob","xcoord":63.2013,"ycoord":37.3134,"created":1256317760}]
+	</string>
+</resources>

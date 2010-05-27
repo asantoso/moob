@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   
+    <string name="preference.notification.enabled">notification.enabled</string>    
+    <string name="preference.notification.vibration.enabled">notification.vibration.enabled</string>
+    <string name="preference.notification.light.enabled">notification.light.enabled</string>
+    <string name="preference.notification.sound.resource">notification.sound.resource</string>
+    <string name="preference.notification.light.color">notification.light.color</string>
+    
+    <string name="preference.notification.checkpollinginterval">notification.checkpollinginterval</string>
+    
+    <string name="preference.streams.numitemsperfetch">streams_numitemsperfetch</string>
+    <string name="preference.comments.numitemsperfetch">streams_numitemsperfetch</string>
+    <string name="preference.cache.local.clear">cache_local_clear</string>
+    <string name="preference.cache.sdcard.enabled">cache_sdcard_enabled</string>
+    <string name="preference.cache.sdcard.clear">cache_sdcard_clear</string>
+    <string name="preference.cache.clearall_on_logoff">cache_all_clearonlogoff</string>    
+    <string name="preference.views.stream.profile_image.show">views_stream_profileimage_show</string>
+    <string name="preference.views.stream.attachment_image.show">views_stream_attachmentimage_show</string>
+    <string name="preference.views.event.showimages">views_stream_showimages</string>
+        
+</resources>

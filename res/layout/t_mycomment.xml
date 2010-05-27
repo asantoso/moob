@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="4dp"
+    android:paddingTop="0.5dp"
+    android:paddingLeft="0.5dp"
+    android:paddingRight="0.5dp"  
+>  
+
+<TextView      
+    android:id="@+id/name"                                     
+    
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"
+    android:layout_marginLeft="3dp"
+   	android:layout_marginRight="2dp"
+    android:layout_marginTop="3dp"  
+    android:layout_marginBottom="0dp"
+        
+    android:text="Name says: (1 hr ago)"    
+  
+  	android:textScaleX="1.07"    
+    android:textSize="12dp"
+    android:textStyle="bold"
+    android:lines="1"
+  	android:background="#00000000"
+    android:textColor="#FF225555"
+    
+    android:gravity="top|left"   
+      
+    >
+</TextView>
+   
+<TextView      
+    android:id="@+id/comment"                                     
+    
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"
+	android:layout_marginRight="2dp"
+    android:layout_marginLeft="2dp"
+    android:layout_marginTop="1dp" 
+    android:layout_marginBottom="3dp"   
+    
+    android:layout_below="@+id/name"
+    
+    android:textSize="12dp"    
+    android:textColor="#FF444444"
+    android:textScaleX="1.04"
+    android:textStyle="bold"
+	
+    android:gravity="center_vertical|left"
+    android:maxLines="10"
+    android:minLines="1"       
+    
+    android:background="@drawable/my_message_box_selector"                 
+/>
+
+<TextView      
+    android:id="@+id/time"                                     
+    
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="3dp"
+   	android:layout_marginRight="2dp"
+    android:layout_marginTop="3dp"  
+    android:layout_marginBottom="3.5dp"
+        
+   	android:layout_alignParentRight="true"
+   	android:layout_alignTop="@+id/name"
+    android:text="1 hr ago"    
+  
+  	android:textScaleX="1.07"    
+    android:textSize="10dp"
+    android:textStyle="bold"
+    android:lines="1"
+  	android:background="#00000000"
+    android:textColor="#FF555555"
+    
+    android:gravity="top|right"      
+/>
+
+<ImageView 
+	android:id="@+id/profile_pic"     
+	android:layout_width="48dp" 
+    android:layout_height="48dp"
+    android:layout_toLeftOf="@+id/name"
+    
+    />
+    
+</RelativeLayout>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+<string name="fql_get_mailbox_folder">
+{
+\"mailbox_folder\":\"SELECT folder_id, name, unread_count FROM mailbox_folder WHERE viewer_id=${viewer_id}\"
+}
+</string>
+
+<string name="fql_get_groups_joined_by_user">
+{
+\"group_member\":\"select uid, gid, positions from group_member where uid=${uid}\",
+\"groups\":\"select gid, name, nid, pic_small, pic_big, pic, description, group_type, group_subtype, recent_news, creator, update_time, office,	website, venue,	privacy from group gid in (select gid in #group_member)\"
+}
+</string>
+
+<string name="fql_get_inbox_threads">
+{
+\"threads\":\"select thread_id,folder_id,subject,recipients,updated_time,parent_message_id,parent_thread_id,message_count,snippet,snippet_author,object_id,unread,viewer_id from thread where folder_id=${folder_id}\",
+\"messages\":\"select message_id, thread_id, author_id, body, created_time, attachment,	viewer_id from message where thread_id in (select thread_id in #threads)\"
+}
+</string>
+
+<string name="fql_get_groups">
+{
+\"groups\":\"SELECT gid, name, nid, pic_small, pic_big, pic, description, group_type, group_subtype, recent_news, creator, update_time, office,	website, venue,	privacy from group ${whereClause0}\"
+}
+</string>
+
+<string name="fql_get_contacts">
+{ 
+\"users\":\"select name, pic, pic_square, hometown_location, current_location, birthday_date, relationship_status, timezone, uid from user where uid in (select uid2 from friend where uid1=${uid}) LIMIT ${limit} OFFSET ${offset} \"
+}
+</string>
+   
+<string name="fql_get_streams">
+{ 
+\"posts\":\"select post_id, actor_id, source_id, target_id, viewer_id, message, comments, strip_tags(attachment), likes, attribution, app_id, created_time, updated_time FROM stream where filter_key in (SELECT filter_key FROM stream_filter WHERE uid=${uid} AND type=\'newsfeed\') AND (source_id in (select uid2 from friend where uid1=${uid}) OR source_id in (select page_id from page_fan where uid=${uid}) OR source_id in (select eid from event_member where uid=${uid})) AND is_hidden = 0 AND updated_time > ${lastUpdateTime} ORDER BY updated_time DESC LIMIT ${limit} OFFSET ${offset}\",
+\"profiles_posts\":\"select id, type from profile where id in (select actor_id from #posts) or id in (select source_id from #posts) or id in (select viewer_id from #posts) \",
+\"profiles_targets\":\"select id, type from profile where id in (select target_id from #posts)\",
+\"users\":\"select name, pic, pic_small, pic_big, pic_square, first_name, last_name, uid from user where uid in (select id from #profiles_posts where type=\'user\') or uid in (select id from #profiles_targets  where type=\'user\')  \",
+\"pages\":\"select name, pic, pic_small, pic_square, page_id from page where page_id in (select id from #profiles_posts where type=\'page\')\"
+}
+</string>
+ 
+<string name="fql_get_comments">select object_id, fromid, time, text, id, reply_xid from comment where object_id=\'${object_id}\' or post_id=\'${post_id}\' order by time desc LIMIT ${limit} OFFSET ${offset}</string>
+<string name="fql_get_comments_users">select uid, name, pic_square, current_location, online_presence, timezone from user where uid in (${uids})</string>
+       
+	<string name="fql_get_comments_complete">
+{ 
+\"comments\":\"select object_id, fromid, time, text, id, reply_xid from comment where post_id=\'${post_id}\' or object_id=\'${object_id}\' order by time desc LIMIT ${limit} OFFSET ${offset} \",
+\"users\":\"select uid, name, pic_square, current_location, online_presence, timezone from user where uid in (select fromid from #comments) \",
+\"comments_info\":\"select comments from stream where post_id=\'${post_id}\'\"
+}
+    </string>
+    
+<string name="fql_get_comments_photos_complete">
+{ 
+\"comments\":\"select object_id, fromid, time, text, id, reply_xid from comment where post_id=\'${post_id}\' or object_id=\'${object_id}\' order by time desc limit ${limit} offset ${offset} \",
+\"users\":\"select uid, name, pic_square, current_location, online_presence, timezone from user where uid in (select fromid from #comments) \"
+}
+</string>
+    
+    
+    
+    <string name="fql_get_friends_from_friendlist">
+{ 
+\"friends\":\"select uid from friendlist_member where flid = ${flid} \",
+\"profiles\":\"select id, name, pic_square from profile where id in (select uid from #friends)\"
+}
+    </string>
+ 
+    <string name="fql_get_friendlists">
+{ 
+\"friendlists\":\"select name, flid from friendlist where owner = ${owner} \"
+}
+    </string>
+    
+  	<string name="fql_get_photos_using_pids">
+{ 
+\"photos\":\"select src_big, link, caption, aid, pid from photo where pid in ${pids} \",
+\"albums\":\"select owner, cover_pid, name, modified, description, location, size, modified_major, object_id, aid from album where aid in (select aid from #photos)\",
+\"tags\":\"select pid, subject, text, xcoord, ycoord from photo_tag where pid in (select pid from #photos) \",
+\"users\":\"select name, pic_square, first_name, last_name from user where uid in (select subject from #tags) \"
+}
+    </string>
+    
+	<string name="fql_get_all_user_albums">
+{ 
+\"albums\":\"select cover_pid, name, modified, description, location, size, modified_major, object_id, aid from album where owner = ${owner} \",
+\"covers\":\"select src_small, caption, aid, pid from photo where pid in (select cover_pid from #albums) and owner = ${owner} \"
+}
+    </string>
+
+    <string name="fql_get_cookie">
+{ 
+\"cookie\":\"select name,value,expires,path from cookies where uid = ${uid} \"
+}
+    </string>
+    
+    <string name="fql_get_wallposts">
+ {
+ \"posts\":\"select post_id, actor_id, source_id, target_id, viewer_id, message, comments, strip_tags(attachment), likes, attribution, app_id, created_time, updated_time FROM stream where source_id=${uid} and created_time > ${created_date} ORDER BY updated_time DESC LIMIT ${limit} OFFSET ${offset}\"
+ }   
+	</string>
+     
+    <string name="fql_get_notifications">
+{ 
+\"notifications\":\"select app_id, notification_id, sender_id, title_text, body_text, href, created_time FROM notification WHERE recipient_id=${uid} AND is_unread=1 AND is_hidden=0 AND sender_id != ${uid} AND created_time > ${created_time} ORDER BY created_time DESC \",
+\"users\":\"select uid, name, pic_square from user where uid in (select sender_id from #notifications) \",
+\"applications\":\"select app_id, display_name, icon_url, logo_url from application where app_id in (select app_id from #notifications) \"
+} 
+    </string>
+    
+    <string name="fql_get_events">
+{
+\"events\":\"select eid, event_subtype, event_type, hide_guest_list, name, tagline, pic_small, pic_big, pic, host, description, start_time, end_time, creator, update_time, location, venue, privacy FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid=${uid}) AND start_time &gt; ${start_time}\",  
+\"events_member\":\"select eid, rsvp_status from event_member where uid = ${uid} and eid in (select eid from #events)\"
+} 
+    </string>
+    
+    <string name="fql_get_events_attendees">
+{
+\"attendees\":\"select uid from event_member where eid = ${eid} and rsvp_status = \'${rsvp}\' \",
+\"profiles\":\"select id, name, pic_square from profile where id in (select uid from #attendees)\"
+}
+    </string>
+    
+    <string name="fql_get_taggedphotos">
+{
+\"tags\":\"SELECT pid FROM photo_tag WHERE subject=${subject} LIMIT ${limit} OFFSET ${offset}\",
+\"photos\":\"select pid, aid, owner, src, src_small, src_big, src_big_width, src_big_height, caption, created, modified, object_id from photo where pid in (select pid from #tags) order by created DESC LIMIT ${limit} OFFSET 0\",
+\"users\":\"select name,uid from user where uid in (select owner from #photos)\"
+}
+    </string>
+    
+
+ 	<string name="fql_get_tags_with_users">
+{
+\"tags\":\"select pid, subject, text, xcoord, ycoord, created FROM photo_tag WHERE pid=\'${pid}\'\",
+\"users\":\"select name, uid, pic_square from user where uid in (select subject from #tags)\"
+}
+    </string>
+    
+    <string name="fql_get_albums">
+{
+\"albums\":\"select aid, name, cover_pid, created, modified, description, location, size, visible, modified_major, type, object_id, can_upload from album where owner=${owner} order by created DESC LIMIT ${limit} OFFSET ${offset}\",
+\"covers\":\"select pid, aid, owner, src, src_small, src_big, src_big_width, src_big_height, caption, created, modified, object_id from photo where owner=${owner} and pid in (select cover_pid from #albums)\"
+}
+</string>
+
+<string name="fql_get_photos">
+{
+\"photos\":\"select pid, aid, owner, src, src_small, src_big, src_big_width, src_big_height, caption, created, modified, object_id from photo where aid=${aid} order by created DESC LIMIT ${limit} OFFSET ${offset}\"
+}
+</string>
+    
+    
+
+</resources>

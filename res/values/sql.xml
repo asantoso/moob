@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="sql.notifications_complete">
+
+		select sub0.*, u.* from 
+    	(
+    		select 
+    		n.*,
+    		app.*   
+    		from notifications as n left join applications as app on n.notif_app_id = app.app_id ${whereClause0} 
+    	) as sub0 
+    	left join users as u on u.uid = sub0.sender_id  
+    	    	
+	</string>
+
+	
+    <string name="sql.stream_insert">
+    	insert into streams (post_id, attribution, actor_id, target_id, viewer_id, source_id, type, message, updated_time, created_time, likes_count, likes_friends, likes_canlike)
+		values(${post_id} ${post_id} ${post_id} )	
+	</string>
+	
+	<string name="sql.event_insert">		
+		insert into events
+				(
+				eid,  	
+				name,  	
+				tagline,  	
+				nid,  	
+				pic_small,  	
+				pic_big,  	
+				pic,  	
+				host,  	
+				description , 	
+				event_type , 	
+				event_subtype , 	
+				start_time , 	
+				end_time,  	
+				creator,  	
+				update_time, 	
+				location ,
+				venue, 	
+				privacy, 	
+				hide_guest_list  
+				) 				
+				 values( 
+				${eid},  	
+				${name},  	
+				${tagline},  	
+				${nid},  	
+				${pic_small},  	
+				${pic_big},  	
+				${pic},  	
+				${host},  	
+				${description}, 	
+				${event_type}, 	
+				${event_subtype}, 	
+				${start_time}, 	
+				${end_time},  	
+				${creator},  	
+				${update_time}, 	
+				${location} ,
+				${venue} , 	
+				${privacy} , 	
+				${hide_guest_list}  
+				)
+	</string>
+
+	<string name="sql.getstreams_complete">
+		select 
+		v.uid as targetid, 
+		v.name as targetname,
+		v.first_name as targetfirstname, 
+		v.last_name as targetlastname,
+		sub0.* from 
+		(
+			select
+			u.uid as targetid, 
+			u.name as actor_name, 
+			u.pic_square as actor_pic_square, 	
+			u.pic as actor_pic, 
+			u.pic_small as actor_pic_small,
+			u.pic_big as actor_pic_big, 	
+			u.first_name as actor_firstname,
+			u.last_name as actor_lastname,  
+			p.* from streams as p left outer join users as u on u.uid=p.actor_id ${whereClause0} ${orderClause0}
+		) 
+		as sub0 
+		left outer join users as v on v.uid=sub0.target_id ${whereClause1} ${orderClause1}
+		LIMIT ${limit} OFFSET ${offset}
+	</string>
+</resources>

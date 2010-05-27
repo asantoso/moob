@@ -1,0 +1,90 @@
+03-28 10:03:53.327: DEBUG/StreamActivity(13842): [callback_get_tagged_photos]: [
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):   {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):     "fql_result_set": [
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2881474785586195866"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2881474785586195867"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2881474785586703422"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2720970998748593167"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2720970998748593603"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2720970998748593604"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2720970998748593606"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2720970998748593612"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "2714849497825861351"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "3627058392097452596"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "3627058392097452601"},
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {"pid": "3627058392097452612"}
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):     ],
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):     "name": "tags"
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):   },
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):   {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):     "fql_result_set": [
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_width": 401,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_small": "http://photos-a.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302509560340_844490340_9531972_5633325_t.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "created": 1256117112,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_height": 604,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "object_id": 302509560340,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "owner": 844490340,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "caption": "",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "pid": "3627058392097452612",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src": "http://photos-a.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302509560340_844490340_9531972_5633325_s.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "aid": "3627058392088255953",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "modified": 1256494402,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big": "http://photos-a.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302509560340_844490340_9531972_5633325_n.jpg"
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       },
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_width": 604,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_small": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302508700340_844490340_9531961_958088_t.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "created": 1256116996,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_height": 400,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "object_id": 302508700340,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "owner": 844490340,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "caption": "Laughter is the best medicine",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "pid": "3627058392097452601",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302508700340_844490340_9531961_958088_s.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "aid": "3627058392088255953",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "modified": 1256494402,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302508700340_844490340_9531961_958088_n.jpg"
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       },
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_width": 604,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_small": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302508080340_844490340_9531956_3864830_t.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "created": 1256116906,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_height": 400,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "object_id": 302508080340,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "owner": 844490340,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "caption": "",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "pid": "3627058392097452596",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302508080340_844490340_9531956_3864830_s.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "aid": "3627058392088255953",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "modified": 1256494402,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc1/hs242.snc1/8926_302508080340_844490340_9531956_3864830_n.jpg"
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       },
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_width": 604,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_small": "http://photos-f.ak.fbcdn.net/hphotos-ak-snc1/hs280.snc1/10722_309298260156_632100156_9363175_6424936_t.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "created": 1255666715,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_height": 404,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "object_id": 309298260156,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "owner": 632100156,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "caption": "Peserta Bible Camp 2009",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "pid": "2714849497825861351",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src": "http://photos-f.ak.fbcdn.net/hphotos-ak-snc1/hs280.snc1/10722_309298260156_632100156_9363175_6424936_s.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "aid": "2714849497816829036",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "modified": 1256244168,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big": "http://photos-f.ak.fbcdn.net/hphotos-ak-snc1/hs280.snc1/10722_309298260156_632100156_9363175_6424936_n.jpg"
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       },
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       {
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_width": 604,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_small": "http://photos-f.ak.fbcdn.net/hphotos-ak-snc1/hs261.snc1/8832_267294400429_633525429_9223628_5071001_t.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "created": 1254002193,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big_height": 402,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "object_id": 267294400429,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "owner": 633525429,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "caption": "",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "pid": "2720970998748593612",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src": "http://photos-f.ak.fbcdn.net/hphotos-ak-snc1/hs261.snc1/8832_267294400429_633525429_9223628_5071001_s.jpg",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "aid": "2720970998739693037",
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "modified": 1254241530,
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):         "src_big": "http://photos-f.ak.fbcdn.net/hphotos-ak-snc1/hs261.snc1/8832_267294400429_633525429_9223628_5071001_n.jpg"
+03-28 10:03:53.327: DEBUG/StreamActivity(13842):       },

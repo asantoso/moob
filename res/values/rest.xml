@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   
+    <string name="stream.addComment">
+{ 
+\"posts\":\"select post_id, actor_id, source_id, target_id, viewer_id, message, comments, strip_tags(attachment), likes, attribution, created_time, updated_time FROM stream where filter_key in (SELECT filter_key FROM stream_filter WHERE uid=${uid} AND type=\'newsfeed\') AND is_hidden = 0 AND updated_time > ${lastUpdateTime} ORDER BY updated_time DESC LIMIT ${limit} OFFSET ${offset}\",
+\"profiles_posts\":\"select id, type from profile where id in (select actor_id from #posts) or id in (select source_id from #posts) or id in (select viewer_id from #posts) \",
+\"profiles_targets\":\"select id, type from profile where id in (select target_id from #posts)\",
+\"users\":\"select name, pic, pic_small, pic_big, pic_square, first_name, last_name, uid from user where uid in (select id from #profiles_posts where type=\'user\') or uid in (select id from #profiles_targets  where type=\'user\')  \",
+\"pages\":\"select name, pic, pic_small, pic_square, page_id from page where page_id in (select id from #profiles_posts where type=\'page\')\"
+}
+    </string>
+        
+</resources>

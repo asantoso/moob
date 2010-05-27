@@ -1,0 +1,52 @@
+8
+
+dir
+612
+svn://www.3rdwhale.com/main/projects/3rdwhale/android/trunk/doc/code-generation/xmlpullparser
+svn://www.3rdwhale.com/main
+
+
+
+2009-10-02T16:23:37.976274Z
+612
+asantoso
+
+
+svn:special svn:externals svn:needs-lock
+
+about.txt
+file
+613
+
+
+
+2009-10-02T16:31:48.921875Z
+fcef2339623e0d6e21d8f609845ae4b7
+2009-10-02T16:32:22.933720Z
+613
+asantoso
+
+codegen.xsl
+file
+
+
+
+
+2009-10-02T16:21:41.500000Z
+17646e775ec0cb289ce3b252a66e631a
+2009-10-02T16:23:37.976274Z
+612
+asantoso
+
+sampleinput_geonames.xml
+file
+
+
+
+
+2009-10-02T16:21:52.531250Z
+8542caf84feabf7ee7d31fbb45dcd1f9
+2009-10-02T16:23:37.976274Z
+612
+asantoso
+

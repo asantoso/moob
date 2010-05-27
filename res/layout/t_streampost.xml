@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:paddingBottom="1dp" android:paddingTop="1.16dp"
+	android:paddingLeft="0.6dp" android:paddingRight="0.6dp"
+	android:gravity="top|left">
+
+	<!--
+		<ImageView android:id="@+id/fav" android:layout_width="20dp"
+		android:layout_height="20dp" android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true" android:layout_marginTop="-2dp"
+		android:scaleType="fitXY"
+		android:background="@android:drawable/star_on" />
+	-->
+
+
+	<!--
+android:background="#30a0a0a0" 
+ -->
+	<TextView android:id="@+id/name" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:layout_marginLeft="0dp"
+		android:layout_marginTop="0dp" android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true" android:paddingLeft="3dp"
+		android:paddingRight="3dp" android:paddingTop="1dp"
+		android:paddingBottom="2dp" style="@style/text.name"
+		android:background="@color/transparent" android:gravity="center_vertical|left" />
+	<!--
+		android:textColor="#FF001111" android:shadowColor="#66666666"
+		android:shadowDx="1" android:shadowDy="2" android:shadowRadius="2"
+	-->
+
+
+	<TextView android:id="@+id/targetname" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:layout_below="@+id/name"
+		android:layout_marginRight="6dp" android:layout_alignParentRight="true"
+
+		android:textColor="#FF225555" android:textScaleX="1.07" android:text=""
+		android:textSize="13dp" android:textStyle="bold" android:maxLines="2"
+		android:background="#00000000" android:shadowColor="#44000000"
+		android:shadowRadius="1" android:shadowDx="0" android:shadowDy="1"
+		android:gravity="top|right" android:visibility="gone" />
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:id="@+id/middle"
+		android:layout_below="@+id/name">
+
+		<ImageView android:id="@+id/profile_pic"
+
+			android:layout_width="48dp" android:layout_height="48dp"
+
+			android:layout_alignParentLeft="true" android:layout_below="@+id/name"
+			android:layout_marginLeft="1dp" android:layout_marginTop="1dp"
+
+
+			android:padding="2dp" android:adjustViewBounds="true"
+			android:scaleType="fitXY" android:background="@drawable/stream_profile_background" 
+			
+			/>
+
+		<!--
+			android:background="@android:drawable/picture_frame"
+			android:background="@drawable/stream_profile_background"
+		-->
+
+
+		<LinearLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:id="@+id/middle_right"
+			android:layout_toRightOf="@+id/profile_pic" android:layout_below="@+id/name"
+			android:gravity="left|top" android:orientation="vertical">
+
+			<TextView android:id="@+id/message" android:layout_width="fill_parent"
+				android:layout_height="wrap_content" android:layout_marginTop="1dp"
+				android:layout_marginLeft="1.5dp" android:layout_marginRight="1dp"
+				android:layout_marginBottom="0dp" android:paddingLeft="5dp"
+				android:paddingRight="5dp" android:textScaleX="1.05"
+				android:typeface="normal" android:textStyle="bold" android:textSize="11.5dp"
+				android:background="@drawable/message_box" android:textColor="#FF444444"
+
+				android:gravity="top|left" android:minLines="0" android:maxLines="30" />
+
+			<RelativeLayout android:id="@+id/attachmentcontainer"
+				android:layout_width="fill_parent" android:layout_height="wrap_content"
+				android:layout_below="@+id/message" android:layout_marginTop="1dp"
+				android:layout_marginBottom="1dp" android:layout_marginRight="1.5dp"
+				android:layout_marginLeft="1.5dp" android:background="@drawable/message_box"
+
+				android:gravity="top|left" android:paddingLeft="5dp"
+				android:paddingRight="5dp" android:visibility="gone">
+				<!--  debug bgcolor     android:background="#FFff00ff" -->
+
+
+				<TextView android:id="@+id/attachmentname"
+
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_alignParentLeft="true" android:layout_marginTop="0dp"
+					android:layout_marginLeft="0dp" android:layout_marginRight="0dp"
+					android:layout_marginBottom="0dp" android:textScaleX="1.06"
+					android:textSize="10.5dp" android:textStyle="bold"
+					android:background="#00000000" android:textColor="#FF666777"
+					android:gravity="top|left" android:maxLines="3" android:text="Title" />
+
+
+
+				<!--
+					<ImageView android:id="@+id/attachmentimage"
+
+					android:layout_width="48dp" android:layout_height="wrap_content"
+
+					android:layout_marginTop="0dp" android:layout_marginLeft="0dp"
+					android:layout_marginRight="0dp" android:layout_marginBottom="0dp"
+
+					android:layout_below="@+id/attachmentname"
+					android:layout_alignParentLeft="true" android:scaleType="fitCenter"
+					android:adjustViewBounds="true" android:padding="2dp"
+
+					android:background="@drawable/stream_attachmentimagebg" >
+					</ImageView>
+				-->
+
+				<RelativeLayout android:id="@+id/mediaimagescontainer"
+
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_below="@+id/attachmentname"
+					android:layout_alignLeft="@+id/attachmentname" android:paddingTop="1dp"
+					android:paddingBottom="1dp" android:background="#00000000"
+					android:gravity="top|left" android:visibility="gone">
+
+
+					<!-- debug container color  android:background="#FFff0000"
+    -->
+					<ImageView android:id="@+id/mediaimage0"
+
+						android:layout_width="wrap_content" android:layout_height="wrap_content"
+						android:layout_alignParentLeft="true"
+						android:layout_alignParentTop="true" android:layout_marginTop="0dp"
+						android:layout_marginLeft="0dp" android:layout_marginRight="3dp"
+						android:layout_marginBottom="3dp" android:maxWidth="64dp"
+						android:minHeight="64dp" android:scaleType="fitCenter"
+						android:adjustViewBounds="true" android:padding="3dp"
+						android:background="@drawable/stream_attachmentimagebg"
+
+
+						android:src="@drawable/circular_progress">
+					</ImageView>
+
+					<ImageView android:id="@+id/mediaimage1"
+
+						android:layout_width="64dp" android:layout_height="wrap_content"
+						android:layout_marginRight="3dp" android:maxWidth="64dp"
+						android:minHeight="64dp" android:scaleType="fitCenter"
+						android:adjustViewBounds="true" android:padding="3dp"
+						android:background="@drawable/stream_attachmentimagebg"
+
+						android:layout_toRightOf="@+id/mediaimage0"
+						android:layout_alignTop="@+id/mediaimage0" android:src="@drawable/circular_progress">
+					</ImageView>
+
+
+					<ImageView android:id="@+id/mediaimage2"
+
+						android:layout_width="64dp" android:layout_height="wrap_content"
+						android:layout_marginRight="3dp" android:scaleType="fitCenter"
+						android:adjustViewBounds="true" android:padding="3dp"
+						android:background="@drawable/stream_attachmentimagebg"
+
+						android:maxWidth="64dp" android:minHeight="64dp"
+
+						android:layout_toRightOf="@+id/mediaimage1"
+						android:layout_alignTop="@+id/mediaimage1" android:src="@drawable/circular_progress">
+					</ImageView>
+
+					<ImageView android:id="@+id/mediaimage3"
+
+						android:layout_width="64dp" android:layout_height="wrap_content"
+						android:layout_marginRight="3dp" android:maxWidth="64dp"
+						android:minHeight="64dp" android:scaleType="fitCenter"
+						android:adjustViewBounds="true" android:padding="3dp"
+						android:background="@drawable/stream_attachmentimagebg"
+
+						android:layout_alignTop="@+id/mediaimage2"
+						android:layout_toRightOf="@+id/mediaimage2" android:src="@drawable/circular_progress">
+					</ImageView>
+
+					<ImageView android:id="@+id/mediaimage4"
+
+						android:layout_width="64dp" android:layout_height="wrap_content"
+
+						android:scaleType="fitCenter" android:adjustViewBounds="true"
+
+						android:padding="2dp" android:maxWidth="64dp" android:minHeight="64dp"
+
+						android:background="@drawable/stream_attachmentimagebg"
+
+						android:layout_toRightOf="@+id/mediaimage3"
+						android:layout_alignTop="@+id/mediaimage3" android:src="@drawable/circular_progress">
+					</ImageView>
+
+				</RelativeLayout>
+
+
+				<TextView android:id="@+id/attachmentdescription"
+
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_marginRight="0dp" android:layout_marginLeft="2dp"
+					android:layout_marginTop="-3dp" android:layout_below="@+id/attachmentname"
+					android:layout_alignTop="@+id/mediaimagescontainer"
+					android:layout_toRightOf="@+id/mediaimagescontainer"
+
+					android:textScaleX="1.06" android:textSize="9.5dp"
+					android:textStyle="bold" android:background="#00000000"
+					android:textColor="#FF888888" android:gravity="top|left"
+					android:maxLines="15" android:text="Description" />
+
+				<TextView android:id="@+id/attachmentcaption"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_marginRight="0dp" android:layout_marginLeft="2dp"
+					android:layout_marginTop="-3dp" android:layout_below="@+id/attachmentdescription"
+					android:layout_alignLeft="@+id/attachmentdescription"
+
+					android:textScaleX="1.06" android:textSize="10.5dp"
+					android:textStyle="bold" android:background="#00000000"
+					android:textColor="#FF666777" android:gravity="top|left"
+					android:maxLines="1" />
+
+
+				<!-- debug textview color  android:background="#ffFFFF00"    -->
+
+			</RelativeLayout>
+
+
+		</LinearLayout>
+
+	</RelativeLayout>
+
+	<ImageView android:id="@+id/icon" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:layout_alignParentLeft="true"
+		android:layout_below="@+id/middle" android:layout_marginTop="2dp"
+		android:layout_marginLeft="0dp" android:layout_marginRight="0dp"
+		android:layout_marginBottom="0dp" android:scaleType="fitCenter"
+		android:adjustViewBounds="true" android:padding="1dp">
+	</ImageView>
+
+	<TextView android:id="@+id/updated_lbl" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:layout_marginTop="-2dp"
+		android:layout_marginLeft="0dp" android:layout_toRightOf="@+id/icon"
+		android:layout_alignTop="@+id/icon" android:layout_below="@+id/middle"
+
+		android:textScaleX="1.06" android:text="" android:textSize="10.5dp"
+		android:background="#00000000" android:textColor="#FF666777"
+		android:gravity="bottom|right" android:lines="1" />
+
+	<TextView android:id="@+id/since" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:layout_marginRight="3dp"
+		android:layout_marginLeft="1dp" android:layout_toRightOf="@+id/updated_lbl"
+		android:layout_alignTop="@+id/updated_lbl" android:gravity="bottom|right"
+
+		style="@style/text.since" />
+
+	<TextView android:id="@+id/likes" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:layout_marginLeft="8dp"
+		android:layout_below="@+id/middle" android:layout_toLeftOf="@+id/comments"
+		android:layout_alignTop="@+id/since" android:textScaleX="1.00"
+		android:text="(0) likes" android:textStyle="bold" android:textSize="10.5dp"
+		android:background="#00000000" android:textColor="#FF666667"
+		android:gravity="center_vertical|left" android:lines="1" />
+
+	<TextView android:id="@+id/comments" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:layout_marginLeft="10dp"
+		android:layout_marginRight="3dp" android:layout_alignParentRight="true"
+		android:layout_below="@+id/middle" android:layout_alignTop="@+id/likes"
+
+		android:textScaleX="1.08" android:textStyle="bold" android:text="(0) comments"
+		android:textSize="10.5dp" android:background="#00000000"
+		android:textColor="#FF666667" android:gravity="center_vertical|left"
+		android:lines="1" />
+
+	<ImageView android:id="@+id/progress" android:layout_width="32dip"
+		android:layout_height="8dip" android:layout_alignParentTop="true"
+		android:layout_alignParentRight="true" android:layout_marginTop="0.5dp"
+		android:layout_marginRight="1dp" android:visibility="invisible"
+		android:background="@drawable/face_loading" android:focusable="false"
+		android:focusableInTouchMode="false" android:clickable="false" />
+
+</RelativeLayout>

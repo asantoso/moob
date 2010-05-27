@@ -1,0 +1,42 @@
+ json: {
+D/ProcessStreamMultiQueryTask(10330):   "message": "",
+D/ProcessStreamMultiQueryTask(10330):   "actor_id": 660120347,
+D/ProcessStreamMultiQueryTask(10330):   "source_id": 660120347,
+D/ProcessStreamMultiQueryTask(10330):   "likes": {
+D/ProcessStreamMultiQueryTask(10330):     "can_like": true,
+D/ProcessStreamMultiQueryTask(10330):     "user_likes": false,
+D/ProcessStreamMultiQueryTask(10330):     "friends": {},
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/social_graph.php?node_id=111863752157342&class=LikeManager",
+D/ProcessStreamMultiQueryTask(10330):     "sample": {}
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "app_id": 213797292305,
+D/ProcessStreamMultiQueryTask(10330):   "attachment": {
+D/ProcessStreamMultiQueryTask(10330):     "icon": "http://photos-b.ak.fbcdn.net/photos-ak-sf2p/v43/149/213797292305/app_2_213797292305_2817.gif",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_type": "",
+D/ProcessStreamMultiQueryTask(10330):     "description": "",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_id": "",
+D/ProcessStreamMultiQueryTask(10330):     "name": "Nata is the proud owner of a brand new town!",
+D/ProcessStreamMultiQueryTask(10330):     "caption": "Come visit Nata's new town! You can see what they've built and join your friends in creating your very own town full of buildings, businesses and decorations!",
+D/ProcessStreamMultiQueryTask(10330):     "properties": {},
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://apps.facebook.com/aroundtown/?bid=68495705&_fb_fromhash=05520741c8db152c2a9f062b074abb93",
+D/ProcessStreamMultiQueryTask(10330):     "media": [{
+D/ProcessStreamMultiQueryTask(10330):       "type": "link",
+D/ProcessStreamMultiQueryTask(10330):       "href": "http://apps.facebook.com/aroundtown/?bid=68495705",
+D/ProcessStreamMultiQueryTask(10330):       "src": "http://platform.ak.fbcdn.net/www/app_full_proxy.php?app=213797292305&v=1&size=z&cksum=12377f95877ee5f8c54526e2a7bde978&src=http%3A%2F%2Ftowncdn.brokenbulbstudios.com%2Fimages%2FwallPosts%2FnewTown.jpg"
+D/ProcessStreamMultiQueryTask(10330):     }]
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "created_time": 1269117362,
+D/ProcessStreamMultiQueryTask(10330):   "viewer_id": 116202691,
+D/ProcessStreamMultiQueryTask(10330):   "post_id": "660120347_111863752157342",
+D/ProcessStreamMultiQueryTask(10330):   "updated_time": 1269117362,
+D/ProcessStreamMultiQueryTask(10330):   "comments": {
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "comment_list": {},
+D/ProcessStreamMultiQueryTask(10330):     "can_post": true,
+D/ProcessStreamMultiQueryTask(10330):     "can_remove": false
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "attribution": "My Town",
+D/ProcessStreamMultiQueryTask(10330):   "target_id": null
+D/ProcessStreamMultiQueryTask(10330): }
+

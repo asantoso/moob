@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="menu_reload">刷新</string>
+    <string name="menu_update">更新</string>
+    <string name="menu_search">搜索</string>
+    <string name="menu_friends">朋友</string>         
+</resources>

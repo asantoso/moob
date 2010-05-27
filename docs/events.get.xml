@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<events_get_response xmlns="http://api.facebook.com/1.0/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://api.facebook.com/1.0/ http://api.facebook.com/1.0/facebook.xsd"
+	list="true">
+
+<event>
+
+    <eid>145220916308</eid>
+
+    <name>The Minimalist Jug Band features at the Vancouver Poetry Slam</name>
+
+    <tagline/>
+
+    <nid>0</nid>
+
+    <pic>http://profile.ak.fbcdn.net/object2/714/89/s145220916308_7735.jpg</pic>
+
+    <pic_big>http://profile.ak.fbcdn.net/object2/714/89/n145220916308_7735.jpg</pic_big>
+
+    <pic_small>http://profile.ak.fbcdn.net/object2/714/89/t145220916308_7735.jpg</pic_small>
+
+    <host>Vancouver Poetry Slam</host>
+
+    <description>The Vancouver Poetry Slam is very proud to have the Minimalist Jug Band feature on this, our 3rd qualifying Slam of the season AND the birthday of the evening's host,  our International Slammaster, Duncan Shields.  
+
+
+The minimalist jug band is a one man beatnik punk-a-billy band act that's been dragging its carcass across the continent performing at various festivals since the last ice age. This low down high-strung washed up guy on a washtub bass plucks at his own heart strings ,performing material that ranges from darkly comic to comically dark. His most recent c.d. 'thrift stories' can be heard on your more interesting radio program or on cbc.   
+
+
+Doors and Sign Up are at 8:00PM
+
+Open Mic 8:45 PM
+
+Slam 9:00 PM
+
+
+Cover is $5-10 sliding scale</description>
+
+    <event_type>Music/Arts</event_type>
+
+    <event_subtype>Performance</event_subtype>
+
+    <start_time>1256007600</start_time>
+
+    <end_time>1256019300</end_time>
+
+    <creator>21824038456</creator>
+
+    <update_time>1254521429</update_time>
+
+    <location>Cafe Deux Soleils</location>
+
+    <venue>
+
+      <street>2096 Commercial Drive</street>
+
+      <city>Vancouver</city>
+
+      <state>British Columbia</state>
+
+      <country>Canada</country>
+
+      <latitude>49.25</latitude>
+
+      <longitude>-123.133</longitude>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+
+
+
+	<event>
+
+		<eid>145220916308</eid>
+
+		<name>The Minimalist Jug Band features at the Vancouver Poetry Slam</name>
+
+		<tagline />
+
+		<nid>0</nid>
+
+		<pic>http://profile.ak.fbcdn.net/object2/714/89/s145220916308_7735.jpg</pic>
+
+		<pic_big>http://profile.ak.fbcdn.net/object2/714/89/n145220916308_7735.jpg</pic_big>
+
+		<pic_small>http://profile.ak.fbcdn.net/object2/714/89/t145220916308_7735.jpg</pic_small>
+
+		<host>Vancouver Poetry Slam</host>
+
+		<description>The Vancouver Poetry Slam is very proud to have the Minimalist Jug Band feature on this, our 3rd qualifying Slam of the season AND the birthday of the evening's host,  our International Slammaster, Duncan Shields.  
+
+
+The minimalist jug band is a one man beatnik punk-a-billy band act that's been dragging its carcass across the continent performing at various festivals since the last ice age. This low down high-strung washed up guy on a washtub bass plucks at his own heart strings ,performing material that ranges from darkly comic to comically dark. His most recent c.d. 'thrift stories' can be heard on your more interesting radio program or on cbc.   
+
+
+Doors and Sign Up are at 8:00PM
+
+Open Mic 8:45 PM
+
+Slam 9:00 PM
+
+
+Cover is $5-10 sliding scale</description>
+
+		<event_type>Music/Arts</event_type>
+
+		<event_subtype>Performance</event_subtype>
+
+		<start_time>1256007600</start_time>
+
+		<end_time>1256019300</end_time>
+
+		<creator>21824038456</creator>
+
+		<update_time>1254521429</update_time>
+
+		<location>Cafe Deux Soleils</location>
+
+		<venue>
+
+			<street>2096 Commercial Drive</street>
+
+			<city>Vancouver</city>
+
+			<state>British Columbia</state>
+
+			<country>Canada</country>
+
+			<latitude>49.25</latitude>
+
+			<longitude>-123.133</longitude>
+
+		</venue>
+
+		<privacy>OPEN</privacy>
+
+		<hide_guest_list>0</hide_guest_list>
+
+		<show_in_search>1</show_in_search>
+
+	</event>
+
+	<event>
+
+		<eid>144932810414</eid>
+
+		<name>Dan Mangan (Vancouver/ Kanada)</name>
+
+		<tagline />
+
+		<nid>0</nid>
+
+		<pic>http://profile.ak.fbcdn.net/object2/1352/99/s144932810414_820.jpg</pic>
+
+		<pic_big>http://profile.ak.fbcdn.net/object2/1352/99/n144932810414_820.jpg</pic_big>
+
+		<pic_small>http://profile.ak.fbcdn.net/object2/1352/99/t144932810414_820.jpg</pic_small>
+
+		<host>Hasenschaukel</host>
+
+		<description>Der NME schrieb über Dan Mangan: &quot;This folk singer may only be 23, but he sings with the soul of Woody Guthrie - if Woody Guthrie had listened to Godspeed (You Black Emperor).&quot; Inzwischen ist Dan 25 und die Presse überschlägt sich förmlich, wenn es um sein letztes Album &quot;Nice, Nice, Very Nice&quot; geht. Ich verstehe haargenau, warum alle so begeistert sind. Dan Managan ist ein großartiger, scharfer Beobachter mit umwerfendem Humor, der in seinen Songs über Roboter, Indie-Mädchen und Tina Turners Comeback genau den richtigen Ton trifft und seine Figuren niemals der Lächerlichkeit preis-, sondern sie stattdessen mit wunderbaren Melodien umgibt. Eine wahre Entdeckung.
+
+
+http://www.danmanganmusic.com
+
+http://www.myspace.com/danmangan</description>
+
+    <event_type>Music/Arts</event_type>
+
+    <event_subtype>Concert</event_subtype>
+
+    <start_time>1259213400</start_time>
+
+    <end_time>1259218800</end_time>
+
+    <creator>172321355335</creator>
+
+    <update_time>1254486796</update_time>
+
+    <location>Hasenschaukel</location>
+
+    <venue>
+
+      <street>Silbersackstr. 17</street>
+
+      <city>Hamburg</city>
+
+      <state>Hamburg</state>
+
+      <country>Germany</country>
+
+      <latitude>53.55</latitude>
+
+      <longitude>10</longitude>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+  <event>
+
+    <eid>102830957002</eid>
+
+    <name>Vancouver 2010 Torch Relay</name>
+
+    <tagline/>
+
+    <nid>0</nid>
+
+    <pic>http://profile.ak.fbcdn.net/object3/979/49/s102830957002_5605.jpg</pic>
+
+    <pic_big>http://profile.ak.fbcdn.net/object3/979/49/n102830957002_5605.jpg</pic_big>
+
+    <pic_small>http://profile.ak.fbcdn.net/object3/979/49/t102830957002_5605.jpg</pic_small>
+
+    <host>Richard Davies</host>
+
+    <description>The Olympic torch is going through Brampton on this evening, </description>
+
+    <event_type>Sports</event_type>
+
+    <event_subtype>Pep Rally</event_subtype>
+
+    <start_time>1261188000</start_time>
+
+    <end_time>1261202400</end_time>
+
+    <creator>686864697</creator>
+
+    <update_time>1247586146</update_time>
+
+    <location>Queen St. near Bramalea. </location>
+
+    <venue>
+
+      <street/>
+
+      <city/>
+
+      <state/>
+
+      <country/>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+  <event>
+
+    <eid>140416632954</eid>
+
+    <name>Vancouver Cancuks regular season tickets for sale</name>
+
+    <tagline>Premium Club Seats..Tons of games available</tagline>
+
+    <nid>0</nid>
+
+    <pic>http://profile.ak.fbcdn.net/object2/231/96/s140416632954_2102.jpg</pic>
+
+    <pic_big>http://profile.ak.fbcdn.net/object2/231/96/n140416632954_2102.jpg</pic_big>
+
+    <pic_small>http://profile.ak.fbcdn.net/object2/231/96/t140416632954_2102.jpg</pic_small>
+
+    <host>Ryan Goodrich</host>
+
+    <description>Vancouver Canucks single game ticket sales...see games below.. all game are in the same section and seats.. sold is pairs
+
+
+Section 105 (club section) - You get your own parking, service at your seat. No having to get up out of your seat to get a beer!
+
+
+Row 7 - Very close to the ice with a great view
+
+
+Seats 103/104 - These seats are on the aisle so when the waitress comes down you get first service!
+
+
+More dates will become available as the months roll along so if you're looking for a certain game it just might come up. Below are the dates and our opponent for the night. Prices are subject to change. No low ball offers. Premium games will cost more. Weekday games are cheaper
+
+
+Oct 24/09 - Maple Leafs - $700 - SOLD
+
+Oct 25/09 - Oilers - $500
+
+
+Nov 1/09 - Avalanche - $450
+
+Nov 20/09 - Avalanche - $450
+
+Nov 28/09 - Oilers - $500
+
+
+Dec 12/09 - Wild - $450 - SOLD
+
+Dec 18/09 - Capitals - NOT FOR SALE IM GOING! Haha
+
+Dec 20/09 -  Blues - $400
+
+Dec 22/09 - Predators - $400
+
+Dec 26/09 - Oilers - $400 (Boxing Day Sale) - SOLD
+
+
+Jan 16/09 - Penguins - $750
+
+
+Mar 13/09 - Senators - $650</description>
+
+    <event_type>Sports</event_type>
+
+    <event_subtype>Sporting Event</event_subtype>
+
+    <start_time>1261022400</start_time>
+
+    <end_time>1261033200</end_time>
+
+    <creator>506381525</creator>
+
+    <update_time>1254676105</update_time>
+
+    <location>GM PLACE</location>
+
+    <venue>
+
+      <street/>
+
+      <city/>
+
+      <state/>
+
+      <country/>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+  <event>
+
+    <eid>143472764724</eid>
+
+    <name>Santa Shuffle 2009 - Vancouver</name>
+
+    <tagline>5km Fun Run, 1km Elm Walk</tagline>
+
+    <nid>0</nid>
+
+    <pic>http://profile.ak.fbcdn.net/object2/1140/12/s143472764724_338.jpg</pic>
+
+    <pic_big>http://profile.ak.fbcdn.net/object2/1140/12/n143472764724_338.jpg</pic_big>
+
+    <pic_small>http://profile.ak.fbcdn.net/object2/1140/12/t143472764724_338.jpg</pic_small>
+
+    <host>Santa Shuffle</host>
+
+    <description>The annual Santa Shuffle Fun Run &amp; Elf Walk brings families and friends together. The event is held across North America, so check the city closest to you and sign up! 
+
+
+http://www.events.runningroom.com/site/?raceId=4786</description>
+
+    <event_type>Causes</event_type>
+
+    <event_subtype>Fundraiser</event_subtype>
+
+    <start_time>1260036000</start_time>
+
+    <end_time>1260043200</end_time>
+
+    <creator>116336607154</creator>
+
+    <update_time>1254280125</update_time>
+
+    <location>Lumberman's Arch, Stanley Park</location>
+
+    <venue>
+
+      <street>Stanley Park Dr.</street>
+
+      <city>Vancouver</city>
+
+      <state>British Columbia</state>
+
+      <country>Canada</country>
+
+      <latitude>49.25</latitude>
+
+      <longitude>-123.133</longitude>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+  <event>
+
+    <eid>138341934221</eid>
+
+    <name>Vancouver Launch of GUERRILLA DIPLOMACY</name>
+
+    <tagline>A special evening with Daryl Copeland, author of the highly acclaimed book Guerrilla Diplomacy.</tagline>
+
+    <nid>0</nid>
+
+    <pic>http://profile.ak.fbcdn.net/object3/531/42/s138341934221_3201.jpg</pic>
+
+    <pic_big>http://profile.ak.fbcdn.net/object3/531/42/n138341934221_3201.jpg</pic_big>
+
+    <pic_small>http://profile.ak.fbcdn.net/object3/531/42/t138341934221_3201.jpg</pic_small>
+
+    <host>Canada's World</host>
+
+    <description>--------------------------------------------
+
+
+A SPECIAL BOOK LAUNCH
+
+
+The SFU Centre for Dialogue,  School for International Studies, Canada's World and CIC Vancouver invite you to a special evening with Daryl Copeland, author of the highly acclaimed book Guerrilla Diplomacy.
+
+
+With increasing recognition now given to the notion that international security is dependent on progress and stability in the developing world, former Canadian diplomat Daryl Copeland argues in his new book Guerilla Diplomacy that development should replace defence as the key consideration at the centre of national foreign policies. Copeland offers both a call to action and an alternative approach to understanding contemporary international relations.
+
+
+--------------------------------------------
+
+
+THE BOOK 
+
+
+“A tour de force…. Refreshing, insightful, innovative…. Finally, a new generation of diplomacy for a new generation of students of diplomacy.”
+
+—R.S. Zaharna, American University
+
+
+“When diplomacy’s current revolution is recorded in the history books, Copeland’s extraordinarily compelling and prescient work will be acknowledged as one of the milestones of this turbulent period.”
+
+—Simon Anholt, UK Foreign Office Public Diplomacy Board
+
+
+&quot;With its holistic approach, the book is... a tool for navigation through a complex and intertwined system of multiple actors, levels, and problems -- and a guideline for advancing the role of diplomacy in a changed world.&quot;
+
+-- Katharina Höne, Diplo Foundation
+
+
+--------------------------------------------
+
+
+HOW TO ATTEND
+
+
+Join us for this event on November 29, 7:00pm at the SFU Harbour Centre (Room 1400), located at 515 W. Hastings St.
+
+
+Refreshments will be served.
+
+
+Please RSVP to ensure your seat by signing up at http://websurvey.sfu.ca/survey/43458593
+
+ or by contacting Linda at ugsid@sfu.ca.
+
+
+--------------------------------------------
+
+
+ABOUT THE AUTHOR
+
+
+Daryl Copeland is a Canadian analyst, writer and educator who writes and speaks extensively as an independent scholar on issues of international policy, global issues, diplomacy and public management. 
+
+
+From 1981 – 2009 Daryl served as a Canadian diplomat with postings abroad in Thailand, Ethiopia, New Zealand and Malaysia. Among his positions at the Department of Foreign Affairs and International Trade in Ottawa, Mr. Copeland worked as Deputy Director for International Communications; Director for Southeast Asia; Senior Advisor, Public Diplomacy; Director of Strategic Communications Services and; Senior Advisor, Strategic Policy and Planning.  Daryl is currently on academic leave from the diplomatic service, seconded to the University of Southern California Centre on Public Diplomacy and the University of Toronto’s Munk Centre for International Studies.
+
+
+For more information, see Copeland's web site and blog at www.guerrilladiplomacy.com.
+
+
+--------------------------------------------</description>
+
+    <event_type>Music/Arts</event_type>
+
+    <event_subtype>Preview</event_subtype>
+
+    <start_time>1259550000</start_time>
+
+    <end_time>1259560800</end_time>
+
+    <creator>2935755178</creator>
+
+    <update_time>1253780048</update_time>
+
+    <location>SFU Harbour Centre, Downtown.</location>
+
+    <venue>
+
+      <street>515 W. Hastings St.</street>
+
+      <city>Vancouver</city>
+
+      <state>British Columbia</state>
+
+      <country>Canada</country>
+
+      <latitude>49.25</latitude>
+
+      <longitude>-123.133</longitude>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+</events_get_response>
+

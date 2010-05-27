@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"	
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:background="#00000000"
+>
+       
+<include layout="@layout/custom_title" />
+ 
+<ListView
+	android:id="@+id/list" 
+	android:layout_width="fill_parent" 
+    android:layout_height="fill_parent" 
+    android:layout_below="@+id/topheader"
+    android:layout_above="@+id/ad"
+    android:background="#00000000"  
+/>
+
+<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
+android:id="@+id/ad" 
+android:visibility="visible" 
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content" 
+android:layout_alignParentBottom="true" 
+app:backgroundColor="#00000000" 
+app:textColor="#FFffffff" 
+app:keywords="" 
+app:testing="false"/>
+    
+</RelativeLayout>
+

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="menu_reload">reload</string>
+    <string name="menu_update">mettre à jour</string>
+    <string name="menu_search">chercher</string>
+    <string name="menu_friends">amis</string>         
+</resources>

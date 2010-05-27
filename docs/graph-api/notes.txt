@@ -1,0 +1,26 @@
+Moobook application page
+http://www.facebook.com/developers/apps.php?app_id=225201213503
+
+Step 1: Call the url with the app id as the client id and a redirect url
+
+https://graph.facebook.com/oauth/authorize?
+    client_id=225201213503&
+    redirect_uri=http://www.facebook.com/connect/login_success.html&
+    display=touch
+    
+Step 2: Call the url and supply the secret key and code returned in step 1
+        
+https://graph.facebook.com/oauth/access_token?
+    client_id=225201213503&
+    redirect_uri=http://www.facebook.com/connect/login_success.html&
+    client_secret=f99fabbda9bce1d30e06cb8d6328f868&
+    code=449398444aeb3a215c7991d8-116202691|c_VUjxedDRGqCKMhWxz0y3U30Ns.
+    
+    
+https://graph.facebook.com/10150159175965503?metadata=1. 
+    
+Get a photo metadata
+https://graph.facebook.com/<photo_id>?metadata=1&access_token=<access_token>
+https://graph.facebook.com/10150159175965503?metadata=1&access_token=2227470867|2._8caDXwjMz5PWbWREobuGA__.3600.1272819600-116202691|UEltU9JEnR9jvNjMn3l57KPLw28.
+
+https://graph.facebook.com/10150159175965503/tags?access_token=2227470867|2._8caDXwjMz5PWbWREobuGA__.3600.1272819600-116202691|UEltU9JEnR9jvNjMn3l57KPLw28.

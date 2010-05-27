@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="./codegen.xsl"?>
+<events_get_response xmlns="http://api.facebook.com/1.0/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://api.facebook.com/1.0/ http://api.facebook.com/1.0/facebook.xsd"
+	list="true"
+	
+	>
+
+<event>
+
+    <eid>145220916308</eid>
+
+    <name>The Minimalist Jug Band features at the Vancouver Poetry Slam</name>
+
+    <tagline/>
+
+    <nid>0</nid>
+
+    <pic>http://profile.ak.fbcdn.net/object2/714/89/s145220916308_7735.jpg</pic>
+
+    <pic_big>http://profile.ak.fbcdn.net/object2/714/89/n145220916308_7735.jpg</pic_big>
+
+    <pic_small>http://profile.ak.fbcdn.net/object2/714/89/t145220916308_7735.jpg</pic_small>
+
+    <host>Vancouver Poetry Slam</host>
+
+    <description>The Vancouver Poetry Slam is very proud to have the Minimalist Jug Band feature on this, our 3rd qualifying Slam of the season AND the birthday of the evening's host,  our International Slammaster, Duncan Shields.  
+
+
+The minimalist jug band is a one man beatnik punk-a-billy band act that's been dragging its carcass across the continent performing at various festivals since the last ice age. This low down high-strung washed up guy on a washtub bass plucks at his own heart strings ,performing material that ranges from darkly comic to comically dark. His most recent c.d. 'thrift stories' can be heard on your more interesting radio program or on cbc.   
+
+
+Doors and Sign Up are at 8:00PM
+
+Open Mic 8:45 PM
+
+Slam 9:00 PM
+
+
+Cover is $5-10 sliding scale</description>
+
+    <event_type>Music/Arts</event_type>
+
+    <event_subtype>Performance</event_subtype>
+
+    <start_time>1256007600</start_time>
+
+    <end_time>1256019300</end_time>
+
+    <creator>21824038456</creator>
+
+    <update_time>1254521429</update_time>
+
+    <location>Cafe Deux Soleils</location>
+
+    <venue>
+
+      <street>2096 Commercial Drive</street>
+
+      <city>Vancouver</city>
+
+      <state>British Columbia</state>
+
+      <country>Canada</country>
+
+      <latitude>49.25</latitude>
+
+      <longitude>-123.133</longitude>
+
+    </venue>
+
+    <privacy>OPEN</privacy>
+
+    <hide_guest_list>0</hide_guest_list>
+
+    <show_in_search>1</show_in_search>
+
+  </event>
+
+
+</events_get_response>
+

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:background="#00000000"
+	android:id="@+id/rootLayout"
+>
+        
+<include layout="@layout/custom_title"/>   
+    
+<RelativeLayout
+	android:layout_width="fill_parent"  
+	android:layout_height="wrap_content"
+	android:visibility="visible"
+	android:layout_above="@+id/footerbuttonscontainer"
+	android:layout_below="@+id/topheader"
+>
+
+<ImageView 
+	android:id="@+id/profilepic"
+	android:layout_width="300dip"  
+	android:layout_height="wrap_content"
+	android:layout_marginLeft="12dp"
+	android:layout_marginRight="12dp"
+	android:layout_marginTop="5dp"
+	android:layout_marginBottom="4dp"
+	android:layout_centerHorizontal="true"
+	android:layout_below="@+id/topheader"	
+	
+	android:scaleType="centerInside"
+	android:src="@drawable/defaultprofileimage"
+	
+/>
+
+<Button
+	android:id="@+id/post"
+	android:layout_width="wrap_content"  
+	android:layout_height="wrap_content"
+	android:layout_toRightOf="@+id/profilepic"
+	android:layout_alignTop="@+id/profilepic"
+	android:text="Post pix"
+/>
+
+<Button
+	android:id="@+id/wall"
+	android:layout_width="wrap_content"  
+	android:layout_height="wrap_content"
+	android:layout_toLeftOf="@+id/profilepic"
+	android:layout_alignTop="@+id/profilepic"
+	android:text="Wall"
+/>
+
+<TextView 
+	android:id="@+id/message"
+	android:layout_width="fill_parent"  
+	android:layout_height="wrap_content"	
+	android:layout_centerHorizontal="true"
+	android:layout_marginRight="12dip"
+	android:layout_marginLeft="12dip"
+	android:layout_below="@+id/profilepic"
+	
+	android:minHeight="64dip"
+	android:text=""
+	android:gravity="left|top"
+	android:hint="What is on your mind?"	
+	android:minLines="1"
+	android:maxLines="5"
+	android:paddingTop="3dip"
+	android:paddingBottom="3dip"
+	android:paddingLeft="6dip"
+	android:paddingRight="6dip"
+	
+	style="@style/text.whatisonyourmind"
+/>
+
+</RelativeLayout>
+
+<ListView
+	android:id="@+id/list" 
+	android:layout_width="fill_parent" 
+    android:layout_height="fill_parent" 
+    android:layout_below="@+id/message"
+    android:layout_above="@+id/footerbuttonscontainer"
+    android:background="#00000000"  
+/>
+
+
+<RelativeLayout
+	android:layout_width="fill_parent"  
+	android:layout_height="wrap_content"
+	android:visibility="visible"
+	android:layout_above="@+id/ad"
+>
+	
+
+
+<LinearLayout
+	android:layout_width="fill_parent"  
+	android:layout_height="wrap_content"
+	android:orientation="horizontal"
+	android:gravity="bottom|center_horizontal"
+	android:id="@+id/footerbuttonscontainer"
+>
+	<Button 
+		android:id="@+id/streams"
+		android:layout_width="fill_parent"  
+		android:layout_height="wrap_content"
+		android:layout_weight="25"
+		android:text="streams"
+		style="@style/home.button"
+	/> 
+	
+	<Button 
+		android:id="@+id/photos"
+		android:layout_width="fill_parent"  
+		android:layout_height="wrap_content"
+		android:layout_weight="25"
+		android:text="photos"
+		style="@style/home.button"
+	/> 
+		
+	<Button 
+		android:id="@+id/network"
+		android:layout_width="fill_parent"  
+		android:layout_height="wrap_content"
+		android:layout_weight="25"
+		android:text="network"
+		style="@style/home.button"
+	/> 
+	
+	<Button 
+		android:id="@+id/notifs"
+		android:layout_width="fill_parent"  
+		android:layout_height="wrap_content"
+		android:layout_weight="25"
+		android:text="notifs"
+		style="@style/home.button"
+	/> 
+
+</LinearLayout>
+
+</RelativeLayout>
+
+<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
+android:id="@+id/ad" 
+android:visibility="visible" 
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content" 
+android:layout_alignParentBottom="true" 
+app:backgroundColor="#00000000" 
+app:textColor="#FFffffff" 
+app:keywords="" 
+app:testing="false"/>
+    
+</RelativeLayout>

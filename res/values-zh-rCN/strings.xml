@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">moobook</string>
+    <string name="live_feed">活饲料</string>
+    <string name="possible_actions">可能采取的行动</string>
+    <string name="refresh">提神</string>
+    <string name="delete">刪除</string>
+    <string name="deletingcomment">刪除評論</string>
+    <string name="postingcomment">張貼評論</string>
+    <string name="loadingcomments">加載評論</string>
+   	<string name="commentposted">Comment has been posted</string>
+    <string name="commentdeleted">Comment has been deleted</string>  
+</resources>

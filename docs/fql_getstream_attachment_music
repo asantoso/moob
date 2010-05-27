@@ -1,0 +1,48 @@
+ json: {
+D/ProcessStreamMultiQueryTask(10330):   "message": "jo...ini lagu buat kamuu!!\nmusiknya jazz km pasti suka..lyricnya jg pas!!downloaddd!!",
+D/ProcessStreamMultiQueryTask(10330):   "actor_id": 669345031,
+D/ProcessStreamMultiQueryTask(10330):   "source_id": "545896108",
+D/ProcessStreamMultiQueryTask(10330):   "likes": {
+D/ProcessStreamMultiQueryTask(10330):     "can_like": true,
+D/ProcessStreamMultiQueryTask(10330):     "user_likes": false,
+D/ProcessStreamMultiQueryTask(10330):     "friends": {},
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/social_graph.php?node_id=104277589604578&class=LikeManager",
+D/ProcessStreamMultiQueryTask(10330):     "sample": {}
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "app_id": 2309869772,
+D/ProcessStreamMultiQueryTask(10330):   "attachment": {
+D/ProcessStreamMultiQueryTask(10330):     "icon": "http://static.ak.fbcdn.net/rsrc.php/z2JIW/hash/bd2lzrr5.png",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_type": "",
+D/ProcessStreamMultiQueryTask(10330):     "description": "",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_id": "",
+D/ProcessStreamMultiQueryTask(10330):     "name": "Kamu",
+D/ProcessStreamMultiQueryTask(10330):     "caption": "ffu139.freefastupload.com",
+D/ProcessStreamMultiQueryTask(10330):     "properties": {},
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/l.php?u=http%253A%252F%252Fffu139.freefastupload.com%252F9bbec5b336ff6196f693db54d81dfa21%252FAlessia-Cestaro-Gara-Gara-Kamu.mp3&h=9ab117b7d81cdcb10318e771922209c4",
+D/ProcessStreamMultiQueryTask(10330):     "media": [{
+D/ProcessStreamMultiQueryTask(10330):       "music": {
+D/ProcessStreamMultiQueryTask(10330):         "title": "Kamu",
+D/ProcessStreamMultiQueryTask(10330):         "album": "Cestaro",
+D/ProcessStreamMultiQueryTask(10330):         "artist": "Alessia",
+D/ProcessStreamMultiQueryTask(10330):         "source_url": "http://ffu139.freefastupload.com/9bbec5b336ff6196f693db54d81dfa21/Alessia-Cestaro-Gara-Gara-Kamu.mp3"
+D/ProcessStreamMultiQueryTask(10330):       },
+D/ProcessStreamMultiQueryTask(10330):       "type": "music",
+D/ProcessStreamMultiQueryTask(10330):       "href": "http://www.new.facebook.com/",
+D/ProcessStreamMultiQueryTask(10330):       "alt": "Kamu"
+D/ProcessStreamMultiQueryTask(10330):     }]
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "created_time": 1269150914,
+D/ProcessStreamMultiQueryTask(10330):   "viewer_id": 116202691,
+D/ProcessStreamMultiQueryTask(10330):   "post_id": "545896108_104277589604578",
+D/ProcessStreamMultiQueryTask(10330):   "updated_time": 1269150914,
+D/ProcessStreamMultiQueryTask(10330):   "comments": {
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "comment_list": {},
+D/ProcessStreamMultiQueryTask(10330):     "can_post": true,
+D/ProcessStreamMultiQueryTask(10330):     "can_remove": false
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "attribution": null,
+D/ProcessStreamMultiQueryTask(10330):   "target_id": "545896108"
+D/ProcessStreamMultiQueryTask(10330): }
+

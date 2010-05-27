@@ -1,0 +1,56 @@
+ json: {
+D/ProcessStreamMultiQueryTask(10330):   "message": "why they say Bali instead of Indonesia????!!! if they Bali they should say Rome or Delhi instead of Italy and India??",
+D/ProcessStreamMultiQueryTask(10330):   "actor_id": 670025502,
+D/ProcessStreamMultiQueryTask(10330):   "source_id": 670025502,
+D/ProcessStreamMultiQueryTask(10330):   "likes": {
+D/ProcessStreamMultiQueryTask(10330):     "can_like": true,
+D/ProcessStreamMultiQueryTask(10330):     "user_likes": false,
+D/ProcessStreamMultiQueryTask(10330):     "friends": {},
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/social_graph.php?node_id=102006226502899&class=LikeManager",
+D/ProcessStreamMultiQueryTask(10330):     "sample": {}
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "app_id": 2309869772,
+D/ProcessStreamMultiQueryTask(10330):   "attachment": {
+D/ProcessStreamMultiQueryTask(10330):     "icon": "http://static.ak.fbcdn.net/rsrc.php/z8HJY/hash/976ulj6z.png",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_type": "",
+D/ProcessStreamMultiQueryTask(10330):     "description": "Visit us on http://www.soapcom.de  Director: Ryan Murphy (Running with Scissors)  Cast: Julia Roberts, Javier Bardem, James Franco, Richard Jenkins, Viola Davis, Billy Crudup, Tuva Novotny, Arlene Tur  Release Date: August 13, 2010",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_id": "",
+D/ProcessStreamMultiQueryTask(10330):     "name": "[New] Eat, Pray, Love - Trailer HD 2010",
+D/ProcessStreamMultiQueryTask(10330):     "caption": "www.youtube.com",
+D/ProcessStreamMultiQueryTask(10330):     "properties": {},
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/l.php?u=http%253A%252F%252Fwww.youtube.com%252Fwatch%253Fv%253DcrNaJjfY57g&h=9ab117b7d81cdcb10318e771922209c4",
+D/ProcessStreamMultiQueryTask(10330):     "media": [{
+D/ProcessStreamMultiQueryTask(10330):       "src": "http://external.ak.fbcdn.net/safe_image.php?d=775eae33117c65567ce368065b406be0&w=90&h=90&url=http%3A%2F%2Fi.ytimg.com%2Fvi%2FcrNaJjfY57g%2F2.jpg",
+D/ProcessStreamMultiQueryTask(10330):       "type": "video",
+D/ProcessStreamMultiQueryTask(10330):       "href": "http://www.new.facebook.com/l.php?u=http%253A%252F%252Fwww.youtube.com%252Fwatch%253Fv%253DcrNaJjfY57g&h=9ab117b7d81cdcb10318e771922209c4",
+D/ProcessStreamMultiQueryTask(10330):       "video": {
+D/ProcessStreamMultiQueryTask(10330):         "owner": 670025502,
+D/ProcessStreamMultiQueryTask(10330):         "source_type": "html",
+D/ProcessStreamMultiQueryTask(10330):         "created_time": 1269052910,
+D/ProcessStreamMultiQueryTask(10330):         "permalink": "http://www.new.facebook.com/profile.php?v=feed&story_fbid=102006226502899&id=670025502",
+D/ProcessStreamMultiQueryTask(10330):         "display_url": "http://www.youtube.com/watch?v=crNaJjfY57g",
+D/ProcessStreamMultiQueryTask(10330):         "source_url": "http://www.youtube.com/v/crNaJjfY57g&autoplay=1"
+D/ProcessStreamMultiQueryTask(10330):       },
+D/ProcessStreamMultiQueryTask(10330):       "alt": "[New] Eat, Pray, Love - Trailer HD 2010"
+D/ProcessStreamMultiQueryTask(10330):     }]
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "created_time": 1269052910,
+D/ProcessStreamMultiQueryTask(10330):   "viewer_id": 116202691,
+D/ProcessStreamMultiQueryTask(10330):   "post_id": "670025502_102006226502899",
+D/ProcessStreamMultiQueryTask(10330):   "updated_time": 1269136515,
+D/ProcessStreamMultiQueryTask(10330):   "comments": {
+D/ProcessStreamMultiQueryTask(10330):     "count": 1,
+D/ProcessStreamMultiQueryTask(10330):     "comment_list": [{
+D/ProcessStreamMultiQueryTask(10330):       "id": "670025502_102006226502899_30066",
+D/ProcessStreamMultiQueryTask(10330):       "fromid": 633525726,
+D/ProcessStreamMultiQueryTask(10330):       "text": "Because they think that Indonesia is a city of Bali. ",
+D/ProcessStreamMultiQueryTask(10330):       "time": 1269136515
+D/ProcessStreamMultiQueryTask(10330):     }],
+D/ProcessStreamMultiQueryTask(10330):     "can_post": true,
+D/ProcessStreamMultiQueryTask(10330):     "can_remove": false
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "attribution": null,
+D/ProcessStreamMultiQueryTask(10330):   "target_id": null
+D/ProcessStreamMultiQueryTask(10330): }
+

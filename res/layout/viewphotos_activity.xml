@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    
+<include layout="@layout/custom_title"/>
+		    
+<GridView
+	android:id="@+id/photos_container"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_centerHorizontal="true"
+	android:layout_below="@+id/topheader"
+	android:layout_above="@+id/footer"
+	
+    android:numColumns="3" 
+    android:gravity="center_horizontal|center_vertical"
+    android:padding="5dip"
+    android:verticalSpacing="5dp"    
+    android:horizontalSpacing="5dip"
+    android:columnWidth="0dip"
+    android:stretchMode="columnWidth"
+    
+        	
+>
+
+</GridView>
+
+
+<LinearLayout
+android:layout_width="fill_parent"
+android:layout_height="wrap_content"
+android:layout_alignParentBottom="true"
+android:id="@+id/footer"
+android:orientation="vertical"
+>
+
+<RelativeLayout 
+android:id="@+id/paging_container"
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content"
+android:layout_alignParentLeft="true"
+android:layout_below="@+id/photos_container"
+android:layout_above="@+id/ad"
+android:layout_margin="0dip"
+
+android:gravity="center_vertical"
+
+android:background="#22333333"
+
+android:paddingTop="0dip"
+android:paddingBottom="0dip"
+android:paddingLeft="1dip"
+android:paddingRight="1dip"
+
+>
+
+<Button android:id="@+id/prev"
+	android:layout_width="100dip" 
+    android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:layout_alignParentLeft="true"
+  
+    android:text="Previous"
+    android:textSize="14dp"
+    android:textStyle="bold"
+    android:typeface="sans"
+    
+    android:gravity="center"
+   
+    android:singleLine="true"  
+    android:nextFocusUp="@+id/photos_container"
+    >
+    
+</Button>
+
+
+<Button android:id="@+id/next"
+	android:layout_width="100dip" 
+  android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:layout_alignParentRight="true"
+    android:layout_toLeftOf="@+id/prev"
+          
+    android:text="Next"
+    android:textSize="14dp"
+    android:typeface="sans"
+    android:textStyle="bold"
+    android:gravity="center"
+    
+    
+    android:singleLine="true"
+        
+    
+    android:nextFocusUp="@+id/photos_container"
+    >
+    
+</Button>
+    
+</RelativeLayout>
+
+
+<include layout="@layout/include_admob"/>
+	
+</LinearLayout>
+
+</RelativeLayout>

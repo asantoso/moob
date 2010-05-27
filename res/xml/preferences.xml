@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:persistent="true"
+      >
+	
+	
+	<PreferenceCategory	
+	        android:title="Notifications" 
+	        android:summary="Global notification settings"
+	        >
+                              
+		<CheckBoxPreference          
+         	android:key="@string/preference.notification.enabled"
+         	android:title="Enable Notifications"
+         	android:enabled="true"
+         	android:defaultValue="true"
+         	/>
+         
+        <ListPreference
+        	android:key="@string/preference.notification.checkpollinginterval"
+        	android:title="Polling interval"     
+        	android:entries="@array/entries_list_preference"
+        	android:entryValues="@array/entryvalues_list_preference"
+        	android:dialogTitle="Polling interval"        	
+        	android:summary="How often the app will poll for new notifications"        	       
+        />
+                    
+         <RingtonePreference
+         	android:showDefault="true"
+         	android:showSilent="true"         	
+         	android:key="@string/preference.notification.sound.resource"
+         	android:title="Ringtone"
+         	android:summary="Select a cool sound wave for your notifications"
+         	android:ringtoneType="notification"
+         	android:dependency="@string/preference.notification.enabled"
+         />
+         
+         
+         
+         <CheckBoxPreference
+       		android:key="@string/preference.notification.vibration.enabled"
+         	android:title="Emit vibrations?"
+         	android:enabled="true"
+         	android:defaultValue="true"
+         	android:dependency="@string/preference.notification.enabled"         	
+         	android:summary="Your device will vibrate upon receiving notifications"
+         />
+         	
+         <CheckBoxPreference
+       		android:key="@string/preference.notification.light.enabled"
+         	android:title="Emit light effects?"
+         	android:enabled="true"
+         	android:defaultValue="true"
+         	android:dependency="@string/preference.notification.enabled"
+         	android:summary="Your device will '' light up'' upon receiving notifications"
+         />
+            
+    </PreferenceCategory>
+    
+    	
+    <PreferenceCategory
+            android:title="Feed" 
+            android:summary="setting for feeds"
+            >
+            
+         <Preference android:key="num_streams_per_page" android:title="Number of streams per page"> 
+         
+         
+         </Preference>
+
+		
+         
+         <CheckBoxPreference 
+         
+         	android:key="enable_feeds_autoupdate"
+         	android:summary="auto update news feed and live feed"
+         	android:title="Feeds auto-update"
+         	android:enabled="true"
+         	android:defaultValue="true"
+         	android:summaryOn="Auto-update is on"
+         	android:summaryOff="Auto-update is off"
+         	
+         	
+         	/>
+         
+      <!--    	
+         <ListPreference 
+         	android:key="feeds_autoupdate_frequency"
+         	android:dialogMessage="Frequency"
+         	android:positiveButtonText="positive"
+         	android:title="Auto-update frequency"
+         	android:dependency="enable_feeds_autoupdate"
+         	android:entries="@array/polling_interval_entries"
+        	android:entryValues="@array/polling_interval_entryvalues"         	
+         	/>
+         	 -->
+    </PreferenceCategory>
+   
+    	
+    <PreferenceCategory
+            android:title="Views" 
+            android:summary="Settings for views"
+            >
+     
+            <CheckBoxPreference          
+        	 	android:key="@string/preference.views.stream.profile_image.show"
+         		android:title="Show profile images"
+         		android:enabled="true"
+         		android:defaultValue="true"
+         		android:summaryOn="User profile images are visible."
+         		android:summaryOff="User profile images are hidden. You save data bandwidth"
+         	/>
+	
+			<CheckBoxPreference          
+        	 	android:key="@string/preference.views.stream.attachment_image.show"
+         		android:title="Show attachment images"
+         		android:enabled="true"
+         		android:defaultValue="true"
+         		android:summaryOn="Attachment images are visible"
+         		android:summaryOff="Attachment images are hidden. You save data bandwidth"         	
+         	/>
+         	
+	</PreferenceCategory>
+   	
+    <PreferenceCategory
+            android:title="Cache" 
+            android:summary="cache settings"
+            >
+			
+			<Preference
+         	android:key="@string/preference.cache.local.clear"
+         	android:title="Clear local cache"
+         	
+         	/>
+         	
+			<CheckBoxPreference          
+         	android:key="@string/preference.cache.sdcard.enabled"
+         	android:title="Caching on SDCard"
+         	android:enabled="true"
+         	android:defaultValue="true"
+         	android:summaryOn="SDCard is used for caching"
+         	android:summaryOff="SDCard is not used for caching"         	     	
+         	/>
+         	
+         	<Preference
+         	android:key="@string/preference.cache.sdcard.clear"
+         	android:title="Clear cache on SDCard"
+         	
+         	/>
+    </PreferenceCategory>
+    
+	<PreferenceCategory
+            android:title="Session" 
+            >
+			
+         	<Preference
+         	android:key="@string/preference.cache.clearall_on_logoff"
+         	android:title="Clear all cache on log off"
+			android:summary="All Facebook data created by this application will be cleared on log off"        	
+         	/>
+         	
+     </PreferenceCategory>
+</PreferenceScreen>

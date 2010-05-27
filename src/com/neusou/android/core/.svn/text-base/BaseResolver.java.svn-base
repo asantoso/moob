@@ -1,0 +1,24 @@
+package com.thirdwhale.ext.creativesolutions.resolver;
+
+import android.content.ContentProvider;
+import android.os.Bundle;
+
+/**
+ * 
+ * An abstract class that represents a activity data resolver.
+ * @author asantoso@3rdwhale.com
+ * @since July 1, 2009
+ * @see ContentProvider
+ */
+public abstract class BaseResolver {
+	
+	public static final int STATUS_RESOLVESUCCESSFUL = 0;
+	public static final int STATUS_RESOLVEFAILURE = 1;
+		
+	public abstract void resolve(Bundle b);
+	public abstract void close();
+	public abstract int getStatus();
+	
+	public abstract boolean activate();
+	
+}

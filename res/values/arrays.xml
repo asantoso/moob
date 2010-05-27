@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <string-array name="events_options">
+        <item>All</item>
+        <item>Upcoming-confirmed</item>
+        <item>Attended by Friends</item>        
+    </string-array>
+    
+	<string-array name="contacts_options">
+        <item>All</item>
+        <item>Friendlists</item>
+	</string-array>
+    
+    <string-array name="entries_list_preference">    
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>1 hour</item>
+        <item>2 hours</item>
+	</string-array>
+	
+	<string-array name="entryvalues_list_preference">		
+		<item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+	</string-array>
+	
+    
+</resources>

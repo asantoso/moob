@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.neusou.moobook"
+      android:versionCode="1"
+      android:versionName="1.0"
+      
+      >
+    
+    <uses-sdk android:minSdkVersion="4"  />
+    
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.VIBRATE" />
+			
+	 <supports-screens
+	android:largeScreens="false"
+	android:normalScreens="true"
+	android:smallScreens="false"
+	/>	
+	
+    <application android:icon="@drawable/mobook2_64" android:label="1AM"
+    android:name=".App"
+    android:debuggable="true" 
+    >
+     	
+    	<meta-data android:value="a14b2fdb6c6a773" android:name="ADMOB_PUBLISHER_ID"/>
+    	<meta-data android:value="false" android:name="ADMOB_TEST_MODE"/>
+    	 
+    	<service 
+    		android:name=".LocalService" 
+    		android:label="OstrichService"
+    		android:icon="@drawable/mobook2_64" 
+    		android:enabled="true"
+    		android:exported="false"    	
+    		android:process="com.neusou.moobook"
+    	/>
+    	
+    	<receiver android:name=".receiver.BootCompletedReceiver" android:exported="true">
+    		<intent-filter> 
+    			<action android:name="android.intent.action.BOOT_COMPLETED"/>
+    		</intent-filter>
+    	</receiver>
+    	
+    	<receiver android:name=".receiver.OnAlarmReceiver" android:exported="false">
+    	</receiver>
+    	    	
+    	<service android:name=".service.WakefulIntentService">    	
+    	</service>
+    	
+    	<service android:name=".service.AppService" android:exported="false">    	
+    	</service>
+    	
+    	
+        <activity android:name=".activity.AppSettings"
+                  android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.LoginActivity"
+                  android:label="@string/app_name">
+      
+        </activity>
+        
+        <activity android:name=".activity.StreamActivity"
+                  android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.ViewContactsActivity"
+                  android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.LandingActivity"
+                  android:label="@string/app_name"
+                  android:theme="@android:style/Theme.NoDisplay"         
+                  >
+	     	<intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>    
+		
+        </activity>
+                
+        <activity android:name=".activity.ViewPhotosActivity"
+                  android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.Gallery"
+                  android:label="@string/app_name">          
+        </activity>
+        
+		<activity android:name=".activity.TestGallery"
+                  android:label="@string/app_name">          
+        </activity>
+        
+		<activity android:name=".activity.ViewCommentsActivity"
+                  android:label="@string/app_name">          
+        </activity>
+	
+		<activity android:name=".activity.StreamPostActionsDialogActivity"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.Translucent"
+                  >          
+        </activity>
+
+		<activity android:name=".activity.ViewCommentsActivity"
+                  android:label="@string/app_name">          
+        </activity>
+       
+        <activity android:name=".activity.HomeActivity"
+                  android:label="@string/app_name">          
+        </activity>
+         
+        <activity android:name=".activity.FriendListsActivity"
+                  android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.ViewAlbumsActivity"
+                  android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.WriteCommentActivity"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.Translucent"
+                  >          
+        </activity>
+        
+        <activity android:name=".activity.NotificationsActivity"
+				android:label="@string/app_name">          
+        </activity>
+        
+        <activity android:name=".activity.EventsActivity"
+				android:label="@string/app_name">          
+        </activity>
+        
+		<activity android:name=".activity.ChatActivity"
+				android:label="@string/app_name">          
+        </activity>
+        
+        
+		<activity android:name=".activity.PreferenceActivity"
+				android:label="@string/app_name">          
+        </activity>
+        
+		<activity android:name=".activity.DisplayImageActivity"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.Translucent"
+                  >       
+        </activity>
+
+    </application>    
+
+</manifest> 

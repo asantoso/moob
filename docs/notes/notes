@@ -1,0 +1,11 @@
+changes to the sql queriy SQL_GETALL_STREAMPOSTS_AND_USERBASIC
+affects the following class:
+ StreamListViewFactory 
+   the value retrieval from cursor must use the correct column index
+ StreamActivity
+   setGroupIdCursorColumnIndex must be supplied with the right index pointing to the post_id in the result query.
+ ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC
+   the value must point to the start index of the stream result columns. 
+ 
+ Generate login code for application
+ http://www.facebook.com/code_gen.php?v=1.0&api_key=49f47fb239f101d2661ea3087de6e9ac

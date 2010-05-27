@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:background="#00000000"
+>
+        
+<TextSwitcher   
+	android:id="@+id/topheader" 
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical|center_horizontal"   
+    android:inAnimation="@anim/bottom_to_middle"
+    android:outAnimation="@anim/middle_to_top"    
+    android:background="@drawable/topheader"
+   />   
+
+   
+<ProgressBar android:id="@+id/loadingindicator"
+		android:layout_width="24dp"  
+		android:layout_height="24dp"
+		android:layout_alignParentRight="true"
+		android:layout_gravity="center_vertical|right"
+		android:paddingTop="0dp"
+		android:paddingBottom="0dp"
+		android:focusable="false"
+		android:visibility="invisible" />    
+
+<ImageView 
+	android:id="@+id/profile_pic" 	
+ 	android:layout_width="48dp"
+    android:layout_height="48dp"      
+    android:layout_marginLeft="3dp"
+    android:layout_marginTop="3dp"
+    android:padding="2dp"
+	android:adjustViewBounds="true"	
+	android:scaleType="centerCrop"		
+	android:background="@drawable/stream_profile_background"	
+	android:focusable="true"
+	android:focusableInTouchMode="true"
+/>
+
+<TextView
+	android:id="@+id/name"
+	android:layout_width="24dp"  
+	android:layout_height="24dp"
+	android:layout_alignParentLeft="true"
+	android:layout_gravity="center_vertical|left"
+	android:layout_toRightOf="@+id/profile_pic"
+    android:layout_alignTop="@+id/profile_pic"     
+	android:text="session user"
+	android:textSize="18dp"
+	android:focusable="true"
+	android:focusableInTouchMode="true"
+	/>
+			
+<Button android:id="@+id/post_status"
+	android:layout_width="wrap_content" 
+    android:layout_height="32dp"
+    android:layout_alignParentBottom="false"
+    android:layout_alignParentRight="true"
+    android:text="Status"
+    android:textSize="18dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+   	android:paddingTop="0dp"
+    android:paddingBottom="0dp" 
+    android:singleLine="true"
+        
+    android:gravity="center_vertical|center_horizontal"
+    android:visibility="gone"
+    />
+    
+<Button android:id="@+id/post_video"
+	android:layout_width="wrap_content" 
+    android:layout_height="32dp"
+    android:layout_alignParentBottom="false"
+    android:layout_alignParentRight="true"
+    android:text="Status"
+    android:textSize="18dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+   	android:paddingTop="0dp"
+    android:paddingBottom="0dp" 
+    android:singleLine="true"
+        
+    android:gravity="center_vertical|center_horizontal"
+    android:visibility="gone"
+    />
+
+<Button android:id="@+id/post_link"
+	android:layout_width="wrap_content" 
+    android:layout_height="32dp"
+    android:layout_alignParentBottom="false"
+    android:layout_alignParentRight="true"
+    android:text="Status"
+    android:textSize="18dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+   	android:paddingTop="0dp"
+    android:paddingBottom="0dp" 
+    android:singleLine="true"
+        
+    android:gravity="center_vertical|center_horizontal"
+    android:visibility="gone"
+    />
+
+
+
+<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
+android:id="@+id/ad" 
+android:visibility="visible" 
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content" 
+android:layout_alignParentBottom="true" 
+app:backgroundColor="#00000000" 
+app:textColor="#FFffffff" 
+app:keywords="" 
+app:testing="false"/>
+
+
+
+    
+</RelativeLayout>
+
+
+

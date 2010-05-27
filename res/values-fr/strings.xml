@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">moobook</string>
+    <string name="live_feed">Live feed</string>
+    <string name="possible_actions">可能采取的行动</string>
+    <string name="refresh">rafraîchir</string>
+    <string name="delete">effacer</string>
+    <string name="deletingcomment">Suppression d\'un commentaire</string>
+    <string name="postingcomment">Posting comment</string>
+    <string name="loadingcomments">Chargement commentaire</string>
+   	<string name="commentposted">Commentaire a été posté</string>
+    <string name="commentdeleted">Commentaire a été supprimé</string>  
+</resources>

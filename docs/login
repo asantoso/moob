@@ -1,0 +1,15 @@
+Post request parameters
+
+api_key	49f47fb239f101d2661ea3087de6e9ac
+cancel_url	http://www.facebook.com/connect/login_failure.html
+charset_test	€,´,€,´,水,Д,Є
+charset_test	€,´,€,´,水,Д,Є
+email	abasfasf@yahoo.co.uk
+fbconnect	1
+lsd	JBXAw
+next	http://www.facebook.com/connect/login_success.html
+pass	ucanseeme2
+req_perms	email,read_mailbox,publish_stream,read_stream,offline_access,create_event,rsvp_event,photo_upload,status_update,video_upload,create_note,share_item
+return_session	1
+session_key_only	1
+version	1.0

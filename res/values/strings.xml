@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, Main!</string>
+    <string name="app_name">moobook</string>
+    <string name="live_feed">Live Feed</string>
+    <string name="possible_actions">Possible actions</string>
+    <string name="refresh">Refresh</string>
+    <string name="delete">Delete</string>
+    <string name="deletingcomment">Deleting comment</string>
+    <string name="postingcomment">Posting comment</string>
+    <string name="loadingcomments">Loading comments</string>
+    <string name="commentposted">Comment has been posted</string>
+    <string name="commentdeleted">Comment has been deleted</string>
+    <string name="status">Enter your new status</string>
+    <string name="statusupdate">Status Update</string>
+    <string name="alert_dialog_ok">OK</string>
+    <string name="alert_dialog_cancel">Cancel</string>   
+    <string name="alarm_service_started">Alarm Service Started</string>
+    
+    <string name="photomultipart2">Content-Type: multipart/form-data; boundary=${boundary}\r\n\r\n MIME-version: 1.0\r\n\r\n --${boundary}\r\n Content-Disposition: form-data; name="method"\r\n\r\n facebook.photos.upload\r\n --${boundary}\r\n Content-Disposition: form-data; name="v"\r\n\r\n ${v}\r\n --${boundary}\r\n Content-Disposition: form-data; name="api_key"\r\n\r\n ${api_key}\r\n --${boundary}\r\n Content-Disposition: form-data; name="session_key"\r\n\r\n ${session_key}\r\n --${boundary}\r\n Content-Disposition: form-data; name="call_id"\r\n\r\n ${call_id}\r\n --${boundary}\r\n Content-Disposition: form-data; name="caption"\r\n\r\n ${caption}\r\n --${boundary}\r\n Content-Disposition: form-data; name="aid"\r\n\r\n ${aid}\r\n --${boundary}\r\n Content-Disposition: form-data; name="sig"\r\n\r\n ${sig}\r\n --${boundary}\r\n Content-Disposition: form-data; filename="${filename}"\r\n Content-Type: image/jpg\r\n\r\n [Raw file data here]\r\n--${boundary}--</string>
+    <string name="photomultipart">MIME-version: 1.0\r\n\r\n --${boundary}\r\n Content-Disposition: form-data; name="method"\r\n\r\n facebook.photos.upload\r\n --${boundary}\r\n Content-Disposition: form-data; name="v"\r\n\r\n ${v}\r\n --${boundary}\r\n Content-Disposition: form-data; name="api_key"\r\n\r\n ${api_key}\r\n --${boundary}\r\n Content-Disposition: form-data; name="session_key"\r\n\r\n ${session_key}\r\n --${boundary}\r\n Content-Disposition: form-data; name="call_id"\r\n\r\n ${call_id}\r\n --${boundary}\r\n Content-Disposition: form-data; name="caption"\r\n\r\n ${caption}\r\n --${boundary}\r\n Content-Disposition: form-data; name="aid"\r\n\r\n ${aid}\r\n --${boundary}\r\n Content-Disposition: form-data; name="sig"\r\n\r\n ${sig}\r\n --${boundary}\r\n Content-Disposition: form-data; filename="${filename}"\r\n Content-Type: image/jpg\r\n\r\n [Raw file data here]\r\n--${boundary}--</string>
+</resources>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"	
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:background="#00000000"
+>
+            
+<TextSwitcher   
+	android:id="@+id/topheader" 
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:gravity="center_vertical|center_horizontal"   
+    android:inAnimation="@anim/bottom_to_middle"
+    android:outAnimation="@anim/middle_to_top"    
+    android:background="@drawable/topheader"
+   />   
+   
+<ProgressBar android:id="@+id/loadingindicator"
+		android:layout_width="24dp"  
+		android:layout_height="24dp"
+		android:layout_alignParentRight="true"
+		android:layout_gravity="center_vertical|right"
+		android:paddingTop="0dp"
+		android:paddingBottom="0dp"
+		android:focusable="false"
+		android:visibility="invisible" />    
+		    
+<!-- 
+<include 
+	android:id="@+id/stub"
+	layout="@layout/t_streampost"	 
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:layout_below="@+id/topheader"
+/>
+ -->
+ 
+<EditText
+ 	android:id="@+id/comment_input"
+ 	android:layout_width="fill_parent" 
+	android:layout_height="wrap_content" 
+	android:layout_marginTop="2dp"
+	android:layout_marginRight="70dp"
+	android:layout_marginLeft="1dp"
+	android:layout_below="@+id/topheader"	
+		
+	android:hint="tap here to comment.."
+	android:textSize="13dp"
+	android:textStyle="bold"
+	
+	android:maxLines="3"
+	android:minLines="1"
+	
+	android:gravity="top|left"
+/>
+
+<Button
+	android:id="@+id/post"	
+	android:layout_width="70dp" 
+	android:layout_height="wrap_content"	
+	android:layout_below="@+id/topheader"
+	android:layout_alignParentRight="true"
+	android:layout_alignTop="@+id/comment_input"	
+	android:text="post"
+/>
+    
+<ListView
+	android:id="@+id/list" 
+	android:layout_width="fill_parent" 
+    android:layout_height="fill_parent" 
+    android:layout_marginBottom="0dp"
+    android:layout_below="@+id/comment_input"
+    android:layout_above="@+id/reload"
+    android:background="#00000000"
+  
+/>
+
+
+
+<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
+android:id="@+id/ad" 
+android:visibility="visible" 
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content" 
+android:layout_alignParentBottom="true" 
+app:backgroundColor="#00000000" 
+app:textColor="#FFffffff" 
+app:keywords="" 
+app:testing="false"/>
+    
+</RelativeLayout>
+

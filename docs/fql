@@ -1,0 +1,127 @@
+
+select name from stream_filter where uid = 100000522301146
+
+select name from friendlist where owner = 100000522301146
+
+
+{
+"q1":"select target_id, target_type, is_following, is_deleted from connection where source_id = 100000522301146",
+"q2":"select name, profile_update_time from user where uid in (select target_id from #q1)"
+}
+
+//get all streams from friends in the the specified friendlist 
+{
+"q1":"select filter_key, name, rank, icon_url from stream_filter where type = 'friendlist' ORDER BY rank ASC",
+"q2":"select name, pic, pic_square from user where uid in (select target_id from #q1)"
+}
+
+//get all connected users (friends+nonfriends)
+{
+"q1":"select target_id, target_type, is_following, is_deleted from connection where source_id = 100000522301146 limit 100 offset 0",
+"q2":"select name, profile_update_time from user where uid in (select target_id from #q1)"
+}
+
+
+
+### EVENT
+
+{
+"friends":
+"q1":"select eid from event_member where uid in (select )",
+"q2":"select uid, name, profile_update_time, pic, pic_small from user where uid in (select uid2 from #q1)"
+}
+
+//get all events going to be attended by friends in one particular friendlist
+{
+"friendlist":"select flid, name, owner from friendlist where owner = 100000522301146 limit 1 offset 0",
+"friends_inlist":"select uid from friendlist_member where flid in (select flid from #friendlist)",
+"events_member":"select eid, rsvp_status, uid from event_member where uid in (select uid from #friends_inlist) and rsvp_status = 'attending' " ,
+"users":"select uid, name, pic, pic_small from user where uid in (select uid from #events_member)" , 
+"events_info_basic":"select name, tagline, pic, pic_small, pic_big, host, location, venue, start_time, end_time, update_time, privacy from event where eid in (select eid from #events_member)"
+}
+
+
+
+### NOTIFICATION
+
+//get all unread notifications
+{
+"notifications":"select sender_id, created_time, updated_time, title_text, body_text, href, app_id from notification where recipient_id = 100000522301146 and is_hidden = 0",
+"users":"select uid, name, profile_update_time, pic_small from user where uid in (select sender_id from #notifications)",
+"entities":"select id, name, pic_small from profile where id in (select sender_id from #notifications)"
+}
+
+### FRIEND
+
+//get all friends
+{
+"q1":"select uid2 from friend where uid1 = 100000522301146",
+"q2":"select uid, name, profile_update_time, pic, pic_small from user where uid in (select uid2 from #q1)"
+}
+
+### FRIEND LIST
+
+{
+"filters":"select filter_key, name from stream_filter where uid = 100000522301146 and type = 'friendlist' limit 1 offset 0",
+"posts":"select post_id, actor_id, message, attachment, likes, attribution, created_time, updated_time, source_id, target_id, viewer_id FROM stream WHERE filter_key in (select filter_key from #filters)",
+"comments":"select fromid, text, time, post_id from comment where post_id in (select post_id from #posts)",
+"profiles_comments":"select name, id from profile where id in (select fromid from #comments)",
+"profiles_posts":"select name, id from profile where id in (select source_id from #posts)",
+"profiles_targets":"select name from profile where id in (select target_id from #posts)"
+}
+	
+
+//get friendlists created by current session user.
+{
+"friendlist":"select flid, name, owner from friendlist where owner = 100000522301146"
+}
+
+//get all friends in a friendlist
+{
+"friendlist":"select flid, name, owner from friendlist where owner = 100000522301146 limit 1 offset 0",
+"friends_inlist":"select uid from friendlist_member where flid in (select flid from #friendlist)",
+"users":"select uid, name, pic, pic_small from user where uid in (select uid from #friends_inlist)"
+}
+
+### STREAMS (limit to 100 total feeds and post update date less than 2 weeks)
+
+{
+"filters":"select filter_key, name from stream_filter where uid = 100000522301146 and type = 'friendlist' limit 1 offset 0",
+"posts":"SELECT post_id, actor_id, message, attachment, likes, attribution, created_time, updated_time, source_id, target_id, viewer_id FROM stream WHERE filter_key in (select filter_key from #filters)",
+"comments":"select fromid, text, time, post_id from comment where post_id in (select post_id from #posts)",
+"profiles_comments":"select name, 'id' as uid from profile where id in (select fromid from #comments)",
+"profiles_posts":"select name, 'id' as uid from profile where id in (select source_id from #posts)",
+"profiles_targets":"select name, 'id' as uid from profile where id in (select target_id from #posts)"
+}
+	
+
+//get all streams of friends in a specified friendlist
+{
+"filters":"select filter_key, name from stream_filter where uid = 100000522301146 and type = 'friendlist' limit 1 offset 0",
+"posts":"select actor_id, viewer_id, target_id, message, attachment from stream where filter_key in (select filter_key from #filters) and updated_time > (now() -  1209600) limit 100 offset 0 ",
+"users":"select uid, name, pic, pic_small from user where uid in (select actor_id from #posts)"
+}
+
+//get all streams of friends in a specified friendlist (moobook account)
+{
+"posts":"select actor_id, viewer_id, target_id from stream where source_id = 100000522301146 and filter_key = 'fl_101175026576574fl_101175026576574' and updated_time > (now() -  1209600) limit 100 offset 0 ",
+"users":"select uid, name, pic, pic_small, pic_square from user where uid in (select actor_id from #posts) "
+}
+
+//get all newsfeed streams (with filter) with comments
+{
+"filters":"select filter_key from stream_filter where uid = 100000522301146 and type = 'newsfeed' ",
+"posts":"select post_id, actor_id, viewer_id, target_id, attachment from stream where source_id = 100000522301146 and filter_key in (select filter_key from #filters) and updated_time > (now() -  1209600) limit 100 offset 0",
+"comments":"select xid, object_id, comment_id, post_id, text, fromid, time, username from comment where post_id in (select post_id from #posts) ",
+"profiles":"select uid, name, pic, pic_small from user where uid in (select actor_id from #posts) ",
+"pages":"select page_id, name from page where page_id in (select actor_id from #posts) "
+}
+
+//get all streams (without filter)
+{
+"posts":"select actor_id from stream where source_id = 100000522301146 limit 100 offset 0 ",
+"users":"select uid, name, pic, pic_small from user where uid in (select actor_id from #posts) ",
+"pages":"select page_id, name from page where page_id in (select actor_id from #posts) "
+}
+
+"q3":"select gid, name from group where gid in (select actor_id from #q2)",

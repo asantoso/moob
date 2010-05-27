@@ -1,0 +1,81 @@
+ json: {
+D/ProcessStreamMultiQueryTask(10330):   "message": "Mobile Uploads",
+D/ProcessStreamMultiQueryTask(10330):   "actor_id": 1557279956,
+D/ProcessStreamMultiQueryTask(10330):   "source_id": 1557279956,
+D/ProcessStreamMultiQueryTask(10330):   "likes": {
+D/ProcessStreamMultiQueryTask(10330):     "can_like": true,
+D/ProcessStreamMultiQueryTask(10330):     "user_likes": false,
+D/ProcessStreamMultiQueryTask(10330):     "friends": {},
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/social_graph.php?node_id=1322023781476&class=LikeManager",
+D/ProcessStreamMultiQueryTask(10330):     "sample": {}
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "app_id": 2254487659,
+D/ProcessStreamMultiQueryTask(10330):   "attachment": {
+D/ProcessStreamMultiQueryTask(10330):     "icon": "http://static.ak.fbcdn.net/rsrc.php/z4848/hash/8as8iqdm.png",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_type": "album",
+D/ProcessStreamMultiQueryTask(10330):     "description": "",
+D/ProcessStreamMultiQueryTask(10330):     "fb_object_id": "6688466481736364425",
+D/ProcessStreamMultiQueryTask(10330):     "name": "Mobile Uploads",
+D/ProcessStreamMultiQueryTask(10330):     "caption": "8 new photos",
+D/ProcessStreamMultiQueryTask(10330):     "properties": {},
+D/ProcessStreamMultiQueryTask(10330):     "href": "http://www.new.facebook.com/album.php?aid=45449&id=1557279956",
+D/ProcessStreamMultiQueryTask(10330):     "media": [
+D/ProcessStreamMultiQueryTask(10330):       {
+D/ProcessStreamMultiQueryTask(10330):         "src": "http://photos-d.ak.fbcdn.net/hphotos-ak-snc3/hs482.snc3/26392_1350354809734_1557279956_857901_2514193_s.jpg",
+D/ProcessStreamMultiQueryTask(10330):         "type": "photo",
+D/ProcessStreamMultiQueryTask(10330):         "photo": {
+D/ProcessStreamMultiQueryTask(10330):           "owner": 1557279956,
+D/ProcessStreamMultiQueryTask(10330):           "index": 19,
+D/ProcessStreamMultiQueryTask(10330):           "pid": "6688466481737176877",
+D/ProcessStreamMultiQueryTask(10330):           "height": 400,
+D/ProcessStreamMultiQueryTask(10330):           "aid": "6688466481736364425",
+D/ProcessStreamMultiQueryTask(10330):           "width": 528
+D/ProcessStreamMultiQueryTask(10330):         },
+D/ProcessStreamMultiQueryTask(10330):         "href": "http://www.new.facebook.com/photo.php?pid=857901&id=1557279956",
+D/ProcessStreamMultiQueryTask(10330):         "alt": "DJ Semarang"
+D/ProcessStreamMultiQueryTask(10330):       },
+D/ProcessStreamMultiQueryTask(10330):       {
+D/ProcessStreamMultiQueryTask(10330):         "src": "http://photos-b.ak.fbcdn.net/hphotos-ak-snc3/hs482.snc3/26392_1350354929737_1557279956_857902_6389517_s.jpg",
+D/ProcessStreamMultiQueryTask(10330):         "type": "photo",
+D/ProcessStreamMultiQueryTask(10330):         "photo": {
+D/ProcessStreamMultiQueryTask(10330):           "owner": 1557279956,
+D/ProcessStreamMultiQueryTask(10330):           "index": 20,
+D/ProcessStreamMultiQueryTask(10330):           "pid": "6688466481737176878",
+D/ProcessStreamMultiQueryTask(10330):           "height": 453,
+D/ProcessStreamMultiQueryTask(10330):           "aid": "6688466481736364425",
+D/ProcessStreamMultiQueryTask(10330):           "width": 604
+D/ProcessStreamMultiQueryTask(10330):         },
+D/ProcessStreamMultiQueryTask(10330):         "href": "http://www.new.facebook.com/photo.php?pid=857902&id=1557279956",
+D/ProcessStreamMultiQueryTask(10330):         "alt": "At minyak kayu putih cap gajah warehouse"
+D/ProcessStreamMultiQueryTask(10330):       },
+D/ProcessStreamMultiQueryTask(10330):       {
+D/ProcessStreamMultiQueryTask(10330):         "src": "http://photos-h.ak.fbcdn.net/hphotos-ak-snc3/hs502.snc3/26392_1350355849760_1557279956_857903_3634825_s.jpg",
+D/ProcessStreamMultiQueryTask(10330):         "type": "photo",
+D/ProcessStreamMultiQueryTask(10330):         "photo": {
+D/ProcessStreamMultiQueryTask(10330):           "owner": 1557279956,
+D/ProcessStreamMultiQueryTask(10330):           "index": 21,
+D/ProcessStreamMultiQueryTask(10330):           "pid": "6688466481737176879",
+D/ProcessStreamMultiQueryTask(10330):           "height": 453,
+D/ProcessStreamMultiQueryTask(10330):           "aid": "6688466481736364425",
+D/ProcessStreamMultiQueryTask(10330):           "width": 604
+D/ProcessStreamMultiQueryTask(10330):         },
+D/ProcessStreamMultiQueryTask(10330):         "href": "http://www.new.facebook.com/photo.php?pid=857903&id=1557279956",
+D/ProcessStreamMultiQueryTask(10330):         "alt": "Rawon Setan"
+D/ProcessStreamMultiQueryTask(10330):       }
+D/ProcessStreamMultiQueryTask(10330):     ]
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "created_time": 1269149614,
+D/ProcessStreamMultiQueryTask(10330):   "viewer_id": 116202691,
+D/ProcessStreamMultiQueryTask(10330):   "post_id": "1557279956_1350354889736",
+D/ProcessStreamMultiQueryTask(10330):   "updated_time": 1269149614,
+D/ProcessStreamMultiQueryTask(10330):   "comments": {
+D/ProcessStreamMultiQueryTask(10330):     "count": 0,
+D/ProcessStreamMultiQueryTask(10330):     "comment_list": {},
+D/ProcessStreamMultiQueryTask(10330):     "can_post": true,
+D/ProcessStreamMultiQueryTask(10330):     "can_remove": false
+D/ProcessStreamMultiQueryTask(10330):   },
+D/ProcessStreamMultiQueryTask(10330):   "attribution": "via <a href=\"http://www.new.facebook.com/apps/application.php?id=2254487659\">Facebook for BlackBerry® smartphones<\/a>",
+D/ProcessStreamMultiQueryTask(10330):   "target_id": null
+D/ProcessStreamMultiQueryTask(10330): }
+

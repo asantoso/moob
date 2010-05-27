@@ -1,0 +1,10 @@
+@author Agus Santoso
+
+==XMLPullParser partial code generation==
+
+About: 
+Generates partial Java parsing code given an xml response to speed up coding.
+
+How to use: 
+1. run codegen.xsl against an arbitrary XML.
+2. edit the generated file as necessary.

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#FFffffff"
+    >
+    
+    <include layout="@layout/custom_title"/>   
+    
+<RelativeLayout android:id="@+id/stub"
+	android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"
+    android:layout_below="@+id/topheader"
+	android:layout_centerHorizontal="true"
+	android:layout_marginBottom="0dp"
+	android:background="#FFaaaaaa"
+
+/>
+
+<TextView
+	android:id="@+id/permissions"
+    
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+	android:layout_centerHorizontal="true"
+	android:layout_centerVertical="true"
+    android:text=""
+    android:visibility="invisible"
+    
+    android:textSize="13dip"
+    android:textColor="#FF000000"
+    android:textStyle="bold"
+    android:typeface="sans"
+    
+    android:maxLines="20"
+    
+    style="@style/text.name"
+    
+    android:gravity="center_horizontal"
+/>
+
+<Button
+	android:layout_width="200dip" 
+    android:layout_height="wrap_content"
+    
+    android:layout_centerHorizontal="true"
+    android:layout_alignParentBottom="true"
+    
+    android:id="@+id/next"
+    android:text="Continue"
+    
+    android:visibility="invisible"
+>
+
+</Button>
+
+    
+</RelativeLayout>
