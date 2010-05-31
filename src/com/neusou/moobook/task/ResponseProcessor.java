@@ -8,7 +8,6 @@ import org.json.JSONObject;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,13 +15,10 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.neusou.Logger;
 import com.neusou.moobook.App;
-import com.neusou.moobook.FBEventInfo;
 import com.neusou.moobook.R;
-import com.neusou.moobook.activity.NotificationsActivity;
 import com.neusou.moobook.data.Event;
 import com.neusou.moobook.data.FBApplication;
 import com.neusou.moobook.data.FBNotification;
-import com.neusou.moobook.data.Profile;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 
@@ -256,7 +252,7 @@ public class ResponseProcessor {
 		
 		if(firstnote != null){
 			Logger.l(Logger.DEBUG, LOG_TAG, "show notifications");
-			Cursor c = dbHelper.getAllNotifications(App.mDB, null);
+			Cursor c = dbHelper.getAllNotifications(App.INSTANCE.mDB, null);
 			int totalNotifications = c.getCount();
 			c.close();			
 			

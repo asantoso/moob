@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.task;
 
 import java.util.HashMap;
@@ -70,8 +71,8 @@ public class ProcessNotificationsTask extends UserTask<Bundle, ProcessProgressIn
 	int mProgressCode;
 	ProcessProgressInfo mProgressInfo;
 	
-	ApplicationDBHelper dbHelper = App.mDBHelper;
-	SQLiteDatabase db = App.mDB;
+	ApplicationDBHelper dbHelper = App.INSTANCE.mDBHelper;
+	SQLiteDatabase db = App.INSTANCE.mDB;
 
 	JSONArray senders;
 	JSONArray notifications;
@@ -252,4 +253,4 @@ public class ProcessNotificationsTask extends UserTask<Bundle, ProcessProgressIn
 	}
 
 	
-}
+}*/

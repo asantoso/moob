@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.task;
 
 import org.apache.commons.lang.NullArgumentException;
@@ -157,4 +158,4 @@ public class ProcessOneUserDataTask extends UserTask<Bundle,ProcessProgressInfo,
 	}
 	
 	
-}
+}*/

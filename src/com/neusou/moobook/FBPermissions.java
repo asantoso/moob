@@ -15,8 +15,7 @@ public class FBPermissions {
 	public static final short read_mailbox = 6;
 	
 	
-	public static final short all[] =  new short[]
-	                                             {publish_stream, read_stream, create_event, offline_access, rsvp_event , email , read_mailbox};
+	public static final short all[] =  new short[]{publish_stream, read_stream, create_event, offline_access, rsvp_event , email , read_mailbox};
 	
 	public static final String names[] =
 		new String[]{

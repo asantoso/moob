@@ -3,34 +3,19 @@ package com.neusou.moobook.service;
 import java.util.HashMap;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 
 import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.media.AudioManager;
-import android.media.SoundPool;
-import android.preference.Preference;
-import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBConnectionException;
 import com.neusou.moobook.FBSession;
 import com.neusou.moobook.FBWSResponse;
-import com.neusou.moobook.FQL;
 import com.neusou.moobook.Facebook;
-import com.neusou.moobook.R;
 import com.neusou.moobook.data.FBApplication;
-import com.neusou.moobook.data.Profile;
 import com.neusou.moobook.data.User;
-import com.neusou.moobook.model.database.ApplicationDBHelper;
-import com.neusou.moobook.task.ProcessNotificationsTask;
+//import com.neusou.moobook.task.ProcessNotificationsTask;
 import com.neusou.moobook.task.ResponseProcessor;
 
 public class AppService extends WakefulIntentService {
@@ -48,7 +33,7 @@ public class AppService extends WakefulIntentService {
 	static final int CALLBACK_PROCESS_NOTIFICATIONS_TIMEOUT = 4;
 
 	NotificationManager mNotificationManager;
-	ProcessNotificationsTask mProcessNotificationsTask;
+	//ProcessNotificationsTask mProcessNotificationsTask;
 	Facebook mFacebook;
 
 	public AppService() {
@@ -112,9 +97,9 @@ public class AppService extends WakefulIntentService {
 		}
 
 		if (data != null) {
-			ResponseProcessor.processUsers(data.get("users"), new short[]{User.col_uid, User.col_name, User.col_pic_square}, App.mDB, App.mDBHelper);
+			ResponseProcessor.processUsers(data.get("users"), new short[]{User.col_uid, User.col_name, User.col_pic_square}, App.INSTANCE.mDB, App.INSTANCE.mDBHelper);
 			HashMap<Long, FBApplication> appnames = ResponseProcessor.processApplications(data.get("applications"), null);
-			ResponseProcessor.processNotifications(data.get("notifications"), appnames, App.mDB, App.mDBHelper, mNotificationManager, this);
+			ResponseProcessor.processNotifications(data.get("notifications"), appnames, App.INSTANCE.mDB, App.INSTANCE.mDBHelper, mNotificationManager, this);
 		}
 		
 	}

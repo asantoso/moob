@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.accessibilityservice.AccessibilityService;
 import android.app.AlarmManager;
@@ -125,8 +126,8 @@ public class App extends Application {
 			"(https?://)?([\\d\\w-.]+?\\.(a[cdefgilmnoqrstuwz]|b[abdefghijmnorstvwyz]|c[acdfghiklmnoruvxyz]|d[ejkmnoz]|e[ceghrst]|f[ijkmnor]|g[abdefghilmnpqrstuwy]|h[kmnrtu]|i[delmnoqrst]|j[emop]|k[eghimnprwyz]|l[abcikrstuvy]|m[acdghklmnopqrstuvwxyz]|n[acefgilopruz]|om|p[aefghklmnrstwy]|qa|r[eouw]|s[abcdeghijklmnortuvyz]|t[cdfghjkmnoprtvwz]|u[augkmsyz]|v[aceginu]|w[fs]|y[etu]|z[amw]|aero|arpa|biz|com|coop|edu|info|int|gov|mil|museum|name|net|org|pro)(\\b|\\W(?<!&|=)(?!\\.\\s|\\.{3}).*?))(\\s|$)"			
 	);
 		
-	static public ApplicationDBHelper mDBHelper;
-	static public SQLiteDatabase mDB; 
+	public ApplicationDBHelper mDBHelper;
+	public SQLiteDatabase mDB; 
 	static public String imageSDCacheDirectory;
 	static public ImageUrlLoader mImageUrlLoader;
 	static public ImageUrlLoader2 mImageUrlLoader2;	
@@ -136,6 +137,8 @@ public class App extends Application {
 	
 	public static final String LOCALCACHEFILE_SESSIONUSERDATA = "sessionuserdata";
 	public static final String LOCALCACHEFILE_PROFILEIMAGE = "sessionuserprofileimage";
+	public static final String LOCALCACHEFILE_APPIGNORELIST = "appignorelist";
+	
 	
 	public static FBSession mFbSession;
 	
@@ -231,6 +234,7 @@ public class App extends Application {
 	
 		NotificationManager mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		mNM.cancelAll();
+		
 		
 		mDB.close();
 		mDBHelper.close();
@@ -768,7 +772,30 @@ public class App extends Application {
 			setAlarm(pollingInterval, App.INTENT_CHECK_NOTIFICATIONS);
 		}		
     }
+        
+    public void addAppToIgnoreList(String name, int id){
+    	JSONArray ignoreList = getAppIgnoreList();
+    	if(ignoreList == null){
+    		ignoreList = new JSONArray();
+    		JSONObject obj = new JSONObject();
+    		try{
+    			obj.put(name, id);
+    			ignoreList.put(obj);
+    			Util.writeToLocalCache(this, ignoreList.toString(), App.LOCALCACHEFILE_APPIGNORELIST);
+    		}catch(JSONException e){    			
+    		} 
+    	}    	    	
+    }
     
+    public JSONArray getAppIgnoreList(){
+    	String text = Util.readStringFromLocalCache(this, App.LOCALCACHEFILE_APPIGNORELIST);
+    	try{
+    		JSONArray jsonArray = new JSONArray(text);
+    		return jsonArray;
+    	}catch(JSONException e){
+    		return null;
+    	}
+    }
     
 	/*
 	public static class WorkerManagerThread extends BaseManagerThread {

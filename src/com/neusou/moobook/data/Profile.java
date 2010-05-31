@@ -1,4 +1,6 @@
+/*
 package com.neusou.moobook.data;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -105,8 +107,6 @@ public class Profile {
 	}
 	
 	private void doParse(short columnIndex, JSONObject data){
-		try{
-		switch(columnIndex){
 		case col_id:{	
 			id = data.getLong(columnNames[columnIndex]);					
 			break;
@@ -132,3 +132,4 @@ public class Profile {
 	}
 	
 }
+*/

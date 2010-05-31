@@ -1,17 +1,14 @@
 package com.neusou.moobook.activity;
 
-import java.security.KeyStore.LoadStoreParameter;
-
-import com.neusou.moobook.App;
-import com.neusou.moobook.R;
-import com.neusou.moobook.Util;
-import com.neusou.web.ImageUrlLoader;
-
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.neusou.moobook.App;
+import com.neusou.moobook.R;
+import com.neusou.moobook.Util;
 
 public class DisplayImageActivity extends BaseActivity{
 	

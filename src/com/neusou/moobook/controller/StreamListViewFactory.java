@@ -87,13 +87,10 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	//Drawable mEmptyDrawable;
 	Activity ctx;
 	//byte loadCount = 0;
-	
-	
-	
+			
 	HashMap<Long, ArrayList<GroupImageKey>> mImagesCache = new HashMap<Long, ArrayList<GroupImageKey>>(mSolidCacheSize,1.7f);
-	
-	
-
+		
+	int app_id = -1;
 	String attachmentJsonData = null;
 	String actorPicSquare = null;
 	String actorPic = null;
@@ -383,6 +380,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		public String post_id;
 		public long actor_id;
 		public long target_id;
+		public int app_id;
 		public ProcessedData processedData;
 		public String message;
 		public boolean comments_can_post;
@@ -393,6 +391,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		public String actorName;
 		public String targetName;
 		public String attachmentJson;		
+		
 		public byte mDataState = DataState.VALID;		
 	}
 	
@@ -483,7 +482,13 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		if(groupData.message == null || groupData.message.trim().length() == 0){
 			message.setVisibility(View.GONE);
 		}else{
-			groupViewHolder.message.setText(URLDecoder.decode(groupData.message));
+			String _messageText;
+			try{
+				_messageText = URLDecoder.decode(groupData.message);
+			}catch(Exception e){
+				_messageText = groupData.message;
+			}
+			groupViewHolder.message.setText(_messageText);
 			message.setVisibility(View.VISIBLE);
 		}
 		
@@ -640,6 +645,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 			message = ds.getString(Stream.col_message + startStreamTableIndex);			
 			numLikes = ds.getInt(Stream.col_likes_count + startStreamTableIndex);			
 			attachmentJsonData = ds.getString(Stream.col_attachment	+ startStreamTableIndex);
+			app_id = ds.getInt(Stream.col_app_id+startStreamTableIndex);
 		}
 		catch(IllegalStateException e){
 			return convertView;
@@ -741,6 +747,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		//groupData.profilePictureUrl = processedData.mProfileImageUri;
 		groupData.processedData = processedData;
 		groupData.attachmentJson = attachmentJsonData;
+		groupData.app_id = app_id;
 						
 		convertView.setTag(R.id.tag_streamsadapter_item_data, groupData);
 		convertView.setTag(R.id.tag_streamsadapter_item, groupViewHolder);

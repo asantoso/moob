@@ -23,9 +23,9 @@ public abstract class BaseExpandableListViewFactory<DataStore, CacheItemType>
 implements android.widget.AbsListView.RecyclerListener, 
 OnScrollListener{
 	
-	protected Object mCreateViewLock = new Object();
 	protected Resources mResources;
 	protected LayoutInflater mLayoutInflater;
+	protected Object mCreateViewLock = new Object();
 	volatile List<Long> mAsyncLoadingState = Collections.synchronizedList(new ArrayList<Long>(10));
 	
 	public BaseExpandableListViewFactory(Activity ctx){

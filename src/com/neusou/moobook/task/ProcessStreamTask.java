@@ -215,7 +215,7 @@ public class ProcessStreamTask extends com.neusou.async.UserTask<Bundle,ProcessP
 				catch(JSONException e){					
 				}
 				
-				
+				/*
 				
 				if(hasCommentsProperty){//begin process comments 			
 									
@@ -259,7 +259,7 @@ public class ProcessStreamTask extends com.neusou.async.UserTask<Bundle,ProcessP
 							Log.d(LOG_TAG,"no comments");
 						}
 				}//end of process comments
-				
+				*/
 				long rowId = dbHelper.insertStream(stream, db);
 				Log.d(LOG_TAG, "[doInBackground()] streampost new row id: "+rowId);
 

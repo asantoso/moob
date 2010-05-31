@@ -140,7 +140,7 @@ public class NotificationsActivity extends BaseActivity{
 	
 	private void resolveCursor(){
 		if(c == null){
-			c = App.mDBHelper.getAllNotifications(App.mDB, null);
+			c = App.INSTANCE.mDBHelper.getAllNotifications(App.INSTANCE.mDB, null);
 		}else{
 			c.requery();
 		}

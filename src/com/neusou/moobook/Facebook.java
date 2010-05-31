@@ -113,6 +113,7 @@ public class Facebook {
 	public static final String subkey_offset = "offset";
 	public static final String subkey_created_date = "created_date";
 	public static final String subkey_updated_date = "updated_date";
+	public static final String subkey_updated_date_operator = "updated_time_operator";
 	
 	public static final String REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=UTF-8";
 	//public static final String REQUEST_USER_AGENT = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.8) Gecko/2009033100 Ubuntu/9.04 (jaunty) Firefox/3.0.8";
@@ -209,12 +210,7 @@ public class Facebook {
 	
 	public static final String FQL_GET_USER_STREAM_APPLICATION_MULTIQUERY
 	= "SELECT post_id, actor_id, message, attachment, comments, likes, attribution, created_time, updated_time, source_id, target_id, viewer_id FROM stream WHERE filter_key in (SELECT filter_key FROM stream_filter WHERE uid = ${uid} AND type = 'newsfeed') LIMIT 50 OFFSET 0";
-	
-	
-//	public static final String FQL_GET_STREAMS = "SELECT u.name, u.pic_square, post_id, actor_id, message, attachment, comments, likes, attribution, created_time, updated_time, source_id, target_id, viewer_id FROM stream as s left outer join users as u on u.uid=actor_id WHERE filter_key in (SELECT filter_key FROM stream_filter WHERE uid = ${uid} AND type = 'newsfeed') LIMIT 100 OFFSET 0";
-	
-	//select message from stream where source_id = 100000522301146
-	
+		
 	//See the names of all the events that your friends have been invited to
 	public static final String FQL_GET_EVENTS_FRIENDS_INVITED 
 	= "SELECT eid, name, tagline, nid, pic_small, pic_big, pic, host, description, event_type, event_subtype, start_time, end_time, creator, update_time, location, venue, privacy, hide_guest_list FROM event WHERE eid IN (SELECT eid from event_member WHERE uid IN (SELECT uid2 FROM friend WHERE uid1=${uid}) )";
@@ -375,12 +371,12 @@ public class Facebook {
      * @param comment_limit
      * @param comment_offset
      */
-    public void getStreamsComplete(String uid, String filterKey, long lastStreamPostUpdateTime, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs, long limit, long offset, long comment_limit, long comment_offset){
+    public void getStreamsComplete(int outHandlerKey, String uid, String filterKey, long lastStreamPostUpdateTime, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs, long limit, long offset, long comment_limit, long comment_offset){
 
     	Bundle data = new Bundle();
 		
 		fqlmap.clear();		
-		fqlmap.put(param_uid, uid);
+		fqlmap.put(param_uid, uid);		
 		fqlmap.put(subkey_limit, Long.toString(limit));
 		fqlmap.put(subkey_offset, Long.toString(offset));
 		fqlmap.put(param_filterkey, filterKey);
@@ -394,7 +390,8 @@ public class Facebook {
 		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
-				
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
 		executeFQL(data, 0);				
     }
     
@@ -1672,7 +1669,7 @@ public class Facebook {
 		map.put("sig",sig);
 		String response = null; 
 		try{			
-			response = postFileRequest(map, "image.png", imageInputStream, length, h );
+			response = uploadFile(map, "image.png", imageInputStream, length, h );
 			Logger.l(Logger.DEBUG,LOG_TAG,response);
 		}catch(IOException e){		
 			e.printStackTrace();
@@ -1684,7 +1681,7 @@ public class Facebook {
 	
 	
     
-	public String postFileRequest(Map<String,String> params, String fileName, InputStream fileStream, long length , final Handler h) throws IOException {
+	public String uploadFile(Map<String,String> params, String fileName, InputStream fileStream, long length , final Handler h) throws IOException {
          URL _serverUrl = new URL(Facebook.api_rest_endpoint);
          int _timeout = CONNECTION_TIMEOUT;
          int _readTimeout = READ_TIMEOUT;

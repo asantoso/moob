@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.task;
 
 import org.apache.commons.lang.NullArgumentException;
@@ -79,4 +80,4 @@ public abstract class BaseProcessTask extends UserTask<Bundle,ProcessProgressInf
 		m.sendToTarget();	
 	}
 	
-}
+}*/

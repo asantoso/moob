@@ -3,8 +3,6 @@ package com.neusou.moobook.data;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.neusou.Logger;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 

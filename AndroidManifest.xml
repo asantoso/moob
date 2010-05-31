@@ -89,20 +89,10 @@
                   android:label="@string/app_name">          
         </activity>
         
-		<activity android:name=".activity.TestGallery"
-                  android:label="@string/app_name">          
-        </activity>
-        
 		<activity android:name=".activity.ViewCommentsActivity"
                   android:label="@string/app_name">          
         </activity>
 	
-		<activity android:name=".activity.StreamPostActionsDialogActivity"
-                  android:label="@string/app_name"
-                  android:theme="@style/Theme.Translucent"
-                  >          
-        </activity>
-
 		<activity android:name=".activity.ViewCommentsActivity"
                   android:label="@string/app_name">          
         </activity>

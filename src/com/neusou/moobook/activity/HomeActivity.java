@@ -322,7 +322,7 @@ public class HomeActivity extends BaseActivity {
 				
 				else if(action.equals(App.INTENT_WALLPOSTS_UPDATED)){
 					FBSession session = mFacebook.getSession();
-					mStreamsCursor = App.mDBHelper.getWallPosts(App.mDB, session.uid, 1, 0);					
+					mStreamsCursor = App.INSTANCE.mDBHelper.getWallPosts(App.INSTANCE.mDB, session.uid, 1, 0);					
 					int numPosts = mStreamsCursor.getCount();				
 					Logger.l(Logger.DEBUG,LOG_TAG,"numPosts:"+numPosts);					
 					
@@ -781,7 +781,7 @@ public class HomeActivity extends BaseActivity {
 				break;
 			}
 			case App.MENUITEM_CLEAR:{
-				App.mDBHelper.deleteAllNotifications(App.mDB);
+				App.INSTANCE.mDBHelper.deleteAllNotifications(App.INSTANCE.mDB);
 				break;
 			}
 			case App.MENUITEM_GET_WALLCOMMENTS:{

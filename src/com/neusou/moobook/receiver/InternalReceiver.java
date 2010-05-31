@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.receiver;
 
 import android.content.BroadcastReceiver;
@@ -25,3 +26,4 @@ public class InternalReceiver extends BroadcastReceiver{
 	}
 	
 }
+*/

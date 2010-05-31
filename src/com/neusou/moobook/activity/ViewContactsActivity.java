@@ -347,7 +347,7 @@ public class ViewContactsActivity extends BaseActivity{
 		mFilterQueryProvider = new FilterQueryProvider() {			
 			@Override
 			public Cursor runQuery(CharSequence constraint) {				
-				return App.mDBHelper.getAllUsers(App.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY], 1, "name like "+constraint.toString()+"%");
+				return App.INSTANCE.mDBHelper.getAllUsers(App.INSTANCE.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY], 1, "name like "+constraint.toString()+"%");
 			}
 		};
 		
@@ -478,7 +478,7 @@ public class ViewContactsActivity extends BaseActivity{
 		if(c != null){
 			c.requery();
 		}else{
-			c = App.mDBHelper.getAllUsers(App.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY],1,null);
+			c = App.INSTANCE.mDBHelper.getAllUsers(App.INSTANCE.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY],1,null);
 		}
 	}
 	

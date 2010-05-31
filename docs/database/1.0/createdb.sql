@@ -60,7 +60,7 @@ CREATE TABLE streams(
 	stream_appid INTEGER,
 	comments_count INTEGER,
 	comments_can_post INTEGER,
-	comments_can_remove INTEGER
+	comments_can_remove INTEGER,
 );
 	
 DROP TABLE IF EXISTS comments;

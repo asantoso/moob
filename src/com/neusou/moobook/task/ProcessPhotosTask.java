@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.task;
 
 import org.apache.commons.lang.NullArgumentException;
@@ -188,3 +189,5 @@ public class ProcessPhotosTask extends UserTask<Bundle,ProcessProgressInfo,Integ
 	
 	
 }
+
+*/

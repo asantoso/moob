@@ -23,7 +23,6 @@ import com.neusou.moobook.data.Event;
 import com.neusou.moobook.data.FBApplication;
 import com.neusou.moobook.data.FBNotification;
 import com.neusou.moobook.data.FriendList;
-import com.neusou.moobook.data.Profile;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
 
@@ -129,6 +128,7 @@ public class ApplicationDBHelper extends DBHelper{
     	return -1;
 	}
 	
+	/*
 	public long insertComment(Comment comment, SQLiteDatabase db){
 		Log.d(LOG_TAG, "insertComment "+comment.comment);
     	try{    		
@@ -147,7 +147,7 @@ public class ApplicationDBHelper extends DBHelper{
         }
     	return -1;
 	}
-	
+	*/
 
 	public long insertEvent(Event data, SQLiteDatabase db){
 		Log.d(LOG_TAG,"inserting event: "+data.name);

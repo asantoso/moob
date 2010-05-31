@@ -37,8 +37,6 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
 	static final String LOG_TAG = "NotificationsListViewFactory";
 	
-	
-	
 	Context ctx;
 	ApplicationDBHelper mDBHelper;
 	SQLiteDatabase mDB;

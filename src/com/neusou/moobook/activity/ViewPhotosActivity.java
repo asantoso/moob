@@ -89,7 +89,7 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 	
 	static WorkerManagerThread mWorkerThread;
 	ProcessFriendsTask mProcessFriendsTask;
-	ProcessStreamTask mProcessStreamsTask;
+	//ProcessStreamTask mProcessStreamsTask;
 		
 	JSONArray mPhotosData;	
 	Drawable mPlaceholderDrawable;

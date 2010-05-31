@@ -1,8 +1,5 @@
 package com.neusou.moobook.data;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.provider.UserDictionary.Words;
 
 public class Comment {
 	
@@ -26,7 +23,7 @@ public class Comment {
 	public static final String cn_time = "time";
 	public static final String cn_comment = "comment";
 	public static final String cn_post_id = "post_id";
-		
+		/*
 	
 	public static Comment parseCursor(Cursor c, Comment s){
 		
@@ -63,5 +60,6 @@ public class Comment {
 		
 		return cv;
 	}
+	*/
 		
 }

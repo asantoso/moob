@@ -43,12 +43,10 @@ public class FriendList {
 		if(cache == null){
 			cache = new ContentValues();
 		}
-	
-		
+			
 		cache.put(cn_flid, flid);
 		cache.put(cn_uid, uid);
 		cache.put(cn_name, name);
-
 		
 		return cache;
 	}

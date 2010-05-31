@@ -12,7 +12,6 @@ import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Map;
 
-
 /**
  * Basic client taking care of rest call mechanics (signing, etc) to facebook. No api knowledge, nor response interpretation is planned.
  */

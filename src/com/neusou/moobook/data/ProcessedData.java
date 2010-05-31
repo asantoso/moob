@@ -2,8 +2,6 @@ package com.neusou.moobook.data;
 
 import java.util.ArrayList;
 
-import com.neusou.Logger;
-
 public class ProcessedData {
 		
 		public boolean isDirty = true;

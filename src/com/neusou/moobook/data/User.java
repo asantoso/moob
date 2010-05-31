@@ -1,7 +1,5 @@
 package com.neusou.moobook.data;
 
-import java.util.Comparator;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 

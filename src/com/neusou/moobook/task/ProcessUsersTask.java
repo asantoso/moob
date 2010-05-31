@@ -123,7 +123,7 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 		
 		JSONObject currentItem;	
 				
-		App.mDB.beginTransaction();
+		App.INSTANCE.mDB.beginTransaction();
 		
 		for(int i=0,j=mPeriodicUIUpdateInterval;i<num && mStatus == Status.RUNNING;i++){
 			try {								
@@ -131,7 +131,7 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 				Log.d(LOG_TAG,""+currentItem.toString());
 				user.parse(currentItem, selection);
 				
-				long rowId = App.mDBHelper.insertUser(user,selection,App.mDB);
+				long rowId = App.INSTANCE.mDBHelper.insertUser(user,selection,App.INSTANCE.mDB);
 				Log.d(LOG_TAG, "user new row id: "+rowId);
 				
 				mProgressInfo.current = i+1;
@@ -158,8 +158,8 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 			}
 		}	
 		
-		App.mDB.setTransactionSuccessful();		
-		App.mDB.endTransaction();
+		App.INSTANCE.mDB.setTransactionSuccessful();		
+		App.INSTANCE.mDB.endTransaction();
 		
 		
 				

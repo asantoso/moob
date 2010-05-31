@@ -77,7 +77,7 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 	
 	static WorkerManagerThread mWorkerThread;
 	ProcessFriendsTask mProcessFriendsTask;
-	ProcessStreamTask mProcessStreamsTask;
+	//ProcessStreamTask mProcessStreamsTask;
 		
 	JSONArray mPhotosData;	
 	Drawable mPlaceholderDrawable;
@@ -270,7 +270,7 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 					case ManagerThread.CALLBACK_TIMEOUT_ERROR:{
 						mProgressDialog.dismiss();
 						Toast.makeText(ViewAlbumsActivity.this, "Processing streams timeout", 2000).show();
-						mProcessStreamsTask.cancel(true);
+						//mProcessStreamsTask.cancel(true);
 						break;
 					}		
 					case ManagerThread.MESSAGE_UPDATE_ALBUMS_GRID:{

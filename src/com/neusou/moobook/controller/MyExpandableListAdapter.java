@@ -2,13 +2,11 @@ package com.neusou.moobook.controller;
 
 import android.app.Activity;
 import android.database.Cursor;
-import android.database.DataSetObservable;
 import android.database.DataSetObserver;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
-
 
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 

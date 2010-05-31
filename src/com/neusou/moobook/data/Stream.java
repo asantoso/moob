@@ -45,7 +45,7 @@ public class Stream {
 	public boolean likes_userlikes;
 	public String attribution;
 	public String attachment;
-	public long app_id;
+	public int app_id;
 	
 	public long comments_count;
 	public boolean comments_can_post;
@@ -104,7 +104,7 @@ public class Stream {
 		s.likes_userlikes = c.getInt(col_likes_userlikes) == 1? true:false;
 	
 		s.attachment = c.getString(col_attachment);
-		s.app_id = c.getLong(col_app_id);
+		s.app_id = c.getInt(col_app_id);
 		
 		s.comments_count = c.getLong(col_comments_count);
 		s.comments_can_post = c.getInt(col_comments_can_post) == 1?true:false;
@@ -140,6 +140,7 @@ public class Stream {
 		cv.put(cn_comments_can_post, comments_can_post);
 		cv.put(cn_comments_can_remove, comments_can_remove);
 		cv.put(cn_comments_count, comments_count);		
+
 		//cv.put(cn_comments_comment_list, comments_comment_list);
 		
 		

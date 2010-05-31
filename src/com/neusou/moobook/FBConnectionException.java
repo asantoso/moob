@@ -1,6 +1,4 @@
-
- package com.neusou.moobook;
- 
+package com.neusou.moobook;
 
 public class FBConnectionException extends Exception{
 

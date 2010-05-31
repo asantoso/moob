@@ -334,7 +334,7 @@ public class EventsActivity extends BaseActivity {
 	}
 	
 	private void updateListView(){	
-		Cursor c = App.mDBHelper.getEvents(App.mDB);
+		Cursor c = App.INSTANCE.mDBHelper.getEvents(App.INSTANCE.mDB);
 		if(c!=null){
 			int numEvents = c.getCount();
 			Log.d(LOG_TAG,"num events: "+numEvents);
@@ -371,7 +371,7 @@ public class EventsActivity extends BaseActivity {
 		JSONArray events_member = data.get("events_member");
 		JSONArray events = data.get("events");
 
-		ResponseProcessor.processEvents(events, events_member, App.mDB, App.mDBHelper,
+		ResponseProcessor.processEvents(events, events_member, App.INSTANCE.mDB, App.INSTANCE.mDBHelper,
 				this);
 	}
 
@@ -475,7 +475,7 @@ public class EventsActivity extends BaseActivity {
 				protected void onPostExecute(Boolean result) {
 					if(result){
 						Toast.makeText(EventsActivity.this, "RSVP Changed.", 3000).show();
-						long rows_updated = App.mDBHelper.updateEventRSVP(App.mDB, eid, rsvp_status);
+						long rows_updated = App.INSTANCE.mDBHelper.updateEventRSVP(App.INSTANCE.mDB, eid, rsvp_status);
 						Log.d("debug","rows updated: "+rows_updated);
 						updateListView();
 					}else{

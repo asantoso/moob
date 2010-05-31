@@ -60,8 +60,8 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		mFinishCode = finishCode;
 		
 		mProgressInfo = new ProcessProgressInfo();
-		dbHelper = App.mDBHelper;			
-		db = App.mDB;
+		dbHelper = App.INSTANCE.mDBHelper;			
+		db = App.INSTANCE.mDB;
 		mFinishRunnable = finishRunnable;
 		 
 	}
@@ -181,7 +181,13 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				stream.source_id = itemJson.getLong(Stream.cn_source_id);
 				stream.target_id = itemJson.getString(Stream.cn_target_id);
 				stream.actor_id = itemJson.getLong(Stream.cn_actor_id);
-				stream.app_id = itemJson.getLong(Stream.fields_appid);
+				
+				try{
+					stream.app_id = itemJson.getInt(Stream.fields_appid);
+					Logger.l(Logger.DEBUG,"crucial2",""+stream.app_id);
+				}catch(Exception e){
+					stream.app_id = -1;
+				}
 				
 				// process attachment
 				JSONObject att = itemJson.getJSONObject(Stream.cn_attachment);
@@ -282,6 +288,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		return true;
 	}
 
+	/*
 	private boolean processComments(final JSONArray data) {
 
 		if (data == null) {
@@ -334,7 +341,8 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		Logger.l(Logger.DEBUG, LOG_TAG, "[processComments()] finished");
 		return true;
 	}
-
+*/
+	
 	private boolean processUsers(final JSONArray data, short[] selection) {
 		if (data == null) {
 			return false;
