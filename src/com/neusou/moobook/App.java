@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
@@ -13,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
@@ -36,6 +38,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
@@ -51,6 +54,9 @@ import android.os.Parcel;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.Toast;
@@ -62,6 +68,7 @@ import com.neusou.async.UserTaskExecutionScope;
 import com.neusou.moobook.activity.LoginActivity;
 import com.neusou.moobook.activity.NotificationsActivity;
 import com.neusou.moobook.activity.StreamActivity;
+import com.neusou.moobook.activity.ViewCommentsActivity;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
@@ -76,6 +83,8 @@ public class App extends Application {
 	static final String LOG_TAG = "App";
 	
 	public static App INSTANCE;
+	public Resources mResources;
+	
 	public Notification mNotification;
 	public UserTaskExecutionScope mExecScopeListViewTask =
 		new UserTaskExecutionScope("ListViewTask",5,1,5,TimeUnit.SECONDS,10);
@@ -88,9 +97,9 @@ public class App extends Application {
 	public static final String packageprefix = "com.neusou.moobook";	
 	
 	// Intents
-	public static final String INTENT_CHECK_NOTIFICATIONS = packageprefix+".action.CHECK_NOTIFICATIONS";
-	public static final String INTENT_CHECK_STREAMS = packageprefix+".action.CHECK_STREAMS";
-	public static final String INTENT_LOGIN = "com.neusou.moobook.action.LOGIN_FACEBOOK";///packageprefix+".action.LOGIN_FACEBOOK";
+	public static final String INTENT_CHECK_NOTIFICATIONS = packageprefix+".intent.CHECK_NOTIFICATIONS";
+	public static final String INTENT_CHECK_STREAMS = packageprefix+".intent.CHECK_STREAMS";
+	public static final String INTENT_LOGIN = packageprefix+".intent.LOGIN_FACEBOOK";///packageprefix+".action.LOGIN_FACEBOOK";
 	public static final String INTENT_PROFILE_UPDATED = packageprefix+".intent.PROFILE_UPDATED";
 	public static final String INTENT_NEW_NOTIFICATIONS = packageprefix+".intent.NEW_NOTIFICATIONS";
 	public static final String INTENT_STREAMCOMMENTS_UPDATED = packageprefix+".intent.STREAMCOMMENTS_UPDATED";
@@ -99,7 +108,10 @@ public class App extends Application {
 	public static final String INTENT_AUTOUPDATE_STREAMS = packageprefix+".intent.AUTOUPDATE_STREAMS";
 	public static final String INTENT_PLAY_NOTIFICATIONS_SOUND = packageprefix+".intent.PLAY_NOTIFICATIONS_SOUND";
 	public static final String INTENT_STOP_NOTIFICATIONS_SOUND = packageprefix+".intent.STOP_NOTIFICATIONS_SOUND";
-		
+	public static final String INTENT_DELETECOMMENT = packageprefix+".intent.DELETE_COMMENT";
+	public static final String INTENT_POSTCOMMENT = packageprefix+".intent.POST_COMMENT";
+	public static final String INTENT_GET_ALBUMS =  packageprefix+".intent.GET_ALBUMS";
+	
 	static final int CALLBACK_PROCESS_STREAMS_START = 0;
 	static final int CALLBACK_PROCESS_STREAMS_UPDATE = 1;
 	static final int CALLBACK_PROCESS_STREAMS_FINISH = 2;
@@ -112,6 +124,7 @@ public class App extends Application {
 	public static final byte MENUITEM_GET_WALLCOMMENTS = 3;
 	public static final byte MENUITEM_GET_WALLPOSTS = 4;
 	public static final byte MENUITEM_TOGGLE_LOGGER = 5;
+	public static final byte MENUITEM_USER_WALL = 6;
 	
 	public static ColorMatrix mWhitishColorMatrix;
 	public static ColorMatrixColorFilter mColorFilterWhitish;
@@ -160,6 +173,9 @@ public class App extends Application {
 	Handler mUIHandler;
 
 	Facebook mFacebook;
+	
+	public static int MINIMUM_IMAGE_WIDTH = 10;
+	public static int MINIMUM_IMAGE_HEIGHT = 10;
 
 	static final short[] mSelectedUserFields = new short[]{User.col_first_name, User.col_last_name, User.col_status, User.col_profile_blurb, User.col_pic, User.col_pic_big, User.col_timezone, User.col_current_location, User.col_uid};
 
@@ -249,7 +265,7 @@ public class App extends Application {
 		Resources res = getResources();
 		mDefaultProfileBitmap = BitmapFactory.decodeResource(res, R.drawable.defaultprofileimage);
 		mEmptyBitmap = BitmapFactory.decodeResource(res, R.drawable.empty_bitmap);
-		
+		mResources = getResources();
 		mUIHandler = new Handler(){
 			@Override
 			public void handleMessage(Message msg) {
@@ -293,7 +309,7 @@ public class App extends Application {
 				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 
 				0.5f, 0.4f, 0.1f, 0.0f, 0.0f, 
 				0.7f, 0.4f, 0.1f, 0.0f, 0.0f, 
-				0.5f, 0.0f, 0.0f, 0.0f, 0.0f });
+				0.5f, 0.2f, 0.0f, 0.0f, 0.0f });
 	
 		mColorFilterBlueish = new ColorMatrixColorFilter(mBlueishColorMatrix);
 		
@@ -796,114 +812,24 @@ public class App extends Application {
     		return null;
     	}
     }
+        
+    public static void showPost(Activity act, String post_id) {	
+		Intent showComments = ViewCommentsActivity.getIntent(act);
+		showComments.putExtra(ViewCommentsActivity.XTRA_POSTID, post_id);
+		showComments.putExtra(ViewCommentsActivity.XTRA_CLEARDATA, true);
+		showComments.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
+				| Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
+				| Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+		act.startActivity(showComments);
+	}
     
-	/*
-	public static class WorkerManagerThread extends BaseManagerThread {
-		
-		public WorkerManagerThread(CountDownLatch cdl) {
-			super(cdl);			
-		}
-	
-		CountDownLatch mWaitCommentsUsersCountdown;
-		ProcessStreamMultiQueryTask mProcessStreamMultiQueryDataTask = null;
-		
-		@Override
-		public void doBusiness(Bundle data, int code, FBWSResponse fbresponse) {
-			switch(code){
-				
-				case ManagerThread.CALLBACK_GET_WALLPOSTS:{
-					Logger.l(Logger.DEBUG, LOG_TAG, "[WorkerManagerThread][callback_get_wallposts] ");
-					
-					if(
-							mProcessStreamMultiQueryDataTask == null ||						
-							mProcessStreamMultiQueryDataTask.getStatus() == UserTask.Status.FINISHED
-					){
-						Logger.l(Logger.DEBUG, LOG_TAG, "[WorkerManagerThread][callback_get_wallposts] processing wall posts.");
-						
-					Toast.makeText(App.INSTANCE, "processing wallposts data", 2000).show();
-						
-						mProcessStreamMultiQueryDataTask = new ProcessStreamMultiQueryTask(
-						App.INSTANCE, mOutHandler, CALLBACK_PROCESS_STREAMS_FINISH, null
-						);					
-						mProcessStreamMultiQueryDataTask.execute(data);
-						
-					}else{
-						Toast.makeText(App.INSTANCE, "Cant call fetch streams mq: "+mProcessStreamMultiQueryDataTask.getStatus(), 2000).show();
-					}
-					
-					Intent updateWall = new Intent(App.INTENT_WALLPOSTS_UPDATED);
-					updateWall.putExtras(data);
-					App.INSTANCE.sendBroadcast(updateWall);
-					
-					break;
-				}
-			
-				
-				case ManagerThread.CALLBACK_POSTPHOTO:{
-					
-					break;
-				}
-				
-				case ManagerThread.CALLBACK_GET_COMMENTS:{
-					
-					Logger.l(Logger.DEBUG, LOG_TAG, "[callback_get_comments] "+fbresponse.data);
-					if(!fbresponse.hasErrorCode && fbresponse.jsonArray != null){
-						int numComments = fbresponse.jsonArray.length();
-						if(numComments > 0){
-							String[] uids = App.getCommentsUids(fbresponse.jsonArray, null);									
-							Logger.l(Logger.DEBUG, LOG_TAG, "[callback_get_comments] getting users");
-
-							Facebook.getInstance().getCommentsUsers(R.id.outhandler_app, uids, ManagerThread.CALLBACK_GET_COMMENTS_USERS, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR, 0);							
-							mWaitCommentsUsersCountdown = new CountDownLatch(1);
-														
-							
-						}
-					}						
-					Intent updateComments = new Intent(App.INTENT_STREAMCOMMENTS_UPDATED);
-					Logger.l(Logger.DEBUG, LOG_TAG, "[callback_get_comments] fbwsresponse xtra:"+ FBWSResponse.XTRA_OBJECT);
-					data.putParcelable(FBWSResponse.XTRA_OBJECT, fbresponse);
-					updateComments.putExtras(data);
-					App.INSTANCE.sendBroadcast(updateComments);					
-					break;
-				}
-				
-				case ManagerThread.CALLBACK_GET_COMMENTS_USERS:{
-					Logger.l(Logger.DEBUG, LOG_TAG, "[WorkerManagerThread] [callback_get_comments_users] "+fbresponse.data);
-					//data_users = fbresponse.jsonArray;							
-					mWaitCommentsUsersCountdown.countDown();
-					break;
-				}
-				
-				
-				case ManagerThread.CALLBACK_GET_USERDATA:{
-					String parsed;
-					if(fbresponse.jsonArray!=null){
-						try {							
-							parsed = fbresponse.jsonArray.toString(2);
-							Logger.l(Logger.DEBUG, LOG_TAG,"[WorkerManagerThread] [handleMessage()] [callback_get_user_data] json data: "+ parsed);	
-							if(fbresponse.hasErrorCode){								
-							}else{
-								//Logger.l(Logger.DEBUG,LOG_TAG,"[WorkerManagerThread] [handleMessage()] [callback_get_user_data] sending message to ui handler.");																
-							}
-							Logger.l(Logger.DEBUG, LOG_TAG,"[WorkerManagerThread] [handleMessage()] [callback_get_user_data] saving to local cache");
-							Util.saveToLocalCache(App.INSTANCE, fbresponse.data,  LOCALCACHEFILE_SESSIONUSERDATA);
-							String restored = Util.readStringFromLocalCache(App.INSTANCE, LOCALCACHEFILE_SESSIONUSERDATA);
-							Logger.l(Logger.DEBUG, LOG_TAG,"[WorkerManagerThread] [handleMessage()] [callback_get_user_data] restored cache: "+ restored);
-						
-							Intent updateProfileIntent = new Intent(INTENT_PROFILE_CHANGED);
-							App.INSTANCE.sendBroadcast(updateProfileIntent);
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}		
-					}
-					break;
-				}
-				
-			}
-				
-		}
-	
-	};
-	*/
-	
+    public static void showUserWall(Activity act, long uid) {
+    	Intent viewWall = StreamActivity.getIntent(act);
+    	Bundle b = new Bundle();    	
+    	b.putLong(StreamActivity.XTRA_USERID, uid);
+    	b.putByte(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_WALLFEED);
+    	viewWall.putExtras(b);
+    	act.startActivity(viewWall);
+    }
+    
 }

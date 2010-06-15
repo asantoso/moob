@@ -2,7 +2,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
 	>
 	<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
-		android:id="@+id/ad" android:visibility="visible"
+		android:id="@+id/ad" android:visibility="invisible"
 		android:layout_width="fill_parent" android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true" app:backgroundColor="#00000000"
 		app:textColor="#FFffffff" app:keywords="" app:testing="false" />

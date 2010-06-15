@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.text.StrSubstitutor;
 
+import android.app.Notification;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
@@ -437,7 +438,8 @@ public class ApplicationDBHelper extends DBHelper{
 	
 	public Cursor getAllNotifications(SQLiteDatabase db, long[] hiddenAppIds){
 		
-		String whereClause0 = "";		
+		String orderClause0 = " ";	
+		String whereClause0 = " ";		
 		String hiddenAppIdsCSV = Util.toCSV(hiddenAppIds);
 		
 		HashMap<String, String> args = new HashMap<String, String>();
@@ -446,9 +448,11 @@ public class ApplicationDBHelper extends DBHelper{
 			whereClause0 = "app.app_id NOT IN ("+hiddenAppIdsCSV+") ";
 		}
 		
+		orderClause0 += "order by "+FBNotification.cn_created_time+" DESC";
+		
 		args.put("whereClause0", whereClause0);		
-		
-		
+		args.put("orderClause0", orderClause0);
+				
     	try{    		 
     		
     		String sql = StrSubstitutor.replace(SQL_GETNOTIFICATIONS_COMPLETE, args);    	
@@ -525,13 +529,14 @@ public class ApplicationDBHelper extends DBHelper{
 		
 	}
 	
-	public Cursor getStreams(SQLiteDatabase db, byte type, long source_id, long uids_filter[], long limit, long offset){
+	public Cursor getStreams(SQLiteDatabase db, byte streamtype, long source_id, long uids_filter[], long limit, long offset){
 		
 		if(db == null || !db.isOpen()){
 			return null;
 		}
 		
-		String sql = createSqlGetStreams(type, source_id, uids_filter, limit, offset);		
+		String sql = createSqlGetStreams(streamtype, source_id, uids_filter, limit, offset);
+		
 		Logger.l(Logger.DEBUG, LOG_TAG, "SQL:  "+sql);
 		
     	try{    		
@@ -639,8 +644,12 @@ public class ApplicationDBHelper extends DBHelper{
 		
 		if(streamType == Facebook.STREAMMODE_LIVEFEED){
 			orderClause0 = "order by p.updated_time desc ";
-		}else{
+		}
+		if(streamType == Facebook.STREAMMODE_NEWSFEED){			
 			orderClause0 = "order by p.created_time desc ";
+		}
+		if(streamType == Facebook.STREAMMODE_WALLFEED){
+			orderClause0 = "order by p.updated_time desc ";
 		}
 				
 		if(uids != null){		
@@ -661,8 +670,10 @@ public class ApplicationDBHelper extends DBHelper{
 			whereClause0 += " and "+uidsFilter;
 		}
 		
-		if(source_id != -1){
-			whereClause0 += " and p.source_id="+source_id+" ";
+		if(streamType == Facebook.STREAMMODE_WALLFEED){
+			whereClause0 += " and p.source_id = "+source_id+" ";
+		}else{
+			whereClause0 += " and p.source_id != "+source_id+" ";
 		}
 		
 		args.put("whereClause0", whereClause0);
@@ -677,6 +688,27 @@ public class ApplicationDBHelper extends DBHelper{
 		return ret;		
 	}
 	
+	public int truncateStreams(SQLiteDatabase db, long cutoff){
+		StringBuffer sb = new StringBuffer();
+		String whereClause;
+		sb.append(Stream.cn_updated_time)
+		.append("< ? ");
+		whereClause = sb.toString();
+		String whereArgs[] = new String[]{Long.toString(cutoff)};
+		int numRowsAffected = db.delete(STREAMS_TABLE,cutoff==0?null:whereClause, whereArgs);
+		return numRowsAffected;
+	}
+	
+	public int truncateNotifications(SQLiteDatabase db, long cutoff){
+		StringBuffer sb = new StringBuffer();
+		String whereClause;
+		sb.append(FBNotification.cn_updated_time)
+		.append("< ? ");
+		whereClause = sb.toString();
+		String whereArgs[] = new String[]{Long.toString(cutoff)};
+		int numRowsAffected = db.delete(NOTIFICATIONS_TABLE,cutoff==0?null:whereClause, whereArgs);
+		return numRowsAffected;
+	}
 	
 	public static int getFieldOffset(int sqlCode, int tableCode, int fieldCode){
 		int offset = 0;

@@ -67,7 +67,9 @@ public class User {
 	public static final short col_website = 46 ;	
 	public static final short col_type = 47 ;
 	
-	public static final short TOTAL_COLUMNS = 48; 
+	public static final short col__sessionUserId = 48;
+	
+	public static final short TOTAL_COLUMNS = 49; 
 	
 	//
 	public static final byte TYPE_USER = 0;
@@ -125,6 +127,8 @@ public class User {
 	// application specific data
 	public byte type;
 	
+	public long _sessionUserId;
+	
 	public void clear(){
 		uid = 0;
 		about_me = null;
@@ -173,6 +177,7 @@ public class User {
 		tv = null ;
 		wall_count = null ;
 		website = null ;
+		_sessionUserId = -1;
 	}
 		
 	public static final String columnNames[] = new String[]{
@@ -228,7 +233,9 @@ public class User {
 	 "tv",
 	 "wall_count",
 	 "website",
-	 "type"
+	 "type",
+	 
+	 "_sessionUserId"
 	 } ;
 	
 	
@@ -314,6 +321,7 @@ public class User {
 		u.website = c.getString(col_website);
 		u.type = (byte) c.getInt(col_type);		
 	
+		u._sessionUserId = c.getLong(col__sessionUserId);
 		return u;
 	}
 	
@@ -385,7 +393,8 @@ public class User {
 			case col_tv:{cv.put(columnNames[var],tv);break;}
 			case col_wall_count:{cv.put(columnNames[var],wall_count);break;}
 			case col_website:{cv.put(columnNames[var],website);break;}
-			case col_type:{cv.put(columnNames[var],type);break;}
+			case col_type:{cv.put(columnNames[var],type);break;}			
+			case col__sessionUserId:{cv.put(columnNames[var],_sessionUserId);break;}
 		}
 		
 	}
@@ -446,6 +455,7 @@ public class User {
 			case col_wall_count:{wall_count=c.getString(i);break;}
 			case col_website:{website=c.getString(i);break;}
 			case col_type:{type=(byte)c.getShort(i);break;}
+			case col__sessionUserId:{_sessionUserId=c.getLong(i);break;}
 		}
 	}
 	
@@ -466,14 +476,22 @@ public class User {
 		return sb.toString();		
 	}
 	
+	/**
+	 * Parses user data  JSON format
+	 * @param data
+	 * @param selection
+	 */
 	public void parse(JSONObject data, short selection[]){		
 		for(int i=0,num=selection.length;i<num;i++){
 			short column = selection[i];
-			doParse(column,data);
+			try{
+				doParse(column,data);
+			}catch(JSONException e){				
+			}
 		}
 	}
 	
-	private void doParse(short columnIndex, JSONObject data){
+	private void doParse(short columnIndex, JSONObject data) throws JSONException {
 		try{
 		switch(columnIndex){
 		case col_uid:{	
@@ -543,6 +561,9 @@ public class User {
 		case col_type:{
 			type = (byte) data.getInt(columnNames[columnIndex]);
 			break;
+		}
+		case col__sessionUserId:{
+			_sessionUserId = data.getLong(columnNames[columnIndex]);
 		}
 		
 		}

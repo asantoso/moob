@@ -27,12 +27,20 @@
 }
 </string>
 
+<!-- 
 <string name="fql_get_contacts">
 { 
 \"users\":\"select name, pic, pic_square, hometown_location, current_location, birthday_date, relationship_status, timezone, uid from user where uid in (select uid2 from friend where uid1=${uid}) LIMIT ${limit} OFFSET ${offset} \"
 }
 </string>
-   
+-->
+
+<string name="fql_get_contacts">
+{ 
+\"users\":\"select name, pic_square, uid from user where uid in (select uid2 from friend where uid1=${uid}) LIMIT ${limit} OFFSET ${offset} \"
+}
+</string>
+    
 <string name="fql_get_streams">
 { 
 \"posts\":\"select post_id, actor_id, source_id, target_id, viewer_id, message, comments, strip_tags(attachment), likes, attribution, app_id, created_time, updated_time FROM stream where filter_key in (SELECT filter_key FROM stream_filter WHERE uid=${uid} AND type=\'newsfeed\') AND (source_id in (select uid2 from friend where uid1=${uid}) OR source_id in (select page_id from page_fan where uid=${uid}) OR source_id in (select eid from event_member where uid=${uid})) AND is_hidden = 0 AND updated_time > ${lastUpdateTime} ORDER BY updated_time DESC LIMIT ${limit} OFFSET ${offset}\",
@@ -42,6 +50,17 @@
 \"pages\":\"select name, pic, pic_small, pic_square, page_id from page where page_id in (select id from #profiles_posts where type=\'page\')\"
 }
 </string>
+
+<string name="fql_get_wallposts">
+{ 
+\"posts\":\"select post_id, actor_id, source_id, target_id, viewer_id, message, comments, strip_tags(attachment), likes, attribution, app_id, created_time, updated_time FROM stream where source_id=${uid} AND created_time > ${created_date} ORDER BY updated_time DESC LIMIT ${limit} OFFSET ${offset}\",
+\"profiles_posts\":\"select id, type from profile where id in (select actor_id from #posts) or id in (select source_id from #posts) or id in (select viewer_id from #posts) \",
+\"profiles_targets\":\"select id, type from profile where id in (select target_id from #posts)\",
+\"users\":\"select name, pic, pic_small, pic_big, pic_square, first_name, last_name, uid from user where uid in (select id from #profiles_posts where type=\'user\') or uid in (select id from #profiles_targets  where type=\'user\')  \",
+\"pages\":\"select name, pic, pic_small, pic_square, page_id from page where page_id in (select id from #profiles_posts where type=\'page\')\"
+}
+</string>
+
  
 <string name="fql_get_comments">select object_id, fromid, time, text, id, reply_xid from comment where object_id=\'${object_id}\' or post_id=\'${post_id}\' order by time desc LIMIT ${limit} OFFSET ${offset}</string>
 <string name="fql_get_comments_users">select uid, name, pic_square, current_location, online_presence, timezone from user where uid in (${uids})</string>
@@ -53,6 +72,7 @@
 \"comments_info\":\"select comments from stream where post_id=\'${post_id}\'\"
 }
     </string>
+ 
     
 <string name="fql_get_comments_photos_complete">
 { 
@@ -97,13 +117,15 @@
 \"cookie\":\"select name,value,expires,path from cookies where uid = ${uid} \"
 }
     </string>
-    
+
+<!--     
     <string name="fql_get_wallposts">
  {
  \"posts\":\"select post_id, actor_id, source_id, target_id, viewer_id, message, comments, strip_tags(attachment), likes, attribution, app_id, created_time, updated_time FROM stream where source_id=${uid} and created_time > ${created_date} ORDER BY updated_time DESC LIMIT ${limit} OFFSET ${offset}\"
  }   
 	</string>
-     
+ --> 
+
     <string name="fql_get_notifications">
 { 
 \"notifications\":\"select app_id, notification_id, sender_id, title_text, body_text, href, created_time FROM notification WHERE recipient_id=${uid} AND is_unread=1 AND is_hidden=0 AND sender_id != ${uid} AND created_time > ${created_time} ORDER BY created_time DESC \",
@@ -155,6 +177,16 @@
 }
 </string>
     
+
+<string name="fql_get_likes_complete">
+{
+\"likes\":\"select object_id, user_id from likes where object_id=${object_id} LIMIT ${limit} OFFSET ${offset}\",
+\"users\":\"select name, uid, pic_square from user where uid in (select user_id from #likes)\"
+}
+</string>
     
+    
+
+
 
 </resources>

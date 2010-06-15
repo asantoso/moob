@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<merge
+	xmlns:android="http://schemas.android.com/apk/res/android" 
+    xmlns="http://schemas.android.com/apk/res/android"
+>
+
+	<RelativeLayout 
+		android:id="@+id/actionbar"
+		android:layout_width="fill_parent"
+   		android:layout_height="wrap_content"
+   		android:layout_gravity="center_vertical|left"   		     	
+    	android:paddingTop="4dip"
+    	android:paddingLeft="2dip"
+    	android:paddingRight="2dip"
+    	android:paddingBottom="1dip"
+    	android:background="@drawable/actionbar_bg"
+    	>
+		
+		<ImageButton
+			android:id="@+id/ab_refresh"
+			android:layout_width="48dip"
+			android:layout_height="48dip"			
+			android:layout_marginRight="2.5dip"
+			android:layout_alignParentRight="true"
+			android:scaleType="centerInside"
+			android:src="@android:drawable/ic_menu_rotate"
+		/>
+		
+		<ImageButton
+			android:id="@+id/ab_post"
+			android:layout_width="48dip"
+			android:layout_height="48dip"			
+			android:layout_alignParentLeft="true"
+			android:scaleType="centerInside"
+			android:src="@android:drawable/ic_menu_add"
+		/>
+		
+	</RelativeLayout>
+     
+</merge>
+ 

@@ -14,10 +14,13 @@ import com.neusou.moobook.FBUser;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
 import com.neusou.moobook.data.User;
-import com.neusou.web.ImageUrlLoader;
-import com.neusou.web.ImageUrlLoader.AsyncLoaderResult;
+import com.neusou.web.ImageUrlLoader2;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderInput;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.sax.RootElement;
 import android.view.View;
@@ -32,15 +35,14 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 	HashMap<Long, Long> mSkipCount = new HashMap<Long,Long>();	
 	int[] mJumpCount;
 	//public static final int TAG_INTERNAL = R.id.tag_commentsadapter_item_internal;
-	public static final int TAG_ITEM = R.id.tag_commentsadapter_item;
+	public static final int TAG_ITEM_VIEW = R.id.tag_commentsadapter_item_view;
+	public static final int TAG_ITEM_DATA = R.id.tag_commentsadapter_item_data;
 	public static final int DEFAULT_PICTURE_RESID = R.drawable.defaultprofileimage;
-	Drawable mDefaultProfileImage;
-	
-
+	Bitmap mDefaultProfileImage;
 	
 	public CommentsAdapter(Activity ctx) {
 		super(ctx);		
-		mDefaultProfileImage = ctx.getResources().getDrawable(DEFAULT_PICTURE_RESID);
+		mDefaultProfileImage = App.INSTANCE.mDefaultProfileBitmap;
 	}
 
 	public class ItemTag{
@@ -50,10 +52,17 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 		public String comment_id;
 		public ImageView picture;
 		public long fromid;
-		public int internalPosition;
-		
+		public int internalPosition;		
 	}
 	
+	public class DataTag{
+		public String name;
+		public String imageUri;
+		public String comment;
+		public long fromid;
+		public String comment_id;		
+	}
+		
 	public void clearUsersData(){
 		userMap.clear();	
 	}
@@ -124,6 +133,7 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 		//bind views to itemtag if itemtag does not exist
 		Logger.l(Logger.DEBUG, LOG_TAG, "[createDataView()] pos:"+requestedPosition);
 		ItemTag itemTag = null;
+		DataTag dataTag = null;
 		InternalTag internalTag = null;
 		boolean isInflateNewView = false;
 		
@@ -146,12 +156,12 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 		
 		if(isInflateNewView){
 			convertView = mLayoutInflater.inflate(R.layout.t_comment, parent, false);
-		}
-		
+		}		
 		
 		// get reference to UI views
 		try{
-			itemTag = (ItemTag) convertView.getTag(TAG_ITEM);
+			itemTag = (ItemTag) convertView.getTag(TAG_ITEM_VIEW);
+			dataTag = (DataTag) convertView.getTag(TAG_ITEM_DATA);
 		}catch(Exception e){
 		}
 		
@@ -162,12 +172,17 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 			itemTag.time = (TextView) convertView.findViewById(R.id.time);
 			itemTag.picture = (ImageView) convertView.findViewById(R.id.profile_pic);
 			
-			convertView.setTag(TAG_ITEM,itemTag);
+			convertView.setTag(TAG_ITEM_VIEW,itemTag);
 		}
-									
-		// bind data to UI views
 		
-		String text = null,fromName = null, comment_id = null, pictureUrl = null;
+		if(dataTag == null){
+			dataTag = new DataTag();			
+			convertView.setTag(TAG_ITEM_DATA,dataTag);
+		}
+								
+		
+		
+		String commentText = null,senderUserName = null, comment_id = null, pictureImageUri = null;
 		String online_presence = "";
 		String current_location = ""; 
 		String status = "";
@@ -182,15 +197,15 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 			//JSONObject comment = commentsJsonData.getJSONObject(validNonDeletedPos);
 
 			JSONObject comment = (JSONObject) datastores.getAt(requestedPosition);
-			text = comment.getString("text");
+			commentText = comment.getString("text");
 			timePostedInSecs = comment.getLong("time");
 			fromid = comment.getLong("fromid");
 			comment_id = comment.getString("id");
 			
 			User user = userMap.get(fromid);
 			if(user != null){
-				fromName = user.name==null?"":user.name;	
-				pictureUrl = user.pic_square;
+				senderUserName = user.name==null?"":user.name;	
+				pictureImageUri = user.pic_square;
 				status = user.status;
 				locale = user.locale;
 				current_location = user.current_location;
@@ -203,8 +218,19 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 			e.printStackTrace();
 		}			
 		
+		// assign datatag variables
+		
+		dataTag.name = senderUserName;
+		dataTag.imageUri = pictureImageUri;
+		dataTag.comment = commentText;
+		dataTag.fromid = fromid;
+		dataTag.comment_id = comment_id; 
+			
+		// bind data to UI views		
+			
+		
 		try{
-			itemTag.comment.setText(text==null?"-":text.trim());
+			itemTag.comment.setText(commentText==null?"-":commentText.trim());
 		}catch(NullPointerException e){				
 		}
 		
@@ -212,13 +238,11 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 		String inferredCountry = "";
 		try{
 			inferredCountry = new java.util.Locale(locale).getCountry();
-		}catch(Exception e){
-			
-		}
-		
+		}catch(Exception e){			
+		}		
 		
 		try{
-		itemTag.name.setText(fromName+"\n"+inferredCountry);			
+		itemTag.name.setText(senderUserName+"\n"+inferredCountry);			
 		itemTag.time.setText(since);				
 		}catch(Exception e){			
 		}
@@ -227,38 +251,52 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 		itemTag.fromid = fromid;
 		itemTag.internalPosition = requestedPosition; 
 			
-		Drawable d; 
-		d = App.mImageUrlLoader.loadImage(pictureUrl, true);
-		if(d == null){
-			App.mImageUrlLoader.loadImageAsync(pictureUrl, mImageAsyncLoaderListener);
-			d = mDefaultProfileImage;
+		Bitmap bmp;
+		bmp = App.mImageUrlLoader2.loadImage(pictureImageUri, true);
+		if(bmp == null){
+			AsyncLoaderInput input = new AsyncLoaderInput();
+			input.imageUri = pictureImageUri;
+			App.mImageUrlLoader2.loadImageAsync(
+					App.INSTANCE.mExecScopeImageLoaderTask,input, mImageAsyncLoaderListener);
+			bmp = mDefaultProfileImage;
 		}
 		try{
-		itemTag.picture.setImageDrawable(d);
+			itemTag.picture.setImageBitmap(bmp);
 		}catch(Exception e){			
 		}
 		
-		Logger.l(Logger.DEBUG, LOG_TAG, "[createDataView()] time:"+timePostedInSecs+" name:"+fromName);
+		Logger.l(Logger.DEBUG, LOG_TAG, "[createDataView()] time:"+timePostedInSecs+" name:"+senderUserName);
 		return convertView;		
 	}
 	
 	
-	ImageUrlLoader.AsyncListener mImageAsyncLoaderListener = new ImageUrlLoader.AsyncListener() {
+	ImageUrlLoader2.AsyncListener mImageAsyncLoaderListener = new ImageUrlLoader2.AsyncListener() {
 		
 		@Override
 		public void onPreExecute() {								
 		}
 		
 		@Override
-		public void onPostExecute(AsyncLoaderResult result) {
+		public void onPostExecute(final AsyncLoaderResult result) {
 			
-			if(result!= null && result.status == AsyncLoaderResult.SUCCESS){
-				notifyDataSetChanged();
-			}
+			
 		}
 		
 		@Override
 		public void onCancelled() {
+			
+		}
+
+		@Override
+		public void onPublishProgress(final AsyncLoaderProgress progress) {
+			ctx.runOnUiThread(new Runnable() {				
+				@Override
+				public void run() {
+					if(progress!= null && progress.success){
+						notifyDataSetChanged();
+					}					
+				}
+			});
 			
 		}
 	};

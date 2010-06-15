@@ -2,14 +2,20 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:paddingBottom="2dp"
-    android:paddingTop="0.5dp"
-    android:paddingLeft="0.6dp"
-    android:paddingRight="0.6dp"  
-    
+    android:layout_height="wrap_content"    
 >  
 
+<include layout="@layout/include_shadow" />
+
+<RelativeLayout 
+ 	android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingBottom="5dip"
+    android:paddingTop="5dip"
+    android:paddingLeft="0dip"
+    android:paddingRight="0dip"
+>
+  
 <ImageView 
 	android:id="@+id/profile_pic"     
 	android:layout_width="48dp" 
@@ -100,6 +106,6 @@
     android:gravity="top|right"      
 />
 
-
+</RelativeLayout>
     
 </RelativeLayout>

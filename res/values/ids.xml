@@ -3,15 +3,27 @@
   <item type="id" name="tag_pageableadapter_internal" />
   <item type="id" name="tag_pageableadapter_item" />
   <item type="id" name="tag_commentsadapter_item_internal" />
-  <item type="id" name="tag_commentsadapter_item" />
-  <item type="id" name="tag_contactsadapter_item" />
-  <item type="id" name="tag_notificationsadapter_item" />
+  <item type="id" name="tag_commentsadapter_item_view" />
+  <item type="id" name="tag_commentsadapter_item_data" />
+  <item type="id" name="tag_contactsadapter_item_view" />
+  <item type="id" name="tag_contactsadapter_item_data" />
+  <item type="id" name="tag_eventsadapter_item_view" />
+  <item type="id" name="tag_eventsadapter_item_data" />
   
-  <item type="id" name="tag_streamsadapter_item" />
+  <item type="id" name="tag_notificationsadapter_item_view" />
+  <item type="id" name="tag_notificationsadapter_item_data" />
+  
+  <item type="id" name="tag_streamsadapter_item_view" />
   <item type="id" name="tag_streamsadapter_item_photo" />
   <item type="id" name="tag_streamsadapter_item_data" />
   
+  <item type="id" name="tag_standardimageasynclistener" />
+  
   <item type="id" name="asyncimageloader_profileimage" />
+  
+  <item type="id" name="imagetype_profileimage" />
+  <item type="id" name="imagetype_attachment" />
+  <item type="id" name="imagetype_userphotos" />
   
   <item type="id" name="notification_uploadphoto" />
   <item type="id" name="notification_uploadphoto_finish" />
@@ -26,6 +38,9 @@
   <item type="id" name="outhandler.activity.viewcomments" />
   <item type="id" name="outhandler.activity.viewphotos" />
   <item type="id" name="outhandler.activity.gallery" />   
-  <item type="id" name="outhandler_activity_viewcontacts" />             
+  <item type="id" name="outhandler_activity_viewcontacts" />
+  <item type="id" name="outhandler_activity_viewalbums" />             
+  
+  
                             
 </resources>

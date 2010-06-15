@@ -14,12 +14,11 @@ import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 
 public abstract class BaseManagerThread extends LeadingLooperThread{
+	
 	public static final String LOG_TAG = "ManagerThread";
 	public static final int CALLBACK_SERVERCALL_ERROR = 600;
 	public static final int CALLBACK_TIMEOUT_ERROR = 601;	
 	public static final int CALLBACK_PROCESS_WSRESPONSE_ERROR = 602; 
-	public static final int CALLBACK_ADMOB_ONFAILRECEIVE = 70;					
-	public static final int CALLBACK_ADMOB_ONRECEIVE = 71;
 	public static final String XTRA_CALLBACK_INTENT_ACTION = "xtra.mngrthrd.cb.intent.action";
 	
 	public BaseManagerThread(CountDownLatch cdl) {

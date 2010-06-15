@@ -3,14 +3,14 @@
 
     <string name="sql.notifications_complete">
 
-		select sub0.*, u.* from 
+		select notifapp.*, u.* from 
     	(
     		select 
     		n.*,
     		app.*   
-    		from notifications as n left join applications as app on n.notif_app_id = app.app_id ${whereClause0} 
-    	) as sub0 
-    	left join users as u on u.uid = sub0.sender_id  
+    		from notifications as n left join applications as app on n.notif_app_id = app.app_id ${whereClause0} ${orderClause0}
+    	) as notifapp
+    	left join users as u on u.uid = notifapp.sender_id  
     	    	
 	</string>
 

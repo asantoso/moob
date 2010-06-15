@@ -1,11 +1,11 @@
 package com.neusou.moobook.controller;
 
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,11 +17,10 @@ import android.database.DataSetObserver;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
+import android.provider.ContactsContract;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,6 +35,7 @@ import com.neusou.moobook.Util;
 import com.neusou.moobook.activity.DisplayImageActivity;
 import com.neusou.moobook.data.Attachment;
 import com.neusou.moobook.data.AttachmentMedia;
+import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.Comment;
 import com.neusou.moobook.data.MediaImageTag;
 import com.neusou.moobook.data.ProcessedData;
@@ -47,9 +47,7 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderInput;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
-public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,ProcessedData>
-
-{
+public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,ProcessedData>{
 	
 	static final String LOG_TAG = "StreamListViewFactory";
 	
@@ -134,8 +132,9 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	// @see ApplicationDBHelper
 	final int startStreamTableIndex = ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC;
 
-	Object mCreateViewLock = new Object();
-	Object mCursorLock = new Object();
+	//CountDownLatch mCreateViewLatch = new CountDownLatch(1);
+	//volatile Object mCreateViewLock = new Object();
+	volatile Object mCursorLock = new Object();
 	Cursor mDataStore;
 	
 	ArrayList<String> loadAsyncImageUris = new ArrayList<String>(5);
@@ -156,6 +155,17 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		}
 
 	};
+	
+	View.OnClickListener mProfileImageOnClickListener = new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {			
+			ContactsContract.QuickContact.showQuickContact(ctx, v, null,1,null);; 
+		}
+
+	};
+	
+	
 
 	ImageUrlLoader2.AsyncListener mPrefetchImageLoaderListener = new ImageUrlLoader2.AsyncListener() {
 		
@@ -193,53 +203,10 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 			
 		}
 	};
-	ThrottlingImageAsyncLoaderListener mImageAsyncLoaderListener = new ThrottlingImageAsyncLoaderListener(10l, 20, false){
 	
-		@Override
-		public void onPublishProgress(AsyncLoaderProgress progress) { 
-			//Logger.l(Logger.DEBUG, LOG_TAG, "onPublishProgress() message:"+progress.message);
-			
-			boolean isGroupStateValid = true;
-			
-			synchronized (mCreateViewLock) {
-							
-				isGroupStateValid = getAsyncLoadState(progress.groupCode);
-				
-				Logger.l(Logger.DEBUG, "crucial", "onPublishProgress() groupCode: "+progress.groupCode+" valid? "+isGroupStateValid);
-				
-				if(isGroupStateValid){
-					if(progress.imageView != null){
-						if(progress.success){		
-							
-		//					Logger.l(Logger.DEBUG, "bmp", "w:"+w+", h:"+h);
-			
-							if(!filterImageByDimension(progress.bitmap)){
-								progress.imageView.setVisibility(View.GONE);
-							}else{							
-								progress.imageView.setImageBitmap(progress.bitmap);
-								progress.imageView.setVisibility(View.VISIBLE);
-								addBitmapToCache(progress.groupCode, progress.imageUri, progress.bitmap);
-							}
-						}else{
-							if(progress.code == R.id.asyncimageloader_profileimage){						
-								progress.imageView.setImageBitmap(mProfileLoadingBitmap);							
-							}
-							else{
-								progress.imageView.setImageBitmap(mAttachmentDefaultBitmap);
-							}
-							progress.imageView.setVisibility(View.VISIBLE);
-						}						
-					}
-					//Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress groupCode:"+progress.groupCode+", success?:"+progress.success);
-				}else{
-					//Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress groupCode:"+progress.groupCode+"   INVALID INVALID INvALID");
-				}
-				
-			}
+	StandardImageAsyncLoadListener mAsyncLoaderListener;
 	
-		}	
-		
-	};
+	
 	StringBuffer mStringBuffer = new StringBuffer(10);
 	
 	public View.OnTouchListener mItemTouchListener;
@@ -338,16 +305,10 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	}	
 	
 		
-	private boolean filterImageByDimension(Bitmap bmp){		
-		int w = bmp.getWidth();
-		int h = bmp.getHeight();
-		if(w < MIN_BITMAP_WIDTH || h < MIN_BITMAP_HEIGHT){
-			return false;
-		}
-		return true;
-	}
+
+	
 	public void setDataSetObserver(DataSetObserver observer){
-		mImageAsyncLoaderListener.setObserver(observer);
+		mAsyncLoaderListener.setObserver(observer);
 	}
 	
 	@Override
@@ -362,7 +323,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	
 
 	public StreamListViewFactory(Activity app) {
-		super(app);
+		super(app,R.id.tag_streamsadapter_item_data, R.id.tag_streamsadapter_item_view);
 		this.ctx = app;
 		Resources res = ctx.getResources();
 		WindowManager wm = (WindowManager) app.getSystemService(Context.WINDOW_SERVICE);
@@ -373,10 +334,18 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		mProfileDefaultBitmap = BitmapFactory.decodeResource(res, R.drawable.defaultprofileimage);
 		mStringBuilder = new StringBuilder();
 		//mEmptyDrawable = res.getDrawable(R.drawable.empty);
+		
+		mAsyncLoaderListener = new StandardImageAsyncLoadListener(
+				app, 
+				mCreateViewLock, 
+				(IStatefulListView) this, 
+				200l, 
+				100, 
+				false);
 	}
 	
 	
-	public class GroupData {
+	public class GroupData implements BaseListViewFactory.IBaseListViewData{
 		public String post_id;
 		public long actor_id;
 		public long target_id;
@@ -392,10 +361,15 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		public String targetName;
 		public String attachmentJson;		
 		
-		public byte mDataState = DataState.VALID;		
+		public byte mDataState = DataState.VALID;
+
+		@Override
+		public void setDataState(byte state) {
+			mDataState = (byte)state;
+		}		
 	}
 	
-	public class GroupViewHolder {
+	public class GroupViewHolder extends BaseRowViewHolder{
 		public TextView name;
 		public TextView targetName;
 		public TextView message;
@@ -422,9 +396,21 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		
 		public TextView since;
 		public ImageView mProgressImage;
-		public int position; // cancel asynctask if the recycled row is used as
-		
+			
 		public GroupData groupData;
+	
+
+		@Override
+		public void onMovedToScapHeap() {
+			super.onMovedToScapHeap();
+			Logger.l(Logger.DEBUG, "StreamListViewFactory.GroupView", "onMovedToScrapHeap() "+position);			
+		}
+
+		@Override
+		public void onMovedToForeground() {
+			super.onMovedToForeground();
+			Logger.l(Logger.DEBUG, "StreamListViewFactory.GroupView", "onMovedToForeground");
+		}
 	
 	}
 
@@ -483,11 +469,14 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 			message.setVisibility(View.GONE);
 		}else{
 			String _messageText;
+			/*
 			try{
 				_messageText = URLDecoder.decode(groupData.message);
 			}catch(Exception e){
 				_messageText = groupData.message;
 			}
+			*/
+			_messageText = groupData.message;
 			groupViewHolder.message.setText(_messageText);
 			message.setVisibility(View.VISIBLE);
 		}
@@ -538,7 +527,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 			final ViewGroup parent) {		
 		super.createGroupView(ds, position, convertView, parent);
 		
-		Logger.l(Logger.DEBUG, "crucial", "createGroupView() position: "+position);
+		//Logger.l(Logger.DEBUG, "crucial", "createGroupView() position: "+position);
 		
 		this.mDataStore = ds;
 				
@@ -546,10 +535,10 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		GroupData groupData;
 		
 		if (convertView != null) {
-			groupViewHolder = (GroupViewHolder) convertView.getTag(R.id.tag_streamsadapter_item);
+			groupViewHolder = (GroupViewHolder) convertView.getTag(R.id.tag_streamsadapter_item_view);
 			groupData = (GroupData) convertView.getTag(R.id.tag_streamsadapter_item_data);
 			
-			if (position != groupViewHolder.position) {
+			if (position != groupViewHolder.getPosition()) {
 				//cancel asyncTask of the row if the row is a previous row.
 				//groupViewHolder.mLoadImagesAsync.cancel(true);
 			}
@@ -580,9 +569,13 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 			groupViewHolder.mediaImagesContainer = convertView.findViewById(R.id.mediaimagescontainer);
 			groupViewHolder.mProgressImage = (ImageView) convertView.findViewById(R.id.progress);
 	
+			//set event listeners
+			
 			for (int i = 0; i < 3; i++) {
 				groupViewHolder.mediaimages[i].setOnClickListener(mMediaImageOnClickListener);
-			}	
+			}
+			
+			groupViewHolder.profileImage.setOnClickListener(mProfileImageOnClickListener);
 			
 		}
 	
@@ -602,10 +595,14 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		groupViewHolder.attachmentName.setText("");
 		groupViewHolder.attachmentCaption.setText("");
 		groupViewHolder.attachmentDescription.setText("");
-		groupViewHolder.icon.setImageBitmap(App.INSTANCE.mEmptyBitmap);
-		groupViewHolder.profileImage.setImageBitmap( mProfileLoadingBitmap);
 		
-		
+		try{
+			groupViewHolder.icon.setImageBitmap(App.INSTANCE.mEmptyBitmap);
+			groupViewHolder.profileImage.setImageBitmap( mProfileLoadingBitmap);
+		}catch(Exception e){
+			
+		}
+				
 		synchronized(mCursorLock){
 		try {
 			// check if the cursor is still open
@@ -731,8 +728,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 				groupViewHolder.profileImage.setImageBitmap(profileImageBitmap);
 			}
 		}		
-		
-		
+				
 		groupData.post_id = post_id;
 		groupData.actor_id = actorId;
 		groupData.target_id = targetId;
@@ -750,9 +746,9 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		groupData.app_id = app_id;
 						
 		convertView.setTag(R.id.tag_streamsadapter_item_data, groupData);
-		convertView.setTag(R.id.tag_streamsadapter_item, groupViewHolder);
+		convertView.setTag(R.id.tag_streamsadapter_item_view, groupViewHolder);
 			
-		groupViewHolder.position = position;
+		groupViewHolder.setPosition(position);
 		groupViewHolder.groupData = groupData;
 				
 		showHideViews(
@@ -761,7 +757,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 				groupViewHolder				
 		);				
 				
-		loadImages(processedData, groupViewHolder, position, mImageAsyncLoaderListener);
+		loadImages(processedData, groupViewHolder, position, mAsyncLoaderListener);
 		
 		return convertView;
 	}
@@ -782,10 +778,8 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		}
 		
 		// load profile image
-		
-		
+				
 		Bitmap profileImageBitmap;
-		
 		
 		AsyncLoaderInput input = AsyncLoaderInput.getInstance();
 		input.imageUri = processedData.mProfileImageUri;
@@ -948,7 +942,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 					imageViewIndices.add(i);
 					bmp = mAttachmentLoadingBitmap;
 				}else{
-					if(!filterImageByDimension(bmp)){
+					if(!Util.filterImageByDimension(bmp, App.MINIMUM_IMAGE_WIDTH, App.MINIMUM_IMAGE_HEIGHT)){
 						groupViewHolder.mediaimages[i].setVisibility(View.GONE);
 					}else{
 						groupViewHolder.mediaimages[i].setImageBitmap(bmp);		
@@ -982,24 +976,21 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		for (int i = numShownImages - numOfInvalidImageUris; i < GroupViewHolder.TOTAL_MEDIAIMAGES;	i ++) {			
 			groupViewHolder.mediaimages[i].setVisibility(View.GONE);
 		}
-		
-		
+				
 		// fetch images asynchronously from the web
 		AsyncLoaderInput[] inputs = new AsyncLoaderInput[loadAsyncImageUris.size()];			
 		Iterator<String> loadAsyncImageUrisIterator = loadAsyncImageUris.iterator();
+		
+		for(int j=0;imageViewIndicesIterator.hasNext();j++){
+			int imageViewIndex = imageViewIndicesIterator.next();
+			inputs[j] = AsyncLoaderInput.getInstance();
+			inputs[j].groupCode = position;
+			inputs[j].code = position;
+			inputs[j].imageUri = loadAsyncImageUrisIterator.next();	
+			inputs[j].imageView = groupViewHolder.mediaimages[imageViewIndex];				
+		}			
+		App.mImageUrlLoader2.loadImageAsync(App.INSTANCE.mExecScopeImageLoaderTask, inputs, asyncListener);
 				
-		
-			for(int j=0;imageViewIndicesIterator.hasNext();j++){
-				int imageViewIndex = imageViewIndicesIterator.next();
-				inputs[j] = AsyncLoaderInput.getInstance();
-				inputs[j].groupCode = position;
-				inputs[j].code = position;
-				inputs[j].imageUri = loadAsyncImageUrisIterator.next();	
-				inputs[j].imageView = groupViewHolder.mediaimages[imageViewIndex];				
-			}			
-			App.mImageUrlLoader2.loadImageAsync(App.INSTANCE.mExecScopeImageLoaderTask, inputs, asyncListener);
-			
-		
 		Logger.l(Logger.DEBUG, LOG_TAG, "loading attachment images DONE. count: "+loadAsyncImageUris.size());
 		
 	}
@@ -1017,7 +1008,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 				processedAttachmentData.mAttachment.mIcon,
 				groupViewHolder.icon, 
 				App.INSTANCE.mEmptyBitmap, 
-				mImageAsyncLoaderListener);				
+				mAsyncLoaderListener);				
 		}
 		
 		String attachmentCaption = Util.getNotNullString(processedAttachmentData.mAttachment.mCaption);		
@@ -1105,69 +1096,6 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	volatile private int dVisible;
 	volatile private int firstVisibleItem;
 	volatile private int mScrollDirection;
-	
-	@Override
-	public void onScroll(AbsListView view, int firstVisibleItem,
-			int visibleItemCount, int totalItemCount) {
-		
-		//new PrefetchAsync(App.INSTANCE.mExecScopePrefetcherTask).execute((Void[])null);
-		
-		//determine the direction of scroll
-		
-		/*
-		if(this.visibleItemCount != visibleItemCount || this.totalItemCount != totalItemCount){
-			this.dVisible = this.firstVisibleItem - firstVisibleItem;
-			this.visibleItemCount = visibleItemCount;
-			this.totalItemCount = totalItemCount;
-			this.mScrollDirection = this.dVisible<0?-1:1;
-		}else{
-			return;
-		}
-		*/
-		
-		
-		
-		/*
-		synchronized(mCreateViewLock){
-			
-			if(this.visibleItemCount != visibleItemCount || this.totalItemCount != totalItemCount){
-				this.visibleItemCount = visibleItemCount;
-				this.totalItemCount = totalItemCount;
-			}else{
-				return;
-			}
-		
-			Logger.l(Logger.DEBUG, "crucial", "[onScroll()] fvi:"+firstVisibleItem+", ic:"+visibleItemCount);
-		
-			clearAsyncLoadStates();
-		
-			for(int i=0;i<visibleItemCount;i++){
-				addAsyncLoadState((long)(i+firstVisibleItem));
-			}
-		*/		
-			/*
-			Iterator<Long> loadStates = mAsyncLoadingState.iterator();
-			for(int i=0;loadStates.hasNext();i++){
-				long position = loadStates.next();
-				Logger.l(Logger.DEBUG, LOG_TAG, "[onScroll()] states position #"+i+": "+position);			
-			}
-			*/
-			
-		//}
-		
-	}
-
-	@Override
-	public void onScrollStateChanged(AbsListView view, int scrollState) {
-		// Logger.l(Logger.DEBUG, LOG_TAG, "[onScrollStateChanged()] state:"+scrollState);
-		switch(scrollState){
-			case SCROLL_STATE_IDLE:{
-				mScrollDirection = 0;
-				break;
-			}
-		}
-	}
-
 	
 	@Override
 	public void markGroupAsDirty(String[] groupIds) {

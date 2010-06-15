@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.controller;
 
 import java.util.Date;
@@ -151,3 +152,4 @@ public class PhotosGridViewFactory extends BaseListViewFactory<Cursor>{
 	}
 	
 
+*/

@@ -28,6 +28,10 @@ public class WakefulIntentService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		getLock(this).release();
+		try{
+			getLock(this).release();
+		}catch(Exception e){
+			
+		}
 	}
 }

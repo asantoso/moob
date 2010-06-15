@@ -76,9 +76,7 @@ public class HomeActivity extends BaseActivity {
 	public static final String LOG_TAG = "HomeActivity";
 
 	public static final int REQUEST_PICKPHOTO = 4;
-	
-	//Button mStatusUpdateBtn;
-	//View.OnClickListener mStatusUpdateOnClick;
+
 	View.OnClickListener mStatusBoxOnClick;
 	
 	Button mPostPictureBtn;
@@ -295,7 +293,13 @@ public class HomeActivity extends BaseActivity {
 				if(action.equals(App.INTENT_PROFILE_UPDATED)){
 					FBWSResponse response = (FBWSResponse) intent.getExtras().getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);
 					Util.writeToLocalCache(App.INSTANCE,response.data,App.LOCALCACHEFILE_SESSIONUSERDATA);
-					showSessionUserData();
+					runOnUiThread(new Runnable(){
+						public void run() {							
+							showSessionUserData();
+						};
+						;	
+					});
+					
 				}
 				
 				else if(action.equals(App.INTENT_STREAMCOMMENTS_UPDATED)){					
@@ -382,7 +386,9 @@ public class HomeActivity extends BaseActivity {
 		mViewStreamsOnClick = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent viewStreamsIntent = new Intent(HomeActivity.this,StreamActivity.class);
+				Intent viewStreamsIntent = StreamActivity.getIntent(HomeActivity.this);
+				viewStreamsIntent.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
+				viewStreamsIntent.putExtra(StreamActivity.XTRA_USERID, Facebook.INSTANCE.getSession().uid);
 				viewStreamsIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
 				startActivity(viewStreamsIntent);
 			}
@@ -636,14 +642,27 @@ public class HomeActivity extends BaseActivity {
 		}
 
 		@Override
-		public void onPublishProgress(AsyncLoaderProgress progress) {
+		public void onPublishProgress(final AsyncLoaderProgress progress) {
 			int code = (int)progress.code;
 			switch(code){
 				case R.id.asyncimageloader_profileimage:{
 					if(progress.success){
-						mProfileImage.setImageBitmap(progress.bitmap);
+						runOnUiThread(new Runnable() {							
+							@Override
+							public void run() {
+								mProfileImage.setImageBitmap(progress.bitmap);	
+								
+							}
+						});
+						
 					}else{
-						mProfileImage.setImageBitmap(App.INSTANCE.mDefaultProfileBitmap);
+						runOnUiThread(new Runnable() {							
+							@Override
+							public void run() {
+								mProfileImage.setImageBitmap(App.INSTANCE.mDefaultProfileBitmap);
+							}
+						});
+					
 					}
 				}
 			}
@@ -763,7 +782,8 @@ public class HomeActivity extends BaseActivity {
 		MenuItem logoff = menu.add(0,App.MENUITEM_LOGOFF, 1,"Logoff");
 		MenuItem getWallComments = menu.add(0,App.MENUITEM_GET_WALLCOMMENTS, 1,"Test");
 		MenuItem getWallPosts = menu.add(0,App.MENUITEM_GET_WALLPOSTS, 1,"Get wall posts");
-		MenuItem toggleLogger= menu.add(0,App.MENUITEM_TOGGLE_LOGGER, 1,"Logger");
+		MenuItem toggleLogger = menu.add(0,App.MENUITEM_TOGGLE_LOGGER, 1,"Logger");
+		MenuItem showUserWall = menu.add(0,App.MENUITEM_USER_WALL, 1,"Wall");
 		//MenuItem settings = menu.add(0,App.MENUITEM_SETTINGS, 2,"Settings");
 		return true;
 	}
@@ -794,6 +814,18 @@ public class HomeActivity extends BaseActivity {
 			}
 			case App.MENUITEM_TOGGLE_LOGGER:{
 				Logger.show = !Logger.show;
+				break;
+			}
+			case App.MENUITEM_USER_WALL:{		
+				App.showUserWall(HomeActivity.this, Facebook.INSTANCE.getSession().uid);
+				/*
+				Intent viewWall = StreamActivity.getIntent(this);
+				Bundle b = new Bundle();
+				b.putLong(StreamActivity.XTRA_USERID,Facebook.INSTANCE.getSession().uid);
+				b.putByte(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_WALLFEED);
+				viewWall.putExtras(b);
+				startActivity(viewWall);
+				*/
 				break;
 			}
 		}
@@ -833,12 +865,12 @@ public class HomeActivity extends BaseActivity {
 					break;
 				}
 				
-				case BaseManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{					
+				case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{					
 					mAdView.setVisibility(View.GONE);
 					break;
 				}
 				
-				case BaseManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
+				case ManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
 					mAdView.setVisibility(View.VISIBLE);
 					break;
 				}
@@ -867,7 +899,7 @@ public class HomeActivity extends BaseActivity {
 							
 				case BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{
 					FBWSResponse fbResponse = (FBWSResponse) msg.obj;					
-					Toast.makeText(HomeActivity.this,fbResponse.errorDesc, 1000).show();
+					Toast.makeText(HomeActivity.this,fbResponse.errorMessage, 1000).show();
 					onFinishFetchingCommentsFromCloud();
 					
 					mListAdapter.onFinishedLoading();

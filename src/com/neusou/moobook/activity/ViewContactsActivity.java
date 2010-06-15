@@ -13,6 +13,7 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.PendingIntent.CanceledException;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -50,6 +51,7 @@ import android.widget.ViewSwitcher.ViewFactory;
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
 import com.neusou.moobook.App;
+import com.neusou.moobook.AppMenu;
 import com.neusou.moobook.FBComment;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.FQL;
@@ -62,6 +64,8 @@ import com.neusou.moobook.adapters.IPageableListener;
 import com.neusou.moobook.adapters.PageableDataStore;
 import com.neusou.moobook.controller.BaseListViewFactory;
 import com.neusou.moobook.controller.ContactsListViewFactory;
+import com.neusou.moobook.controller.GetTaggedPhotosReceiver;
+import com.neusou.moobook.controller.StreamListViewFactory;
 import com.neusou.moobook.data.Comment;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
@@ -69,6 +73,7 @@ import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.task.ProcessUsersTask;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ProfileOnMenuItemClickListener;
 import com.neusou.web.IntelligentPagingInfo;
 import com.neusou.web.PagingInfo;
 
@@ -94,21 +99,23 @@ public class ViewContactsActivity extends BaseActivity{
 	
 	//Views
 	AdView mAdView;
-	ListView mListView;
-	ContactsAdapter mListAdapter;				
+	ListView mListView;	
+	ContactsAdapter mListAdapter;
+	ContactsListViewFactory mListViewFactory;
 	TextSwitcher mTopHeaderText;
 	ProgressDialog mProgressDialog;
 	View.OnClickListener mPostOnClickLst;
 	IPageableListener mAdapterListener;
 	
+	
 	boolean mIsAsyncLoadingFinished = true;
 		
 	public static final int DEFAULT_PAGING_WINDOW_SIZE = 5;
-	WorkerManagerThread mWorkerThread;
+	ManagerThread mWorkerThread;
 	JSONArray data_comments = null;
 	PagingInfo mPagingInfo; 
 	static String LABEL_HEADER_COMMENTS = "Contacts";
-
+	ProfileOnMenuItemClickListener mContextMenuItemClickListener;
 	
 	static final byte SELECTEDCOLUMNS_USER_DISPLAY = 0;
 	static final byte SELECTEDCOLUMNS_USER_FETCH = 1;
@@ -126,6 +133,7 @@ public class ViewContactsActivity extends BaseActivity{
 			Bundle data = msg.getData();
 		
 			switch(code){
+			/*
 			case MESSAGE_START:{
 				onStartUpdatingContacts();
 				break;
@@ -139,6 +147,7 @@ public class ViewContactsActivity extends BaseActivity{
 				onFinishUpdatingContacts();
 				break;
 			}
+			*/
 			
 			case ManagerThread.MESSAGE_DISMISS_DIALOG:{
 				mProgressDialog.dismiss();
@@ -151,12 +160,12 @@ public class ViewContactsActivity extends BaseActivity{
 				onFinishUpdatingContacts();	
 				break;
 			}
-				case BaseManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{					
+				case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{					
 					mAdView.setVisibility(View.GONE);
 					break;
 				}
 				
-				case BaseManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
+				case ManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
 					mAdView.setVisibility(View.VISIBLE);
 					break;
 				}
@@ -179,7 +188,7 @@ public class ViewContactsActivity extends BaseActivity{
 				
 				case BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{
 					FBWSResponse fbResponse = (FBWSResponse) msg.obj;					
-					Toast.makeText(ViewContactsActivity.this,fbResponse.errorDesc, 1000).show();
+					Toast.makeText(ViewContactsActivity.this,fbResponse.errorMessage, 1000).show();
 					onFinishUpdatingContacts();
 					mProgressDialog.dismiss();
 					break;
@@ -240,8 +249,9 @@ public class ViewContactsActivity extends BaseActivity{
 		setContentView(R.layout.contacts_activity);
 		bindViews();
 		initObjects();
+		initBroadcastReceiver();
 		initViews();
-		
+		//getIntentExtras();		
 	}
 	
 	@Override
@@ -257,7 +267,6 @@ public class ViewContactsActivity extends BaseActivity{
 	protected void onStart() {
 		super.onStart();		
 		mFacebook.registerOutHandler(R.id.outhandler_activity_viewcontacts, mWorkerThread.getInHandler());
-		mFacebook.setOutHandler(mWorkerThread.getInHandler());
 		mWorkerThread.setOutHandler(mUIHandler);
 		assert(mFacebook != null);
 		setDefaultKeyMode(DEFAULT_KEYS_SEARCH_LOCAL);
@@ -272,7 +281,13 @@ public class ViewContactsActivity extends BaseActivity{
 		super.onPause();
 		if(c!=null){
 			c.deactivate();	
-		}		
+		}
+		
+		try {
+			unregisterReceiver(mGetTaggedPhotosBroadcastReceiver);
+		} catch (IllegalArgumentException e) {
+		}
+		
 	}
 
 	@Override
@@ -280,7 +295,8 @@ public class ViewContactsActivity extends BaseActivity{
 		super.onResume();		
 		resolveCursor();
 		updateList();
-		getContactsFromCloud(PagingInfo.CURRENT);		
+		getContactsFromCloud(PagingInfo.CURRENT);
+		registerReceiver(mGetTaggedPhotosBroadcastReceiver, GetTaggedPhotosReceiver.INTENT_FILTER);
 	}
 
 	@Override
@@ -306,8 +322,7 @@ public class ViewContactsActivity extends BaseActivity{
 		mListView = (ListView) findViewById(R.id.list);		
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
 	}
-		
-
+	
 	protected void initObjects(){
 		super.initObjects();
 		//Initialize static variables 
@@ -318,7 +333,7 @@ public class ViewContactsActivity extends BaseActivity{
 		}
 		if(initStatics){
 			threadsInitCountDown = new CountDownLatch(numThreadInitializations);
-			mWorkerThread = new WorkerManagerThread(threadsInitCountDown);
+			mWorkerThread = new ManagerThread(threadsInitCountDown);
 			mWorkerThread.start();
 			
 			try {
@@ -339,10 +354,10 @@ public class ViewContactsActivity extends BaseActivity{
 		//get intent extra parameters
 		
 		
-		ContactsListViewFactory mViewFactory = new ContactsListViewFactory(this);
-		mListAdapter = new ContactsAdapter(this, mViewFactory,0);
-		mViewFactory.setDataSetObserver(mListAdapter.getObserver());
-		mViewFactory.setDisplayColumns(mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY]);
+		mListViewFactory = new ContactsListViewFactory(this);
+		mListAdapter = new ContactsAdapter(this, mListViewFactory,0);
+		mListViewFactory.setDataSetObserver(mListAdapter.getObserver());
+		mListViewFactory.setDisplayColumns(mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY]);
 		
 		mFilterQueryProvider = new FilterQueryProvider() {			
 			@Override
@@ -389,10 +404,11 @@ public class ViewContactsActivity extends BaseActivity{
 		
 	}	
 	
-
+	ContactsListViewFactory.Data longClickedItemData;
 	protected void initViews(){
 	
 		mProgressDialog = new ProgressDialog(this);
+		
 		mListAdapter.setFilterQueryProvider(mFilterQueryProvider);
 		
 		mListView.setAdapter(mListAdapter);		
@@ -410,6 +426,8 @@ public class ViewContactsActivity extends BaseActivity{
 		mListView.setSmoothScrollbarEnabled(true);
 		mListView.setScrollContainer(false);
 		mListView.setClickable(true);
+		mListView.setRecyclerListener(mListViewFactory);
+		
 		Drawable stateListDrawable = mListView.getSelector();
 		stateListDrawable.setColorFilter(App.mColorFilterBlueish);	
 		try {
@@ -425,9 +443,7 @@ public class ViewContactsActivity extends BaseActivity{
 				View v, int position, long arg3) {
 			Log.d("debug","onItemLongClick "+position);
 			Log.d("debug","onItemLongClick "+v.getClass().getCanonicalName());			
-			
-			//mLongItemClickData = (CommentsAdapter.ItemTag) v.getTag(CommentsAdapter.TAG_ITEM);			
-			
+			longClickedItemData = (ContactsListViewFactory.Data) v.getTag(R.id.tag_contactsadapter_item_data);
 			return false;//return false to pass on the event, so that context menu gets displayed
 		}	
 		
@@ -472,7 +488,6 @@ public class ViewContactsActivity extends BaseActivity{
 		});
 
 	}
-		
 
 	public void resolveCursor(){
 		if(c != null){
@@ -482,15 +497,42 @@ public class ViewContactsActivity extends BaseActivity{
 		}
 	}
 	
+	BroadcastReceiver mGetTaggedPhotosBroadcastReceiver;
 	
+	
+	private void initBroadcastReceiver() {
+		mGetTaggedPhotosBroadcastReceiver = new GetTaggedPhotosReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {			
+				super.onReceive(context, intent);
+				mProgressDialog.dismiss();
+			}
+		};
+	}
+		
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 	
 		super.onCreateContextMenu(menu, v, menuInfo);
 		menu.clearHeader();
-		///if(mLongItemClickData == null){
-			//return;
-		//}		
+			
+		mContextMenuItemClickListener = 
+			new ProfileOnMenuItemClickListener(
+				longClickedItemData.actorname,
+				longClickedItemData.profileImageUri, 
+				R.id.outhandler_activity_viewcontacts, 
+				longClickedItemData.uid, 
+				mProgressDialog, 
+				this);
+		
+		AppMenu.createActorMenu(
+				menu,
+				mContextMenuItemClickListener,
+				longClickedItemData.actorname,
+				longClickedItemData.profileImageUri,
+				R.id.outhandler_activity_viewcontacts, 
+				longClickedItemData.uid, 
+				this);
 			
 	}
 	
@@ -549,8 +591,7 @@ public class ViewContactsActivity extends BaseActivity{
 	
 	private void resetHeaderText(){		
 		if(mPagingInfo != null && mPagingInfo.totalCount >= 0){
-			setHeaderText(LABEL_HEADER_COMMENTS+" " +
-				" ("+mPagingInfo.totalCount+")");
+			setHeaderText(LABEL_HEADER_COMMENTS);
 		}
 		else{
 			setHeaderText(LABEL_HEADER_COMMENTS);		
@@ -589,8 +630,10 @@ public class ViewContactsActivity extends BaseActivity{
 				ManagerThread.CALLBACK_SERVERCALL_ERROR,  
 				ManagerThread.CALLBACK_TIMEOUT_ERROR, 
 				0,
-				mPagingInfo.windowSize,
-				mPagingInfo.getNextStart());
+				//mPagingInfo.windowSize,
+				//mPagingInfo.getNextStart());
+				500,
+				0);
 		
 	}
 	
@@ -611,30 +654,17 @@ public class ViewContactsActivity extends BaseActivity{
         return true;
     }
 		
-	public static String[] getCommentsUids(JSONArray data, String[] holder){
-		int numComments = data.length();
-		if(holder == null || holder.length < numComments){
-			holder = new String[numComments];
-		}
-		for(int i=0;i<numComments;i++){
-			try{
-				holder[i] = data.getJSONObject(i).getString(FBComment.fields_fromid);
-			}catch(JSONException e){				
-			}
-		}
-		return holder;
-	}
 
 
 	Handler mAdViewHandler = new Handler(){
 		public void handleMessage(Message msg) {
 			int code = msg.what;
 			switch(code){
-				case BaseManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
+				case ManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
 					mAdView.setVisibility(View.VISIBLE);
 					break;
 				}
-				case BaseManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{
+				case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{
 					mAdView.setVisibility(View.INVISIBLE);	
 					break;
 				}
@@ -670,7 +700,7 @@ public class ViewContactsActivity extends BaseActivity{
 					if(!fbresponse.hasErrorCode && fbresponse.jsonArray != null){
 						int numComments = fbresponse.jsonArray.length();
 						if(numComments > 0){
-							String[] uids = getCommentsUids(fbresponse.jsonArray, null);									
+							String[] uids = App.getCommentsUids(fbresponse.jsonArray, null);									
 							Logger.l(Logger.DEBUG, LOG_TAG, "[ViewContactsAct] [callback_get_contacts] response: "+fbresponse.data);							
 							data.putShortArray(Facebook.XTRA_TABLECOLUMNS_SHORTARRAY, mSelectedUserColumns[SELECTEDCOLUMNS_USER_FETCH]);
 							mProcessUsersTask = new ProcessUsersTask(mOutHandler,MESSAGE_START,MESSAGE_UPDATE, ManagerThread.MESSAGE_UPDATELIST, MESSAGE_PROGRESS, MESSAGE_TIMEOUT);

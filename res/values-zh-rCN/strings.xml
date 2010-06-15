@@ -3,6 +3,8 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">moobook</string>
     <string name="live_feed">活饲料</string>
+    <string name="wall_feed">Wall</string>
+    <string name="news_feed">News feed</string>
     <string name="possible_actions">可能采取的行动</string>
     <string name="refresh">提神</string>
     <string name="delete">刪除</string>

@@ -182,6 +182,7 @@ public class Gallery extends BaseActivity
 	@Override
 	protected void onStop() {
 		super.onStop();
+		getAllTagsTaskIdentifier = 0;
 	}
 
 	@Override
@@ -226,6 +227,7 @@ public class Gallery extends BaseActivity
 	@Override
 	protected void onPause() {
 		super.onPause();
+		getAllTagsTaskIdentifier = 0;
 	}
 	//boolean isImageShown = false;
 	@Override
@@ -237,7 +239,7 @@ public class Gallery extends BaseActivity
 		displayImage(mStartIndex);
 		if(currentTagsData == null){
 			mImageView.clearTags();			
-			if(mGetTagsTask != null) mGetTagsTask.cancel(true);
+			//if(mGetTagsTask != null) mGetTagsTask.cancel(true);
 			getAllTags(pid);
 		}else{
 			if(isDisplayTags){
@@ -251,8 +253,8 @@ public class Gallery extends BaseActivity
 			}
 		}
 
-		mFacebook.setOutHandler(mWorkerManagerThread.getInHandler());
-		
+		mFacebook.registerOutHandler(R.id.outhandler_activity_gallery, mWorkerManagerThread.getInHandler());
+				
 		mImageView.postInvalidateDelayed(10);
 		mTopHeaderText.setText("Caption");
 	}
@@ -316,7 +318,8 @@ public class Gallery extends BaseActivity
 					}
 					
 					case R.id.comments_btn:{		
-						Intent showComments = new Intent(Gallery.this, ViewCommentsActivity.class);
+						Intent showComments = ViewCommentsActivity.getIntent(Gallery.this); 
+							//new Intent(Gallery.this, ViewCommentsActivity.class);
 						pid = getCurrentPhotoId();
 						showComments.putExtra(ViewCommentsActivity.XTRA_OBJECTID, pid);
 						showComments.putExtra(ViewCommentsActivity.XTRA_CLEARDATA, true);
@@ -345,9 +348,7 @@ public class Gallery extends BaseActivity
 				}
 				
 			}
-		};
-		
-	
+		};	
 		
 		 mAsyncLoaderListener = new ImageUrlLoader2.AsyncListener() {
 			
@@ -359,7 +360,9 @@ public class Gallery extends BaseActivity
 			@Override
 			public void onPostExecute(ImageUrlLoader2.AsyncLoaderResult result) {
 				Logger.l(Logger.DEBUG, LOG_TAG, "[onPostExecute()]");
-				mProgressDialog.dismiss();
+				if(mProgressDialog != null){
+					mProgressDialog.dismiss();
+				}
 				isLoadingImage = false;
 				
 				if(result.status == AsyncLoaderResult.SUCCESS){					
@@ -383,12 +386,13 @@ public class Gallery extends BaseActivity
 			@Override
 			public void onPublishProgress(AsyncLoaderProgress progress) {	
 				Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] code:"+progress.code+", mImageLoadingCode:"+mImageLoadingCode);
-				if(progress.success){
-					if(progress.code == mImageLoadingCode){
+			//	if(progress.success){
+					//if(progress.code == mImageLoadingCode){
 						Logger.l(Logger.DEBUG, LOG_TAG, "setting bitmap");
 						progress.imageView.setImageBitmap(progress.bitmap);
-					}
-				}				
+					//}
+				//}		
+					mImageView.setVisibility(View.VISIBLE);
 			}
 			
 		};
@@ -494,8 +498,12 @@ public class Gallery extends BaseActivity
 								}
 								, 2000);
 						break;
-					}					
+					}	
+					
 					case ManagerThread.MESSAGE_UPDATE_TAGS:{
+						if(mProgressDialog != null){
+							mProgressDialog.dismiss();
+						}
 						String phototags = msg.getData().getString(XTRA_PHOTOTAGS);
 						String photoId = msg.getData().getString(XTRA_PHOTOID);
 						clearTagInfo();
@@ -574,6 +582,7 @@ public class Gallery extends BaseActivity
 			}
 		});
 	    setupOnScreenControls(findViewById(R.id.rootLayout),mImageView);
+	    
 	    mImageView.setOnKeyListener(new View.OnKeyListener(){
 	    	@Override
 	    	public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -727,9 +736,9 @@ public class Gallery extends BaseActivity
 		//try to get cached tags data in memory
 		currentTagsData = mPhotoTagsMap.get(pid);
 		if(currentTagsData == null){
-			if(mGetTagsTask != null) mGetTagsTask.cancel(true);
+			//if(mGetTagsTask != null) mGetTagsTask.cancel(true);
 			//fetch tags data from facebook.
-			getAllTags(pid);							
+			getAllTags(pid);					
 		}else{			
 			//if the image is available immediately and shown on screen then display tags
 			if(hasImmediate){
@@ -775,11 +784,16 @@ public class Gallery extends BaseActivity
 		return null;
 	}
 	
-	UserTask mGetTagsTask;
+	//UserTask mGetTagsTask;
+	static public long getAllTagsTaskIdentifier;
 	
 	private void getAllTags(String pid){	
-		if(mGetTagsTask!=null){mGetTagsTask.cancel(true);}
-		mGetTagsTask = mFacebook.getPhotoTags(pid,MAX_NUMTAGS,0,
+		//if(mGetTagsTask!=null){mGetTagsTask.cancel(true);}
+		//mGetTagsTask = 
+		Bundle callbackData = new Bundle();
+		getAllTagsTaskIdentifier = SystemClock.currentThreadTimeMillis();
+		callbackData.putLong(Facebook.XTRA_INTERNAL_CALLID, getAllTagsTaskIdentifier);
+			mFacebook.getPhotoTags(R.id.outhandler_activity_gallery,callbackData,pid,MAX_NUMTAGS,0,
 				ManagerThread.CALLBACK_GET_PHOTO_TAGS, 
 				ManagerThread.CALLBACK_SERVERCALL_ERROR, 
 				ManagerThread.CALLBACK_TIMEOUT_ERROR,
@@ -941,9 +955,14 @@ public class Gallery extends BaseActivity
 			@Override
 			public void doBusiness(Bundle data, int code,
 					FBWSResponse fbresponse) {
+				long callid = data.getLong(Facebook.XTRA_INTERNAL_CALLID);
+				
 				switch(code){
 				
-				case ManagerThread.CALLBACK_GET_PHOTO_TAGS:{
+					case ManagerThread.CALLBACK_GET_PHOTO_TAGS:{
+						if(callid != getAllTagsTaskIdentifier){
+							
+						}
 					String parsed;
 					try {							
 						parsed = fbresponse.jsonArray.toString(2);

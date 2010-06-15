@@ -4,11 +4,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.neusou.Logger;
-
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
+
+import com.neusou.Logger;
 
 public class FBWSResponse implements Parcelable{
 	
@@ -28,10 +27,14 @@ public class FBWSResponse implements Parcelable{
 	public JSONArray jsonArray;
 	public long valueLong;
 	public double valueDouble;
+	
+	/**
+	 * Raw string data outputted by Facebook
+	 */
 	public String data = null;
 	public boolean hasErrorCode = false;
 	public int errorCode = 0;
-	public String errorDesc = null;
+	public String errorMessage = null;
 	public int type = 0;
 	
 	public static Creator CREATOR = new Creator();
@@ -69,7 +72,7 @@ public class FBWSResponse implements Parcelable{
 		dest.writeLong(valueLong);
 		dest.writeDouble(valueDouble);
 		dest.writeByte(hasErrorCode?(byte)1:0);
-		dest.writeString(errorDesc);
+		dest.writeString(errorMessage);
 		dest.writeString(data);
 		
 	}
@@ -117,7 +120,7 @@ public class FBWSResponse implements Parcelable{
 			response.valueLong = valueLong;
 			response.valueDouble = valueDouble;
 			response.hasErrorCode = hasErrorCode;
-			response.errorDesc = errorDesc;
+			response.errorMessage = errorDesc;
 			response.data = data;
 			
 			return response;
@@ -148,10 +151,10 @@ public class FBWSResponse implements Parcelable{
 				fbWsResponse.hasErrorCode = jsonObj.has(jsonkey_error_code);
 				if (fbWsResponse.hasErrorCode) {
 					fbWsResponse.errorCode = jsonObj.getInt(jsonkey_error_code);
-					fbWsResponse.errorDesc = jsonObj.getString(jsonkey_error_message);
+					fbWsResponse.errorMessage = jsonObj.getString(jsonkey_error_message);
 				}
 			} catch (JSONException e) {
-				Logger.l(Logger.ERROR, LOG_TAG,"[parse()] cant parse as JSON object. "+ e.getMessage());
+				Logger.l(Logger.WARN, LOG_TAG,e.getMessage()+" can not be parsed as JSON object");
 				return null;
 			}
 		}
@@ -166,7 +169,7 @@ public class FBWSResponse implements Parcelable{
 				fbWsResponse.jsonArray = jsonArray;
 
 			} catch (JSONException e) {
-				Log.e(LOG_TAG, "cant parse as JSON Array" + e.getMessage());
+				Logger.l(Logger.WARN, LOG_TAG, e.getMessage()+ " can not be parsed as JSON Array");
 				return null;
 			}
 		}
@@ -178,7 +181,7 @@ public class FBWSResponse implements Parcelable{
 				fbWsResponse.type = JSON_LITERAL_LONG;
 				fbWsResponse.data = response;
 			} catch (NumberFormatException e) {
-				Log.e(LOG_TAG, "cant parse as long" + e.getMessage());
+				Logger.l(Logger.WARN, LOG_TAG,  e.getMessage()+" can not be parsed as long");
 			}
 
 			try {
@@ -186,7 +189,7 @@ public class FBWSResponse implements Parcelable{
 				fbWsResponse.type = JSON_LITERAL_DOUBLE;
 				fbWsResponse.data = response;
 			} catch (NumberFormatException e) {
-				Log.e(LOG_TAG, "cant parse as double" + e.getMessage());
+				Logger.l(Logger.WARN, LOG_TAG,  e.getMessage()+" can not be parsed as double.");
 
 			}
 

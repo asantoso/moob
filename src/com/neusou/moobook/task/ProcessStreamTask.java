@@ -5,19 +5,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.neusou.moobook.FBWSResponse;
-import com.neusou.moobook.Facebook;
-import com.neusou.moobook.data.Comment;
-import com.neusou.moobook.data.Stream;
-import com.neusou.moobook.model.database.ApplicationDBHelper;
-import com.neusou.async.UserTask;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.neusou.moobook.FBWSResponse;
+import com.neusou.moobook.Facebook;
+import com.neusou.moobook.data.Comment;
+import com.neusou.moobook.data.Stream;
+import com.neusou.moobook.model.database.ApplicationDBHelper;
 
 public class ProcessStreamTask extends com.neusou.async.UserTask<Bundle,ProcessProgressInfo,Integer> {
 

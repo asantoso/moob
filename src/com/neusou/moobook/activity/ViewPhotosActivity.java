@@ -63,8 +63,8 @@ interface IPhotosGallery{
 public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{ 
 	static final String LOG_TAG = "ViewPhotosActivity";
 	
-	static final String XTRA_FACEBOOKUSERID = "xtras.fb.uid";
-	static final String XTRA_PHOTOS = "xtras.photos";	
+	public static final String XTRA_FACEBOOKUSERID = "xtras.fb.uid";
+	public static final String XTRA_PHOTOS = "xtras.photos";	
 	static final String XTRA_PHOTOTAGS = "xtras.phototags";
 	static final String XTRA_USERS = "xtras.users";
 	static final String XTRA_STARTINDEX = "xtras.startindex";
@@ -98,7 +98,7 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 	static int startIndex = 0;
 	static boolean hasNext = true;
 	static boolean hasPrev = false;
-	static final int NUM_PHOTOS_PER_REQUEST = 12;
+	public static final int NUM_PHOTOS_PER_REQUEST = 12;
 	static final int NUM_THREADS_INIT = 1;
 	static final int REQUEST_PHOTOVIEW = 0;
 	
@@ -271,7 +271,7 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 			mAdView.setListener(new AdView.AdListener() {			
 				@Override
 				public void onReceiveAd(AdView adView) {
-					mUIHandler.sendEmptyMessage(BaseManagerThread.CALLBACK_ADMOB_ONRECEIVE);
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONRECEIVE);
 					adView.setVisibility(View.VISIBLE);
 				}
 				
@@ -282,7 +282,7 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 				
 				@Override
 				public void onFailedToReceiveAd(AdView adView) {
-					mUIHandler.sendEmptyMessage(BaseManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE);
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE);
 					adView.setVisibility(View.GONE);
 				}			
 			});
@@ -346,7 +346,7 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 					case ManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{
 						mProgressDialog.dismiss();
 						FBWSResponse fbResponse = (FBWSResponse) msg.obj;					
-						Toast.makeText(ViewPhotosActivity.this,fbResponse.errorDesc, 1000).show();									
+						Toast.makeText(ViewPhotosActivity.this,fbResponse.errorMessage, 1000).show();									
 						break;
 					}			
 					case ManagerThread.MESSAGE_UPDATE_PHOTO_GRID:{
@@ -358,11 +358,11 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 						hideLoadingIndicator();
 						break;
 					}
-					case BaseManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{					
+					case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{					
 						mAdView.setVisibility(View.GONE);
 						break;
 					}
-					case BaseManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
+					case ManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
 						mAdView.setVisibility(View.VISIBLE);
 						break;
 					}

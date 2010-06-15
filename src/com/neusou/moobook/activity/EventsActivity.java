@@ -72,6 +72,8 @@ public class EventsActivity extends BaseActivity {
 
 	View.OnClickListener mPostOnClickLst;
 	View mLoadingIndicator;
+
+	EventsListViewFactory mListViewFactory;
 	
 	ProgressDialog mProgressDialog;
 
@@ -228,11 +230,11 @@ public class EventsActivity extends BaseActivity {
 
 	}
 
-	EventsListViewFactory mViewFactory;
+	
 	
 	protected void initViews() {
-		mViewFactory = new EventsListViewFactory(this);
-		mListAdapter = new CursorListAdapter(this, mViewFactory, Event.col_eid);
+		mListViewFactory = new EventsListViewFactory(this);
+		mListAdapter = new CursorListAdapter(this, mListViewFactory, Event.col_eid);
 		mListView.setAdapter(mListAdapter);
 		
 		registerForContextMenu(mListView);
@@ -248,6 +250,8 @@ public class EventsActivity extends BaseActivity {
 		mListView.setDrawSelectorOnTop(false);
 		mListView.setSmoothScrollbarEnabled(true);
 		mListView.setScrollContainer(false);
+		mListView.setRecyclerListener(mListViewFactory);
+		
 		Drawable stateListDrawable = mListView.getSelector();
 		stateListDrawable.setColorFilter(App.mColorFilterBlueish);
 		try {
@@ -480,7 +484,7 @@ public class EventsActivity extends BaseActivity {
 						updateListView();
 					}else{
 						Toast.makeText(EventsActivity.this, "Unable to change RSVP status. " +
-								"(Error "+fbresponse.errorCode+":"+fbresponse.errorDesc+")", 3000).show();
+								"(Error "+fbresponse.errorCode+":"+fbresponse.errorMessage+")", 3000).show();
 					}
 				};
 			}.execute(params);			

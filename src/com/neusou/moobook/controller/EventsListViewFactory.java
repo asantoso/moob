@@ -19,6 +19,7 @@ import android.widget.TextView;
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
+import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.Event;
 
 public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
@@ -30,24 +31,32 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 	Context mContext;
 	Util mUtil;
 	BaseAdapter mAdapter;
-	Date mDate;
+	Date mDate;	
+	StandardImageAsyncLoadListener mAsyncLoaderListener;
 	
-
 	public EventsListViewFactory(Activity act) {
-		super(act);
+		super(act,R.id.tag_eventsadapter_item_data, R.id.tag_eventsadapter_item_view);
 		mContext = act.getApplicationContext();
 		mLayoutInflater = act.getLayoutInflater();
 		mResources = act.getResources();
 		mUtil = new Util();
 
 		mDate = new Date();
+		
+		mAsyncLoaderListener = new StandardImageAsyncLoadListener(
+				act, 
+				mCreateViewLock, 
+				(IStatefulListView) this, 
+				50l, 
+				50, 
+				false);
 	}
 
 	public void setAdapter(BaseAdapter adapter) {
 		mAdapter = adapter;
 	}
 
-	public class Holder {
+	public class Holder extends BaseRowViewHolder {
 		public TextView title;
 		public TextView description;
 		public ImageView pic;
@@ -55,6 +64,8 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 		public TextView rsvp_status;
 		public TextView start_date;
 		public long eid;
+		public int position;
+	
 	}
 
 	public void destroy() {
@@ -62,7 +73,9 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 
 	public View createView(Cursor ds, int position, View convertView,
 			final ViewGroup parent) {
-
+		super.createView(ds, position, convertView, parent);
+		
+		
 		try {
 			ds.moveToPosition(position);
 		} catch (Exception e) {
@@ -88,7 +101,7 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 			tag.rsvp_status = (TextView) convertView
 					.findViewById(R.id.rsvp_status);
 			// tag.host = (TextView) convertView.findViewById(R.id.host);
-			convertView.setTag(tag);
+			convertView.setTag(mTagViewId,tag);
 		}
 		Event event = null;
 		event = Event.parseCursor(ds, event);

@@ -1,3 +1,4 @@
+/*
 package com.neusou.moobook.view;
 
 import android.content.Context;
@@ -33,3 +34,4 @@ public class Revealer extends ViewGroup{
 	
 	
 }
+*/

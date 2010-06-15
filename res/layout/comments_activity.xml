@@ -44,20 +44,37 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
     android:layout_below="@+id/comment_input"
-    android:layout_above="@+id/ad"
+    android:layout_above="@+id/bottomheader"
     android:background="#00000000"  
 />
+      
+<LinearLayout
+	android:layout_width="fill_parent" 
+	android:layout_height="wrap_content"
+	android:layout_alignParentBottom="true"
+	android:orientation="vertical"
+	android:id="@+id/bottomheader"
+	android:nextFocusUp="@+id/list"
+>
+
+<include 
+	android:id="@+id/actionbar"
+	layout="@layout/include_actionbar"
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:layout_above="@+id/ad"	
+	/>
 
 <com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
-android:id="@+id/ad" 
-android:visibility="visible" 
-android:layout_width="fill_parent" 
-android:layout_height="wrap_content" 
-android:layout_alignParentBottom="true" 
-app:backgroundColor="#00000000" 
-app:textColor="#FFffffff" 
-app:keywords="" 
-app:testing="false"/>
-    
+	android:id="@+id/ad"
+	android:visibility="visible"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	app:backgroundColor="#00000000"
+	app:textColor="#FFffffff" 
+	app:keywords="" 
+	app:testing="false"/>
+</LinearLayout>
+
 </RelativeLayout>
 

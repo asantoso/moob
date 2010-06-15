@@ -25,11 +25,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.http.impl.conn.tsccm.WaitingThread;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,13 +48,17 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.neusou.BasicClientHelper;
+import com.neusou.LeadingLooperThread;
 import com.neusou.Logger;
+import com.neusou.async.IUserTaskListener;
 import com.neusou.async.UserTask;
 import com.neusou.moobook.activity.StreamActivity;
 import com.neusou.moobook.data.Event;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
+import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.thread.MoobookThread;
 
 public class Facebook {
 	
@@ -151,7 +158,15 @@ public class Facebook {
 	private static final String XTRA_INTERNAL_FBCONNECTIONERROR = "int.fb.conn.err"; //boolean value, to indicate whether there is an internal HTTP connection error when trying to invoke facebook API endpoint.
 	public static final String XTRA_INTERNAL_OUTHANDLER_KEY = "int.fb.outh.key"; //int value, a key of out handler
 	private static final String XTRA_INTERNAL_BROADCASTLOGININTENT = "int.fb.broadcast.login"; //boolean value, a key of out handler
-	private static final String XTRA_INTERNAL_ASYNCTASK_ABORTED_SESSIONEXPIRED = "int.fb.task.aborted"; //boolean, 
+	private static final String XTRA_INTERNAL_ASYNCTASK_ABORTED_SESSIONEXPIRED = "int.fb.task.aborted"; 
+	public static final String XTRA_INTERNAL_CALLID = "int.fb.callid"; //long value to indentify the call	
+
+	public static final String XTRA_FBURL_SCRIPTNAME = "fburl.scrnm";
+	public static final String XTRA_FBURL_VERSION = "fburl.ver";
+	public static final String XTRA_FBURL_USERID = "fburl.uid";
+	public static final String XTRA_FBURL_STORYID = "fburl.storyid";
+	
+	public static final String FBURL_VERSION_WALL = "wall";
 	
 	public static final byte ERROR_HTTPCONNECTION = 0;
 	public static final byte ERROR_FBAPIMETHOD = 1;	
@@ -173,6 +188,7 @@ public class Facebook {
 
 	public static final byte STREAMMODE_LIVEFEED = 0;
 	public static final byte STREAMMODE_NEWSFEED = 1;
+	public static final byte STREAMMODE_WALLFEED = 2;
 	
 	/**
 	 * Get all friend lists
@@ -195,7 +211,8 @@ public class Facebook {
 	public String FQL_GET_FRIENDLISTS;
 	public String FQL_GET_CONTACTS;
 	public String FQL_MULTIQUERY_GET_COMMENTS_COMPLETE;
-	public String FQL_MULTIQUERY_GET_COMMENTS_PHOTOS_COMPLETE;	
+	public String FQL_MULTIQUERY_GET_COMMENTS_PHOTOS_COMPLETE;
+	public String FQL_MULTIQUERY_GET_LIKES_COMPLETE;
 	/**
 	 * Get stream filters
 	 */
@@ -250,7 +267,7 @@ public class Facebook {
 		"}" +
 		"";
 		
-	static Facebook INSTANCE;
+	public static Facebook INSTANCE;
 	static final int CONNECTION_TIMEOUT = 100000;
 	static final int READ_TIMEOUT = 100000;
 	static final String PREF = "--";
@@ -271,6 +288,8 @@ public class Facebook {
     TreeMap<String,String> fqlmap;
     Context mContext;    
 	long mReExecuteWaitTime = 2000;
+	
+	
     
     public boolean registerOutHandler(int key, Handler outHandler){
     	if(!mOutRegistry.containsKey(key)){
@@ -301,6 +320,12 @@ public class Facebook {
     		}
     	}
     }
+    
+    CountDownLatch mExecThreadLatch = new CountDownLatch(1);
+    
+    MoobookThread mExecThread = new MoobookThread(mExecThreadLatch) {
+    	
+	};
     
     Handler mInterceptorHandler = new Handler(){
     	public void handleMessage(Message msg) {
@@ -650,6 +675,7 @@ public class Facebook {
 		
 	}
 	
+	
 	 public void getWallPosts(int outHandlerKey, Bundle inData, String uid, long created_date, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs, long limit, long offset){
 
 	    	Bundle data = new Bundle(inData);
@@ -715,8 +741,7 @@ public class Facebook {
 	 * @param limit 
 	 * @param offset
 	 * @return
-	 */
-	public void getTaggedPhotos(int outHandlerKey, Bundle inData, long subject, int limit, int offset, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){
+	 */	public void getTaggedPhotos(int outHandlerKey, Bundle inData, long subject, int limit, int offset, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){
 		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
 		
 		Bundle data = new Bundle(inData);
@@ -738,6 +763,29 @@ public class Facebook {
 		
 		executeFQL(data, 0);
 	}
+		
+	public void getLikesComplete(int outHandlerKey, Bundle inData, long object_id, int limit, int offset, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){			
+		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
+		
+		Bundle data = new Bundle(inData);
+		
+		fqlmap.clear();		
+		fqlmap.put(param_object_id, String.valueOf(object_id));
+		fqlmap.put(subkey_limit, Long.toString(limit));
+		fqlmap.put(subkey_offset, Long.toString(offset));		
+		
+		String fql_query = StrSubstitutor.replace(FQL_MULTIQUERY_GET_LIKES_COMPLETE, fqlmap).trim();		
+		Logger.l(Logger.DEBUG,LOG_TAG, "[getLikesComplete()] fql: "+fql_query);
+				
+		data.putString(XTRA_FQL_QUERIES, fql_query);
+		data.putString(XTRA_FQL_QUERY_TYPE, wsmethod_fql_multiquery);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
+		executeFQL(data, 0);
+	}	
 	
 	/**
 	 * 
@@ -749,10 +797,10 @@ public class Facebook {
 	 * @param cbTimeoutOp timeout code passed on to listener handler
 	 * @param timeoutMillisecs timeout in milliseconds
 	 */
-	public FQLTask getPhotoTags(String pid, int limit, int offset, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){
+	public void getPhotoTags(int outHandlerKey, Bundle inData, String pid, int limit, int offset, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){
 		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
 		
-		Bundle data = new Bundle();
+		Bundle data = new Bundle(inData);
 		
 		fqlmap.clear();		
 		fqlmap.put("pid", pid);
@@ -767,8 +815,9 @@ public class Facebook {
 		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
 				
-		return executeFQL(data, 0);		
+		executeFQL(data, 0);		
 	}
 	
 	
@@ -831,7 +880,7 @@ public class Facebook {
 		Log.d(LOG_TAG,"onSessionValidated isValid: "+isValid+" , errCode: "+errCode+" ,"+errMessage);
 	}
 	
-	public void postComment(String comment, String post_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
+	public void postComment(int outHandlerKey, Bundle inData, String comment, String post_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
 			
 		RestMethod m = new RestMethod(true);
 		
@@ -843,7 +892,7 @@ public class Facebook {
 		map.put(param_post_id, post_id);
 		map.put(param_comment, comment);		
 		map.put(param_method, wsmethod_stream_addComment);
-		
+		/*
 		String requestSignature = computeRequestSig(map, mSession.secret);
 		
 		if(requestSignature == null){ //can't compute signature?
@@ -851,21 +900,23 @@ public class Facebook {
 		}else{		
 			map.put(param_sig, requestSignature);
 		}					
-			
-		String content = generateRequestContent(map);		
+			*/
+		//String content = generateRequestContent(map);		
 		
-		Bundle b = new Bundle();
+		Bundle b = new Bundle(inData);
 		b.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
 		b.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
 		b.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
-		b.putString(XTRA_WEBSERVICE_REQUEST_CONTENT, content);
+		b.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+
+		b.putSerializable(XTRA_METHODPARAMETERSMAP, map);
 		m.execute(b);
 	}
 	
-	public void getAlbums(long uid, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeout, long limit, long offset){
+	public void getAlbums(int outHandlerKey, Bundle inData, long uid, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeout, long limit, long offset){
 		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
 		
-		Bundle data = new Bundle();
+		Bundle data = new Bundle(inData);
 		
 		fqlmap.clear();		
 		fqlmap.put(param_owner, Long.toString(uid));
@@ -881,6 +932,8 @@ public class Facebook {
 		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
 				
 		executeFQL(data, 0);
 	}
@@ -929,18 +982,19 @@ public class Facebook {
 		executeFQL(data, 0);
 	}
 
-	public void deleteComment(String comment_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
+	public void deleteComment(int outHandlerKey, Bundle inData, String comment_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
 			
 		RestMethod m = new RestMethod(true);
 		
 		TreeMap<String,String> map = new TreeMap<String,String>(); 
 		
+		map.put(param_uid, Long.toString(mSession.uid));
 		map.put(param_api_key, FBApp.api_key);
 		map.put(param_format, RESPONSE_FORMAT_JSON);
 		map.put(param_session_key, mSession.key);
 		map.put(param_comment_id, comment_id);		
 		map.put(param_method, wsmethod_stream_removeComment);
-		
+		/*
 		String requestSignature = computeRequestSig(map, mSession.secret);
 		
 		if(requestSignature == null){ //can't compute signature?
@@ -949,18 +1003,21 @@ public class Facebook {
 			map.remove(param_sig);
 			map.put(param_sig, requestSignature);
 		}					
-			
-		String content = generateRequestContent(map);		
+			*/
+		//String content = generateRequestContent(map);		
 		
-		Bundle b = new Bundle();
+		Bundle b = new Bundle(inData);
 		b.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
 		b.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
 		b.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
-		b.putString(XTRA_WEBSERVICE_REQUEST_CONTENT, content);
+		b.putSerializable(XTRA_METHODPARAMETERSMAP, map);
+		b.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
+		//b.putString(XTRA_WEBSERVICE_REQUEST_CONTENT, content);
 		m.execute(b);
 	}
 	
-	class RestMethod extends AsyncTask<Bundle, Void, Bundle>{
+	class RestMethod extends UserTask<Bundle, Void, Bundle>{
 		Bundle inData = null;
 		Exception mInvocationException; 
 		boolean mAutoBroadcastLogin;
@@ -1105,7 +1162,7 @@ public class Facebook {
 			if(fbwsresponse != null){
 				if(fbwsresponse.hasErrorCode){
 					result.putInt(Facebook.XTRA_FBRESPONSE_ERROR_CODE, fbwsresponse.errorCode);
-					result.putString(Facebook.XTRA_FBRESPONSE_ERROR_MESSAGE, fbwsresponse.errorDesc);					
+					result.putString(Facebook.XTRA_FBRESPONSE_ERROR_MESSAGE, fbwsresponse.errorMessage);					
 					switch(fbwsresponse.errorCode){
 						case FBWSErrorCodes.API_EC_PARAM_SIGNATURE:{
 							//re-invoke fql
@@ -1325,7 +1382,7 @@ public class Facebook {
 			if(fbwsresponse != null){
 				if(fbwsresponse.hasErrorCode){	
 					result.putInt(Facebook.XTRA_FBRESPONSE_ERROR_CODE, fbwsresponse.errorCode);
-					result.putString(Facebook.XTRA_FBRESPONSE_ERROR_MESSAGE, fbwsresponse.errorDesc);
+					result.putString(Facebook.XTRA_FBRESPONSE_ERROR_MESSAGE, fbwsresponse.errorMessage);
 					switch(fbwsresponse.errorCode){
 						case FBWSErrorCodes.API_EC_PARAM_SIGNATURE:{
 							Logger.l(Logger.ERROR, LOG_TAG, "[FQLTask] [onPostExecute()] signature error, requesting again.");
@@ -1364,26 +1421,128 @@ public class Facebook {
 		}
 	}
 	
-	private FQLTask executeFQL(final Bundle executionDescriptors, long delayMillis){
-		final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
-		final FQLTask task = new FQLTask(broadcastLogin);
+	Object mWaitLock = new Object();
+	AtomicBoolean mIsInOperation = new AtomicBoolean(false);
+	public void releaseExecuteLock(){
+		synchronized (mWaitLock) {
+			Logger.l(Logger.DEBUG, "crucial", "released lock.");
+			mIsInOperation.set(false);
+			mWaitLock.notify();
+		}	
+	}
+	
+	IUserTaskListener<Void,Bundle> mExecuteListener = new IUserTaskListener<Void, Bundle>() {
+		
+		@Override
+		public void onTimeout() {
+			 releaseExecuteLock();
+		}
+		
+		@Override
+		public void onProgressUpdate(Void... progress) {
+
+			
+		}
+		
+		@Override
+		public void onPreExecute() {
+			
+			
+		}
+		
+		@Override
+		public void onPostExecute(Bundle result) {
+			releaseExecuteLock();
+		}
+		
+		@Override
+		public void onCancelled() {
+			releaseExecuteLock();	
+		}
+	};
+	private void executeFQL(final Bundle executionDescriptors, long delayMillis){
 		Runnable r = new Runnable(){
-			public void run() {	
-				task.execute(executionDescriptors);				
+			
+			long mMaxWaitTimes = 30000l;
+			long mTotalWaitTimesThusFar = 0;
+			long mWaitLength = 500l;
+			
+				public void run() {
+					/*
+					while(true){
+						synchronized (mWaitLock) {
+							try{
+								if(mIsInOperation.get()){	
+									mTotalWaitTimesThusFar+=mWaitLength;
+									if(mTotalWaitTimesThusFar > mMaxWaitTimes){
+										Logger.l(Logger.WARN, "crucial","could not get lock. exiting.");
+										return;
+									}
+									Logger.l(Logger.VERBOSE, "crucial","waiting for lock.");
+									mWaitLock.wait(mWaitLength);
+								}else{								
+									break;
+								}
+							}catch(InterruptedException e){
+							}
+						}						
+					}
+					*/
+					
+					//Logger.l(Logger.VERBOSE, "crucial","acquiring lock.");
+					//mIsInOperation.set(true);
+					
+					final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
+					final FQLTask task = new FQLTask(broadcastLogin);
+													
+					task.setListener(mExecuteListener);
+					task.execute(executionDescriptors);
+					//mInterceptorHandler.postDelayed(r, delayMillis);
+					//return task;
+				};
 			};
-		};
-		mInterceptorHandler.postDelayed(r, delayMillis);
-		return task;
+			
+			mExecThread.getInHandler().postDelayed(r, 0);
+			
+	/*		
+			final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
+			final FQLTask task = new FQLTask(broadcastLogin);
+		
+			mIsInOperation.set(true);					
+			task.setListener(mExecuteListener);
+			task.execute(executionDescriptors);
+*/
 	}
 
 	private boolean executeRest(final Bundle executionDescriptors, long delayMillis){
 		Runnable r = new Runnable(){
 			public void run() {
+				/*
+				while(true){
+					synchronized (mWaitLock) {
+						try{
+						if(mIsInOperation.get()){							
+								mWaitLock.wait(500l);
+							
+						}else{					
+							break;
+						}
+						}catch(InterruptedException e){
+						}
+					}
+				}
+				 */
+				
+				//mIsInOperation.set(true);
+				
 				final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
-				new RestMethod(broadcastLogin).execute(executionDescriptors);				
+				RestMethod rm = new RestMethod(broadcastLogin);
+				rm.setListener(mExecuteListener);
+				rm.execute(executionDescriptors);		
+				
 			};
 		};
-		return mInterceptorHandler.postDelayed(r, delayMillis);
+		return mExecThread.getInHandler().postDelayed(r, 0);
 	}
 
 	public static Facebook getInstance(){
@@ -1398,6 +1557,7 @@ public class Facebook {
 	}
 	
 	private void init(Context ctx){
+		mExecThread.start();
 		
 		mSession = new FBSession();		
 		this.mContext = ctx;
@@ -1418,6 +1578,7 @@ public class Facebook {
 		FQL_GET_CONTACTS = mResources.getString(R.string.fql_get_contacts);
 		FQL_GET_WALLPOSTS = mResources.getString(R.string.fql_get_wallposts);
 		FQL_MULTIQUERY_GET_COMMENTS_PHOTOS_COMPLETE = mResources.getString(R.string.fql_get_comments_photos_complete);
+		FQL_MULTIQUERY_GET_LIKES_COMPLETE = mResources.getString(R.string.fql_get_likes_complete);
 		
 	}
 	
@@ -1758,5 +1919,37 @@ public class Facebook {
 		}
 	}
 	
-	
+	 public static Bundle extractDataFromFacebookUrl(String url){
+	    	String regex = "/(\\w*).php\\?id=([\\d]*)&v=(\\w*)&story_fbid=(\\d*)";
+	    	Pattern pattern = Pattern.compile(regex);
+	    	Matcher matcher = pattern.matcher(url);
+	    	final int GROUP_SCRIPTNAME = 1;
+	    	final int GROUP_ID = 2;
+	    	final int GROUP_VERSION = 3;
+	    	final int GROUP_STORYID = 4;
+	    	
+	    	
+	    	Bundle b = null;
+	    	
+	    	if(matcher.find()){
+	    		String scriptName = matcher.group(GROUP_SCRIPTNAME);
+	    		String userId = matcher.group(GROUP_ID);
+	    		String versionName = matcher.group(GROUP_VERSION);
+	    		String storyId = matcher.group(GROUP_STORYID);
+	    		
+	    		b = new Bundle();
+	    		
+	    		b.putString(XTRA_FBURL_SCRIPTNAME, scriptName);
+	    		b.putString(XTRA_FBURL_STORYID, storyId);
+	    		b.putString(XTRA_FBURL_VERSION, versionName);
+	    		b.putString(XTRA_FBURL_USERID, userId);
+	    		
+	    		Logger.l(Logger.DEBUG,"TEST", "script:"+scriptName+", userId:"+userId+", versionName:"+versionName+", storyId:"+storyId);
+	    		
+	    		return b;
+	    	}
+	    	
+	    	return null;	    	
+	    }
+	 
 }

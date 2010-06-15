@@ -25,6 +25,7 @@ import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
+import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.FBApplication;
 import com.neusou.moobook.data.FBNotification;
 import com.neusou.moobook.data.Stream;
@@ -37,15 +38,16 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
 	static final String LOG_TAG = "NotificationsListViewFactory";
 	
-	Context ctx;
+	Activity ctx;
 	ApplicationDBHelper mDBHelper;
 	SQLiteDatabase mDB;
 	
 	public View.OnTouchListener mItemTouchListener;
-	static int DATA_TAGID = R.id.tag_notificationsadapter_item;
-	
+		
 	ArrayList<Long> mAsyncLoadState = new ArrayList<Long>();
+	StandardImageAsyncLoadListener mAsyncLoaderListener; 
 	
+	/*
 	ImageUrlLoader2.AsyncListener  mAsyncLoaderListener = new ImageUrlLoader2.AsyncListener() {		
 		@Override
 		public void onPreExecute() {
@@ -66,41 +68,51 @@ public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
 		}
 		
 		@Override
-		public void onPublishProgress(AsyncLoaderProgress progress) {
-			Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code);
+		public void onPublishProgress(final AsyncLoaderProgress progress) {
+			ctx.runOnUiThread(new Runnable() {
+				
+				@Override
+				public void run() {
+					Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code);
+					int foundIndex = Collections.binarySearch(mAsyncLoadState, progress.code);
 			
-			
-			int foundIndex = Collections.binarySearch(mAsyncLoadState, progress.code);
-			
-			if(foundIndex!=-1){
-//				Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code+". code is valid");
-				if(progress.success){
-	//				Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code+" updating..");
-					progress.imageView.setImageBitmap(progress.bitmap);
-				}else{
-		//			Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code+". progress failed.");
-					progress.imageView.setImageBitmap(null);
+					if(foundIndex!=-1){
+//					Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code+". code is valid");
+						if(progress.success){
+	//					Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code+" updating..");
+							progress.imageView.setImageBitmap(progress.bitmap);
+						}else{
+		//				Logger.l(Logger.DEBUG, LOG_TAG, "[onPublishProgress()] progress:"+progress.code+". progress failed.");
+							progress.imageView.setImageBitmap(null);
+						}
+					}
 				}
-			}
+			});				
+			
 		}
 	};
+	*/
 	
 	public NotificationsListViewFactory(Activity app, ListView listView) {
-		super(app);
-		this.ctx = app.getApplicationContext();
+		super(app, R.id.tag_notificationsadapter_item_data, R.id.tag_notificationsadapter_item_view);
+		this.ctx = app;
 		Resources res = ctx.getResources();
-		
-		
+		mAsyncLoaderListener = new StandardImageAsyncLoadListener(
+				app, 
+				mCreateViewLock, 
+				(IStatefulListView) this, 
+				50l, 
+				50, 
+				false);		
 	}
 
-	public class Holder {				
+	public class Holder extends BaseRowViewHolder {				
 		public TextView title;
 		public TextView name;
 		public TextView message;
 		public ImageView pic;
 		public ImageView appicon;
 		public TextView since;
-		public long position;
 	}
 	
 	public void destroy() {
@@ -114,6 +126,8 @@ public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
 	
 	synchronized public View createView(Cursor ds, int position,
 			View convertView, final ViewGroup parent) {
+		
+		super.createView(ds, position, convertView, parent);
 		
 		
 		//Logger.l(Logger.DEBUG, "debug", "[createView()] "+position);
@@ -133,10 +147,7 @@ public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
 		Holder tag;
 
 		if (convertView != null) {
-			tag = (Holder) convertView.getTag(DATA_TAGID);
-			if(tag.position != position){
-				//mAsyncLoadState.remove(tag.position);
-			}			
+			tag = (Holder) convertView.getTag(mTagViewId);
 		} else {
 			convertView = mLayoutInflater.inflate(R.layout.t_notification,parent,false);
 			tag = new Holder();
@@ -190,7 +201,7 @@ public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
 				
 		}
 								
-		convertView.setTag(DATA_TAGID, tag);
+		convertView.setTag(mTagViewId, tag);
 		
 		return convertView; 
 	}

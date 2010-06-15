@@ -28,7 +28,9 @@ public class Stream {
 	public static final short col_comments_can_post = 18;
 	public static final short col_comments_can_remove = 19;
 	
-	public static final short TOTAL_COLUMNS = 20;
+	//public static final short col__sessionUserId = 20;
+	
+	public static final short TOTAL_COLUMNS = 21;
 	
 	public String post_id;
 	public long actor_id;
@@ -50,6 +52,8 @@ public class Stream {
 	public long comments_count;
 	public boolean comments_can_post;
 	public boolean comments_can_remove;
+	
+	//public long _sessionUserId;
 	//public String comments_comment_list;
 	
 	public static final String cn_rowid = "post_rowid";
@@ -73,6 +77,8 @@ public class Stream {
 	public static final String cn_comments_count = "comments_count";
 	public static final String cn_comments_can_post = "comments_can_post";
 	public static final String cn_comments_can_remove = "comments_can_remove";
+	
+	public static final String cn__sessionUserId = "_sessionUserId";
 	
 	public static final String fields_appid = "app_id";
 //	public static final String cn_comments_comment_list = "comments_comment_list";
@@ -110,7 +116,7 @@ public class Stream {
 		s.comments_can_post = c.getInt(col_comments_can_post) == 1?true:false;
 		s.comments_can_remove = c.getInt(col_comments_can_remove) == 1?true:false;
 		//s.comments_comment_list = c.getString(col_comments_comment_list);
-		
+		//s._sessionUserId = c.getLong(col__sessionUserId);
 		c.close();
 		return s;
 	}
@@ -140,7 +146,9 @@ public class Stream {
 		cv.put(cn_comments_can_post, comments_can_post);
 		cv.put(cn_comments_can_remove, comments_can_remove);
 		cv.put(cn_comments_count, comments_count);		
-
+		
+		//cv.put(cn__sessionUserId, _sessionUserId);
+		
 		//cv.put(cn_comments_comment_list, comments_comment_list);
 		
 		

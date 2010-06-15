@@ -158,9 +158,11 @@ public class NotificationsActivity extends BaseActivity{
 		mListView.setCacheColorHint(Color.TRANSPARENT);
 		mListView.setSmoothScrollbarEnabled(true);
 		mListView.setDrawSelectorOnTop(false);
+		mListView.setRecyclerListener(mListViewFactory);
 		
 		Drawable stateListDrawable = mListView.getSelector();
 		stateListDrawable.setColorFilter(App.mColorFilterBlueish);			
+		
 		try {
 			mListView.setDivider(
 					mResources
@@ -176,9 +178,14 @@ public class NotificationsActivity extends BaseActivity{
 							int position, long arg3) {
 						c.moveToPosition(position);
 						FBNotification note = FBNotification.parseCursor(c, null);
-						Toast.makeText(NotificationsActivity.this, note.href, 3000).show();
-						
-						mFacebook.getFbObjectTypeFromUri(note.href);
+						//Toast.makeText(NotificationsActivity.this, note.href, 3000).show();
+						Bundle data = Facebook.extractDataFromFacebookUrl(note.href);
+						String version = data.getString(Facebook.XTRA_FBURL_VERSION);
+						String story_id = data.getString(Facebook.XTRA_FBURL_STORYID);
+						String user_id = data.getString(Facebook.XTRA_FBURL_USERID);
+						if(version.equals(Facebook.FBURL_VERSION_WALL)){
+							App.showPost(NotificationsActivity.this, user_id+"_"+story_id);
+						}
 					}			
 				}
 		);

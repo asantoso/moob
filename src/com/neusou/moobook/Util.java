@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -37,6 +38,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -88,7 +91,7 @@ public class Util {
 		defaultProfileStreamDrawable = ctx.getResources().getDrawable(
 				R.drawable.mobook2_64);
 	}
-
+/*
 	public static void lc(Activity act, int code) {
 		try {
 			sb.delete(0, sb.length());
@@ -116,10 +119,10 @@ public class Util {
 		}
 
 		if (seeLifecycle)
-			Util.logi("lifecycle", sb.toString());
+			Logger.l(Logger.DEBUG,"lifecycle", sb.toString());
 
 	}
-
+*/
 	public static double getSimpleElementValueAsDouble(Document doc,
 			String elementName) throws NumberFormatException,
 			NoSuchFieldException, IllegalArgumentException {
@@ -270,6 +273,7 @@ public class Util {
 	 * return null; } catch (NoSuchAlgorithmException e) { // Log.e("Util",
 	 * "NoSuchAlgorithmException " + e.getMessage()); return null; } }
 	 */
+/*
 	public static void logi(String tag, String m) {
 		if (Util.showLog) {
 			Log.i(tag, m);
@@ -287,7 +291,8 @@ public class Util {
 			Log.d(tag, m);
 		}
 	}
-
+*/
+	
 	static Date date = new Date();
 
 	static CharSequence commentDateFormatPattern = "d MMM yyyy '('E 'at' k:mm')'";
@@ -499,6 +504,19 @@ public class Util {
 
 	static final String LOG_TAG = "Util";
 
+	public static void writeBitmapToLocalCache(Bitmap bmp, String filename)
+		throws FileNotFoundException{
+		FileOutputStream fos = new FileOutputStream(filename);
+		bmp.compress(CompressFormat.JPEG, 100, fos);
+		
+	}
+	
+	public static Bitmap readBitmapFromLocalCache(String filename) throws FileNotFoundException{
+		File imageFile = new File(filename);		
+		FileInputStream fis = new FileInputStream(imageFile);
+		return BitmapFactory.decodeStream(fis);		
+	}
+	
 	public static void writeToLocalCache(Context ctx, String data, String filename) {
 		Logger.l(Logger.DEBUG, LOG_TAG,"[saveToLocalCache()] filename: "+ filename.toString());
 		
@@ -651,5 +669,16 @@ public class Util {
 		Logger.l(Logger.DEBUG, LOG_TAG, "tac:"+tac+", tas:"+tas+", teac:"+teac+", teas:"+teas);
 		
 	}
+	
+	public static boolean filterImageByDimension(Bitmap bmp, int minW, int minH){		
+		int w = bmp.getWidth();
+		int h = bmp.getHeight();
+		if(w < minW || h < minH){
+			return false;
+		}
+		return true;
+	}
+	
+
 
 }

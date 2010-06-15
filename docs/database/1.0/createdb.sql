@@ -61,6 +61,7 @@ CREATE TABLE streams(
 	comments_count INTEGER,
 	comments_can_post INTEGER,
 	comments_can_remove INTEGER,
+	_sessionUserId INTEGER
 );
 	
 DROP TABLE IF EXISTS comments;
@@ -151,7 +152,9 @@ CREATE TABLE users(
 	tv TEXT,
 	wall_count INTEGER,
 	website TEXT,
-	type INTEGER
+	type INTEGER,
+	
+	_sessionUserId INTEGER
 );
 
 DROP TABLE IF EXISTS friendlists;
@@ -171,7 +174,7 @@ CREATE TABLE notifications(
 	recipient_id INTEGER, 	
 	created_time INTEGER,  	
 	updated_time INTEGER, 	
-	title_html TEXT, 	
+	title_html TEXT,
 	title_text TEXT, 	
 	body_html TEXT, 	
 	body_text TEXT, 	

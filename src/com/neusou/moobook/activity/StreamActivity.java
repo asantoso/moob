@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 
-import org.json.JSONException;
-
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
@@ -19,10 +17,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,6 +38,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
@@ -52,11 +50,13 @@ import com.admob.android.ads.AdView;
 import com.neusou.Logger;
 import com.neusou.async.UserTask.Status;
 import com.neusou.moobook.App;
-import com.neusou.moobook.FBWSResponse;
+import com.neusou.moobook.AppMenu;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.Prefs;
 import com.neusou.moobook.R;
-import com.neusou.moobook.controller.MyExpandableListAdapter;
+import com.neusou.moobook.controller.GetTaggedPhotosReceiver;
+import com.neusou.moobook.controller.MyExpandableListCursorAdapter;
+import com.neusou.moobook.controller.StandardUiHandler;
 import com.neusou.moobook.controller.StreamListViewFactory;
 import com.neusou.moobook.controller.StreamListViewFactory.GroupData;
 import com.neusou.moobook.data.Attachment;
@@ -67,11 +67,18 @@ import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.task.ProcessStreamMultiQueryTask;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ActionBar;
+import com.neusou.moobook.view.ProfileOnMenuItemClickListener;
 
 public class StreamActivity extends BaseActivity {
 
-	static final String LOG_TAG = "StreamActivity"; 
-
+	static final String LOG_TAG = Logger.registerLog(StreamActivity.class); 
+	
+	public static Intent getIntent(Context caller){
+		Intent i = new Intent(caller, StreamActivity.class);
+		return i;
+	}
+	
 	static CountDownLatch mThreadsInitCountdown;
 	static final int mNumThreadsInitialization = 1;
 
@@ -102,9 +109,11 @@ public class StreamActivity extends BaseActivity {
 			+ ".xtra.onresume.autorefresh";
 	static final String XTRA_DIRTYPOSTS = App.packageprefix
 			+ ".xtra.dirty.posts.ids";
-	static final String XTRA_STREAMMODE = App.packageprefix
+	public static final String XTRA_STREAMMODE = App.packageprefix
 			+ ".xtra.stream.mode";
-
+	public static final String XTRA_USERID = App.packageprefix 
+			+ ".xtra.stream.uid";
+	
 	static final byte NUM_TASKS = 2;
 	static final byte TASK_GETSTREAMS = 0;
 	static final byte TASK_GETFRIENDS = 1;
@@ -112,22 +121,29 @@ public class StreamActivity extends BaseActivity {
 	short tasksMax[] = new short[] { 1, 1 };
 
 	byte mStreamMode = Facebook.STREAMMODE_LIVEFEED;
+	long mUserId = -1; // -1 refers to current session user.
+	
 	Facebook mFacebook;
 	ExpandableListView mListView;
 	StreamListViewFactory mListViewFactory;
-	MyExpandableListAdapter mListViewAdapter;
+	MyExpandableListCursorAdapter mListViewAdapter;
 	OnMenuItemClickListener mContextMenuItemListener;
 	TextSwitcher mTopHeaderText;
 	View mLoadingIndicator;
 	AdView mAdView;
+	ActionBar mActionBar;
+	
 	boolean isStreamFiltered = false;
 	byte mFilterType = 0;
 	final byte FILTER_FRIENDLIST = 1;
 	final byte FILTER_NAME = 2;
 	Handler mThreadUIHandler;
-	static Cursor mStreamsCursor;
+	Cursor mStreamsCursor;
 	StreamListViewFactory.GroupData longClickedItemData;
-	BroadcastReceiver mBroadcastReceiver;
+	
+	BroadcastReceiver mAutoStreamsUpdateBroadcastReceiver;
+	BroadcastReceiver mGetTaggedPhotosBroadcastReceiver;
+	
 	PendingIntent mAutoUpdateStreamsPendingIntent;
 	Intent mAutoUpdateStreamsIntent;
 
@@ -158,8 +174,9 @@ public class StreamActivity extends BaseActivity {
 		initObjects();
 		initBroadcastReceiver();
 		initViews();
+		getIntentExtras();
 	}
-
+	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -178,7 +195,7 @@ public class StreamActivity extends BaseActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-
+		
 		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		mFacebook.registerOutHandler(R.id.outhandler_activity_streams, mWorkerThread.getInHandler());
@@ -199,7 +216,7 @@ public class StreamActivity extends BaseActivity {
 		}
 
 		
-		startAlarm();
+		//startAlarm();
 
 		
 	}
@@ -231,18 +248,12 @@ public class StreamActivity extends BaseActivity {
 
 		}
 
-		try {
-			unregisterReceiver(mBroadcastReceiver);
-		} catch (IllegalArgumentException e) {
-		}
-		try {
-			unregisterReceiver(mUpdateDirtyRows);
-		} catch (IllegalArgumentException e) {
-		}
-		stopAlarm();
-		
+	
+		doUnregisterReceivers();
+		stopAlarm();		
 	}
-
+	
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -250,18 +261,21 @@ public class StreamActivity extends BaseActivity {
 		fetchIsCurrentlyIncrementing = false;
 		startReceivingAutoUpdateIntent();
 		updateHeaderTextBasedOnMode();
-		updateHeaderBackgroundBasedOnMode();
+		updateColorsBasedOnMode();
 		if (mStreamsCursor != null) {
 
 		} else {
 			resolveCursor(null);
 		}
 		updateListView();
-		if (isTimeToUpdate()) {
-			fetchStreamsFromCloud(false);
-		}
-		registerReceiver(mUpdateDirtyRows, mUpdateDirtyRowsIF);
 		
+		//if (isTimeToUpdate()) {
+			fetchStreamsFromCloud(false);
+		//}
+		
+		updateColorsBasedOnMode();
+		
+		doRegisterReceivers();
 	}
 
 	@Override
@@ -277,20 +291,47 @@ public class StreamActivity extends BaseActivity {
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putByte(XTRA_STREAMMODE, mStreamMode);
-
+		outState.putLong(XTRA_USERID, mUserId);
 	}
 
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		mStreamMode = savedInstanceState.getByte(XTRA_STREAMMODE);
+		mUserId = savedInstanceState.getLong(XTRA_USERID);
 	}
 
+	private void getIntentExtras(){
+		Intent i = getIntent();
+		mUserId = i.getLongExtra(XTRA_USERID, Facebook.INSTANCE.getSession().uid);
+		mStreamMode = i.getByteExtra(XTRA_STREAMMODE, mStreamMode);
+	}
+	
+	private void doRegisterReceivers(){	
+		registerReceiver(mGetTaggedPhotosBroadcastReceiver, GetTaggedPhotosReceiver.INTENT_FILTER);
+		IntentFilter autoUpdateStreamsIntentFilter = new IntentFilter();
+		autoUpdateStreamsIntentFilter.addAction(App.INTENT_GET_TAGGED_PHOTOS);
+		registerReceiver(mAutoStreamsUpdateBroadcastReceiver, autoUpdateStreamsIntentFilter);
+	}
+	
+	private void doUnregisterReceivers(){
+		try {
+			unregisterReceiver(mAutoStreamsUpdateBroadcastReceiver);
+		} catch (IllegalArgumentException e) {
+		}
+		try {
+			unregisterReceiver(mGetTaggedPhotosBroadcastReceiver);
+		} catch (IllegalArgumentException e) {
+		}
+	}
+	
+	
 	@Override
 	protected void bindViews() {
 		super.bindViews();
 		mLoadingIndicator = findViewById(R.id.loadingindicator);
 		mListView = (ExpandableListView) findViewById(R.id.list);
+		
 		AdManager.setInTestMode(false);
 		mAdView = (AdView) findViewById(R.id.ad);
 		mAdView.setVisibility(View.VISIBLE);
@@ -299,32 +340,15 @@ public class StreamActivity extends BaseActivity {
 		mAdView.setBackgroundColor(0xFFaaaaaa);
 		mAdView.setTextColor(0xFF111111);
 		mAdView.setGoneWithoutAd(false);
-		mAdView.setRequestInterval(60);
-		mAdView.setListener(new AdView.AdListener() {
-			@Override
-			public void onReceiveAd(AdView adView) {
-				mUIHandler.sendEmptyMessage(CALLBACK_ADMOB_ONRECEIVE);
-				// adView.setVisibility(View.VISIBLE);
-			}
-
-			@Override
-			public void onNewAd() {
-
-			}
-
-			@Override
-			public void onFailedToReceiveAd(AdView adView) {
-				mUIHandler.sendEmptyMessage(CALLBACK_ADMOB_ONFAILRECEIVE);
-				// adView.setVisibility(View.GONE);
-			}
-		});
+		mAdView.setRequestInterval(60);		
 
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
 		mListView = (ExpandableListView) findViewById(R.id.list);
 	}
 
 	LayoutAnimationController mListAnimation;
-
+	ProgressDialog mProgressDialog;
+	
 	protected void initObjects() {
 
 		// initialize threads
@@ -347,7 +371,13 @@ public class StreamActivity extends BaseActivity {
 		mListAnimation = AnimationUtils.loadLayoutAnimation(this,
 				R.anim.layout_animation_row_left_slide);
 
-		mListViewAdapter = new MyExpandableListAdapter(this);
+		mListViewAdapter = new MyExpandableListCursorAdapter(this){
+			@Override
+			public int getChildrenCount(int groupPosition) {
+				return 1;
+			}		
+		};
+		
 		mListViewAdapter.setGroupIdCursorColumnIndex(Stream.col_post_id	+ ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC);
 		mListViewFactory = new StreamListViewFactory(this);
 		mListViewFactory.setDataSetObserver(mListViewAdapter.getObserver());
@@ -383,9 +413,118 @@ public class StreamActivity extends BaseActivity {
 
 		};
 
+		
+		mUIHandler = new StandardUiHandler(this, mProgressDialog, mAdView);
+		
+		/*
+		mUIHandler = new Handler() {
+			public void handleMessage(android.os.Message msg) {
+				// Log.d(LOG_TAG,"ui hander handle message what:"+msg.what);
+				int code = msg.what;
+				Bundle data = msg.getData();
+				switch (code) {
+				case ManagerThread.MESSAGE_DISMISS_DIALOG: {
+					mProgressDialog.dismiss();
+					break;
+				}
+
+				case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE: {
+					mAdView.setVisibility(View.GONE);
+					break;
+				}
+				
+				case ManagerThread.CALLBACK_ADMOB_ONRECEIVE: {
+					mAdView.setVisibility(View.VISIBLE);
+					break;
+				}
+
+				case BaseManagerThread.CALLBACK_TIMEOUT_ERROR: {
+					mProgressDialog.dismiss();
+					Toast.makeText(StreamActivity.this,
+							"Request to Facebook timed out", 2000).show();
+					Logger
+							.l(Logger.WARN, LOG_TAG,
+									"[UIHandler] [handleMessage()] remote request timed out.");
+					onFinishUpdatingStreams();
+					break;
+				}
+				
+				case BaseManagerThread.CALLBACK_SERVERCALL_ERROR: {
+					mProgressDialog.dismiss();
+					String reason = (String) data
+							.getString(Facebook.XTRA_SERVERCALL_ERROR_MSG);
+					int errorCode = data
+							.getInt(Facebook.XTRA_SERVERCALL_ERROR_CODE);
+					Logger.l(Logger.ERROR, LOG_TAG,
+							"[UIHandler] [handleMessage()] failed invoking remote request. error: "
+									+ errorCode + ", reason:" + reason);
+					Toast.makeText(StreamActivity.this, errorCode + ":" + reason,
+							2000).show();
+					
+					
+					// hideLoadingIndicator();
+					// resetHeaderText();
+					onFinishUpdatingStreams();
+					break;
+				}
+
+					
+
+				case ManagerThread.CALLBACK_PROCESS_STREAMS_FINISH: {
+					Logger
+							.l(Logger.DEBUG, LOG_TAG,
+									"[UiHandler][handleMessage()] finished processing streams.");
+
+					updateHeaderTextBasedOnMode();
+					updateColorsBasedOnMode();
+					try {
+						updateListView();
+
+					} catch (Exception e) {
+					}
+					onFinishUpdatingStreams();
+
+					// incremental fetch
+					
+					long waitTime = (long) (3000+1000*Math.random());	
+									
+						postDelayed(
+								new Runnable() {								
+									@Override
+									public void run() {
+										fetchStreamsFromCloud(true);									
+									}
+								}, 							
+								waitTime);
+					
+					// end of incremental fetch
+					
+					break;
+				}
+				}
+			};
+		};
+		*/
 	}
 
 	protected void initViews() {
+		mActionBar = new ActionBar();
+		mActionBar.bindViews(this);
+		mActionBar.setOnAddClick(new View.OnClickListener() {			
+			@Override
+			public void onClick(View v) {		
+				
+			}
+		});
+		mActionBar.setOnReloadClick(new View.OnClickListener() {			
+			@Override
+			public void onClick(View v) {				
+				fetchStreamsFromCloud(false);
+				mActionBar.animateReload();
+			}
+		});
+		
+		
 		mProgressDialog = createProgressDialog();
 
 		mTopHeaderText.setOnClickListener(new View.OnClickListener() {
@@ -432,6 +571,7 @@ public class StreamActivity extends BaseActivity {
 		registerForContextMenu(mListView);
 		mListView.setFocusableInTouchMode(true);
 		mListView.setFocusable(true);
+		mListView.setDividerHeight(0);
 		mListView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
 		mListView.setDrawingCacheBackgroundColor(Color.TRANSPARENT);
 		mListView.setAnimationCacheEnabled(true);
@@ -444,8 +584,6 @@ public class StreamActivity extends BaseActivity {
 		mListView.setGroupIndicator(null);
 		mListView.setChildIndicator(null);
 		// mListView.setChoiceMode(ExpandableListView.CHOICE_MODE_SINGLE);
-		Drawable stateListDrawable = mListView.getSelector();
-		stateListDrawable.setColorFilter(App.mColorFilterBlueish);
 		try {
 			mListView.setDivider(mResources
 					.getDrawable(android.R.drawable.divider_horizontal_bright));
@@ -527,34 +665,8 @@ public class StreamActivity extends BaseActivity {
 
 				});
 
-		mListView.setOnScrollListener(mListViewFactory);
+
 		mListView.setRecyclerListener(mListViewFactory);
-		
-
-		/*
-		 * mListView.setOnItemClickListener(new
-		 * AdapterView.OnItemClickListener() {
-		 * 
-		 * @Override public void onItemClick(AdapterView<?> adapter, View view,
-		 * int position, long arg3) {
-		 * 
-		 * Intent i = new Intent(StreamActivity.this,
-		 * StreamPostActionsDialogActivity.class);
-		 * 
-		 * startActivityForResult(i, ACTCODE_SHOW_POSTACTIONS);
-		 * 
-		 * StreamListViewFactory.Holder h =
-		 * (StreamListViewFactory.Holder)view.getTag(); String comment =
-		 * h.message.getText().toString(); String from =
-		 * h.name.getText().toString(); String since =
-		 * h.since.getText().toString(); String say = since +".. "+ from +
-		 * ".. Says: "+comment;
-		 * 
-		 * mTts.speak(say, TextToSpeech.QUEUE_FLUSH, null);
-		 * 
-		 * } });
-		 */
-
 		mListView
 				.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 
@@ -588,15 +700,26 @@ public class StreamActivity extends BaseActivity {
 				return t;
 			}
 		});
-		/*
-		 * mTestBtn.setOnClickListener(new View.OnClickListener() {
-		 * 
-		 * @Override public void onClick(View v) { test(); } });
-		 * 
-		 * mTest2Btn.setOnClickListener(new View.OnClickListener() {
-		 * 
-		 * @Override public void onClick(View v) { test2(); } });
-		 */
+	
+		mAdView.setListener(new AdView.AdListener() {
+			@Override
+			public void onReceiveAd(AdView adView) {
+				mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONRECEIVE);
+				// adView.setVisibility(View.VISIBLE);
+			}
+
+			@Override
+			public void onNewAd() {
+				
+			}
+
+			@Override
+			public void onFailedToReceiveAd(AdView adView) {
+				mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE);
+				// adView.setVisibility(View.GONE);
+			}
+		});
+		
 	}
 
 	private void switchMode() {
@@ -607,26 +730,66 @@ public class StreamActivity extends BaseActivity {
 		}
 		updateListView();
 		updateHeaderTextBasedOnMode();
-		updateHeaderBackgroundBasedOnMode();
+		updateColorsBasedOnMode();
 	}
 
 	private void updateHeaderTextBasedOnMode() {
-		if (mStreamMode == Facebook.STREAMMODE_LIVEFEED) {
-			mTopHeaderText.setText("Live Feed");
-		} else {
-			mTopHeaderText.setText("News Feed");
-		}
+		String txt = getHeaderNormalText(mStreamMode);
+		mTopHeaderText.setText(txt);		
 	}
 
-	private void updateHeaderBackgroundBasedOnMode(){
-		if (mStreamMode == Facebook.STREAMMODE_LIVEFEED) {
-			mTopHeaderText.setBackgroundDrawable(mResources.getDrawable(R.drawable.title_bg));
-		} else {
-			mTopHeaderText.setBackgroundDrawable(mResources.getDrawable(R.drawable.stream_header_bg_newsfeed));			
+	public String getHeaderNormalText(byte type){
+		Resources res = App.INSTANCE.getResources();
+		
+		switch(type){
+			case Facebook.STREAMMODE_LIVEFEED:{
+				return res.getString(R.string.live_feed);
+			}
+			case Facebook.STREAMMODE_NEWSFEED:{
+				return res.getString(R.string.news_feed);
+			}
+			case Facebook.STREAMMODE_WALLFEED:{
+				return res.getString(R.string.wall_feed);
+			}
+			default:{
+				return "";
+			}
 		}
 	}
 	
-	ProgressDialog mProgressDialog;
+	public String getHeaderLoadingText(byte type){
+		Resources res = App.INSTANCE.getResources();
+		switch(type){
+		case Facebook.STREAMMODE_LIVEFEED:{
+			return res.getString(R.string.live_feed);
+		}
+		case Facebook.STREAMMODE_NEWSFEED:{
+			return res.getString(R.string.news_feed);
+		}
+		case Facebook.STREAMMODE_WALLFEED:{
+			return res.getString(R.string.wall_feed);
+		}
+		default:{
+			return "";
+		}
+		}
+	}
+	
+		
+	private void updateColorsBasedOnMode(){
+		if (mStreamMode == Facebook.STREAMMODE_LIVEFEED) {
+			mTopHeaderText.setBackgroundDrawable(mResources.getDrawable(R.drawable.title_bg));			
+			Drawable stateListDrawable = mListView.getSelector();
+			stateListDrawable.setColorFilter(App.mColorFilterBlueish);		
+			
+		} else {
+			mTopHeaderText.setBackgroundDrawable(mResources.getDrawable(R.drawable.stream_header_bg_newsfeed));
+			mListView.getSelector().setColorFilter(null);
+		}
+		
+	}
+	
+	
 
 	private ProgressDialog createProgressDialog() {
 		ProgressDialog pd;
@@ -785,25 +948,40 @@ public class StreamActivity extends BaseActivity {
 			}
 		}
 
-		Bitmap headerIconBmp = App.mImageUrlLoader2.loadImage(longClickedItemData.processedData.mProfileImageUri, true);
+		mProgressDialog.setTitle(null);
+		mProgressDialog.setMessage(App.INSTANCE.mResources.getString(R.string.getting_tagged_photos));
+		
+		mContextMenuItemClickListener = 
+			new ProfileOnMenuItemClickListener(
+				longClickedItemData.actorName,
+				longClickedItemData.processedData.mProfileImageUri, 
+				R.id.outhandler_activity_streams, 
+				longClickedItemData.actor_id, 
+				mProgressDialog, 
+				StreamActivity.this);
+		
+		AppMenu.createActorMenu(
+				menu,
+				mContextMenuItemClickListener,
+				longClickedItemData.actorName,
+				longClickedItemData.processedData.mProfileImageUri,
+				R.id.outhandler_activity_streams, 
+				longClickedItemData.actor_id, 
+				StreamActivity.this);
+		
+		/*
+		Bitmap headerIconBmp = App.mImageUrlLoader2.loadImage(, true);
 		Drawable actorProfileDrawable = new BitmapDrawable(headerIconBmp);
-		SubMenu actorNameSM = menu.addSubMenu(longClickedItemData.actorName);
+		SubMenu actorNameSM = menu.addSubMenu();
 		actorNameSM.setHeaderIcon(actorProfileDrawable);
 		actorNameSM.setHeaderTitle(longClickedItemData.actorName);
-		//actorNameSM.setHeaderIcon(actorProfileDrawable);
 		actorNameSM.setIcon(actorProfileDrawable);
-		
-		//actorNameSM.add("Send message on wall");
-		//actorNameSM.add("Send images on wall");
-		//actorNameSM.add("Send videos on wall");
 		actorNameSM.add("View wall");
 		actorNameSM.add("View profile");
 		actorNameSM.add("View photos");
 		MenuItem mi = actorNameSM.add(0,CONTEXT_MENUITEM_VIEW_TAGGED_PHOTOS,0,"View tagged photos");
 		mi.setOnMenuItemClickListener(mGetTaggedPhotosMenuItemOnClick);
-		//actorNameSM.add("Add to favorites");
-		//actorNameSM.add("Un-favorite");
-
+		
 		if (longClickedItemData.targetName != null
 				&& longClickedItemData.targetName.length() > 0) {
 			SubMenu targetNameSM = menu
@@ -818,10 +996,11 @@ public class StreamActivity extends BaseActivity {
 			targetNameSM.add("View Photos");
 
 		}
-
+		 */
 	}
 
-	OnMenuItemClickListener mGetTaggedPhotosMenuItemOnClick = 
+	OnMenuItemClickListener  mContextMenuItemClickListener;
+		/*
 	new OnMenuItemClickListener() {
 
 		@Override
@@ -846,18 +1025,25 @@ public class StreamActivity extends BaseActivity {
 		}
 	};
 	
-	
+	*/
+		
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
-		SubMenu toggleMode;
-		if (mStreamMode == Facebook.STREAMMODE_LIVEFEED) {
-			toggleMode = menu
+				
+		if(mStreamMode != Facebook.STREAMMODE_WALLFEED){
+			SubMenu toggleMode;
+			if (mStreamMode == Facebook.STREAMMODE_LIVEFEED) {
+				toggleMode = menu
 					.addSubMenu(0, MENUITEM_TOGGLE_MODE, 0, "Newsfeed");
-		} else {
-			toggleMode = menu
+			} else {
+				toggleMode = menu
 					.addSubMenu(0, MENUITEM_TOGGLE_MODE, 0, "Livefeed");
+			}
+		}else{
+			
 		}
+		
 		SubMenu clearAll = menu.addSubMenu(0, MENUITEM_CLEARALL, 0, "ClearAll");
 
 		SubMenu refresh = menu.addSubMenu(0, MENUITEM_REFRESH_STREAM, 0,
@@ -867,50 +1053,11 @@ public class StreamActivity extends BaseActivity {
 		SubMenu clearDB = menu.addSubMenu(0, MENUITEM_CLEAR_STREAM, 0,
 				"Clear stream");
 		clearDB.setIcon(android.R.drawable.ic_popup_disk_full);
-
-		SubMenu filter = menu.addSubMenu("Filter");
-		filter.setIcon(android.R.drawable.ic_menu_manage);
-
-		filter.setHeaderTitle("Filter streams using:");
-		filter.setHeaderIcon(android.R.drawable.ic_menu_search);
-		MenuItem filterNameMI = filter.add(0, MENUITEM_TEST_GETPROFILE, 0,
-				"Name");
-		MenuItem filterMessageMI = filter.add(0, MENUITEM_TEST_GETPROFILE, 0,
-				"Message");
-		MenuItem filterFriendlistMI = filter.add(0, MENUITEM_TEST_GETPROFILE,
-				0, "Friendlist");
-		filterNameMI.setIcon(android.R.drawable.ic_dialog_info);
-
-		SubMenu actions = menu.addSubMenu("Actions");
-		actions.add("Refresh");
-		actions.add("Post photo");
-		actions.add("Send live message");
-		actions.add("Send an email");
-		actions.add("Show notifications");
-		actions.add("Quick status update");
-
+		
 		/*
 		 * MenuItem photos = menu.add(0, 0, 0, "Photos"); photos.setIntent(new
 		 * Intent(StreamActivity.this, ViewPhotosActivity.class));
 		 */
-
-		SubMenu friends = menu.addSubMenu("Friends");
-		friends.add("All");
-		friends.add("Starred");
-		friends.add("Events");
-		friends.add("B-Days");
-
-		SubMenu my = menu.addSubMenu("My");
-		my.add("Profile");
-		my.add("Mailbox");
-		my.add("Friend list");
-		my.add("Hidden feeds list");
-		my.add("Events");
-		my.add("Photos");
-
-		SubMenu favn = menu.addSubMenu(0, 0, 0, "Fav-n");
-		favn.add("Show my fav-5");
-		favn.add("Settings");
 
 		SubMenu sessions = menu.addSubMenu("Sessions");
 		sessions.add("Lock and go standby mode");
@@ -984,7 +1131,8 @@ public class StreamActivity extends BaseActivity {
 		return super.onMenuItemSelected(featureId, item);
 	}
 
-	static long mUIHandlerSignature = 1000l;
+	//static long mUIHandlerSignature = 1000l;
+	/*
 	BroadcastReceiver mUpdateDirtyRows = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -993,103 +1141,11 @@ public class StreamActivity extends BaseActivity {
 			mListViewAdapter.getViewFactory().markGroupAsDirty(rows);
 		}
 	};
-
-	Handler mUIHandler = new Handler() {
-		public void handleMessage(android.os.Message msg) {
-			// Log.d(LOG_TAG,"ui hander handle message what:"+msg.what);
-			int code = msg.what;
-			Bundle data = msg.getData();
-			switch (code) {
-			case ManagerThread.MESSAGE_DISMISS_DIALOG: {
-				mProgressDialog.dismiss();
-				break;
-			}
-
-			case CALLBACK_ADMOB_ONFAILRECEIVE: {
-				mAdView.setVisibility(View.GONE);
-				break;
-			}
-			
-			case CALLBACK_ADMOB_ONRECEIVE: {
-				mAdView.setVisibility(View.VISIBLE);
-				break;
-			}
-
-			case BaseManagerThread.CALLBACK_TIMEOUT_ERROR: {
-				mProgressDialog.dismiss();
-				Toast.makeText(StreamActivity.this,
-						"Request to Facebook timed out", 2000).show();
-				Logger
-						.l(Logger.WARN, LOG_TAG,
-								"[UIHandler] [handleMessage()] remote request timed out.");
-				onFinishUpdatingStreams();
-				break;
-			}
-			
-			case BaseManagerThread.CALLBACK_SERVERCALL_ERROR: {
-				mProgressDialog.dismiss();
-				String reason = (String) data
-						.getString(Facebook.XTRA_SERVERCALL_ERROR_MSG);
-				int errorCode = data
-						.getInt(Facebook.XTRA_SERVERCALL_ERROR_CODE);
-				Logger.l(Logger.ERROR, LOG_TAG,
-						"[UIHandler] [handleMessage()] failed invoking remote request. error: "
-								+ errorCode + ", reason:" + reason);
-				Toast.makeText(StreamActivity.this, errorCode + ":" + reason,
-						2000).show();
-				
-				
-				// hideLoadingIndicator();
-				// resetHeaderText();
-				onFinishUpdatingStreams();
-				break;
-			}
-
-				/**
-				 * case CALLBACK_PROCESS_WSRESPONSE_HAS_ERRORCODE:{
-				 * mProgressDialog.dismiss(); FBWSResponse fbResponse =
-				 * (FBWSResponse) msg.obj; Logger.l(Logger.ERROR,LOG_TAG,
-				 * "[UIHandler] [handleMessage()] failed processing response.");
-				 * Toast.makeText(StreamActivity.this,fbResponse.errorDesc,
-				 * 1000).show(); onFinishUpdatingStreams(); break; }
-				 **/
-
-			case ManagerThread.CALLBACK_PROCESS_STREAMS_FINISH: {
-				Logger
-						.l(Logger.DEBUG, LOG_TAG,
-								"[UiHandler][handleMessage()] finished processing streams.");
-
-				updateHeaderTextBasedOnMode();
-				updateHeaderBackgroundBasedOnMode();
-				try {
-					updateListView();
-
-				} catch (Exception e) {
-				}
-				onFinishUpdatingStreams();
-
-				// incremental fetch
-				long waitTime = (long) (3000+1000*Math.random());	
-								
-					postDelayed(
-							new Runnable() {								
-								@Override
-								public void run() {
-									fetchStreamsFromCloud(true);									
-								}
-							}, 							
-							waitTime);
-					
-				// end of incremental fetch
-				
-				break;
-			}
-			}
-		};
-	};
+*/
+	Handler mUIHandler;
 
 	private void resolveCursor(long[] uids) {
-
+		
 		boolean isDBLocked = App.INSTANCE.mDB.isDbLockedByCurrentThread();
 		boolean isDBOpen = App.INSTANCE.mDB.isOpen();
 
@@ -1101,8 +1157,8 @@ public class StreamActivity extends BaseActivity {
 			mStreamsCursor.close();
 		}
 
-		mStreamsCursor = App.INSTANCE.mDBHelper.getStreams(App.INSTANCE.mDB, mStreamMode, -1,
-				uids, 300l, 0l);
+		mStreamsCursor = App.INSTANCE.mDBHelper.getStreams(App.INSTANCE.mDB, mStreamMode, mUserId, uids, 300l, 0l);
+		
 		startManagingCursor(mStreamsCursor);
 
 		try {
@@ -1120,54 +1176,41 @@ public class StreamActivity extends BaseActivity {
 		mAutoUpdateStreamsIntent = new Intent(App.INTENT_AUTOUPDATE_STREAMS);
 		mAutoUpdateStreamsPendingIntent = PendingIntent.getBroadcast(this, 0,
 				mAutoUpdateStreamsIntent, 0);
-
-		mBroadcastReceiver = new BroadcastReceiver() {
+		
+		mGetTaggedPhotosBroadcastReceiver = new GetTaggedPhotosReceiver(){
+			@Override
+			public void onReceive(Context context, Intent intent) {			
+				super.onReceive(context, intent);
+				mProgressDialog.dismiss();
+			}
+		};
+		
+		mAutoStreamsUpdateBroadcastReceiver = new BroadcastReceiver() {
+			
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
-				Log.d("StreamActivity", "BroadcastReceiver->onReceive, action:"+action);
-				// PowerManager mgr = (PowerManager)
-				// context.getSystemService(Context.POWER_SERVICE);
-				// WakeLock lockStatic =
-				// mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"mylock");
-				
+		//		Log.d("StreamActivity", "BroadcastReceiver->onReceive, action:"+action);
+						
 				if(action.equals(App.INTENT_AUTOUPDATE_STREAMS)){
+					onFinishUpdatingStreams();
 					if (mIsStreamsUpdateFinished) {
-						Log.d("StreamActivity","BroadcastReceiver->onReceive: start updating streams from the cloud");
+						Logger.l(Logger.DEBUG, "StreamActivity","BroadcastReceiver->onReceive: start updating streams from the cloud");
 						fetchStreamsFromCloud(false);
 					} else {
-						Log.d("StreamActivity",	"BroadcastReceiver->onReceive: not done updating streams");
-						Toast.makeText(context, "Not done updating.", 2000).show();
-					}
-				}else if(action.equals(App.INTENT_GET_TAGGED_PHOTOS)){
-					Bundle extras = intent.getExtras();
-					FBWSResponse fbresponse = (FBWSResponse) extras.getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);										
-					try{
-						String parsed = fbresponse.jsonArray.toString(2);
-						Logger.l(Logger.DEBUG,  LOG_TAG,"[callback_get_tagged_photos]: "+ parsed); 
-						Intent i = new Intent(App.INSTANCE,ViewPhotosActivity.class);
-						i.putExtra(ViewPhotosActivity.XTRA_PHOTOS, fbresponse.data);						
-						i.putExtra(ViewPhotosActivity.XTRA_FACEBOOKUSERID, extras.getLong(Facebook.param_uid,0));
-						i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT); 
-						mUIHandler.sendEmptyMessage(ManagerThread.MESSAGE_DISMISS_DIALOG);
-						App.INSTANCE.startActivity(i);			  
-					}catch(JSONException e){
-					}
+						Logger.l(Logger.DEBUG, "StreamActivity",	"BroadcastReceiver->onReceive: not done updating streams");
+						Toast.makeText(context, "Not done updating..", 2000).show();
+					}					
 					
-				}
+				}	
+				
 			}
 		};
 
 	}
 
 	private void startReceivingAutoUpdateIntent() {
-		IntentFilter autoUpdateStreamsIntentFilter = new IntentFilter(
-				App.INTENT_AUTOUPDATE_STREAMS);
-		autoUpdateStreamsIntentFilter.addAction(
-				App.INTENT_GET_TAGGED_PHOTOS
-		);
-		registerReceiver(mBroadcastReceiver,
-				autoUpdateStreamsIntentFilter);
+		
 	}
 
 	private void stopAlarm() {
@@ -1196,7 +1239,7 @@ public class StreamActivity extends BaseActivity {
 
 	private void onStartUpdatingStreams() {
 		mIsStreamsUpdateFinished = false;
-		mTopHeaderText.setText("Updating streams from the cloud..");
+		//mTopHeaderText.setText("Updating streams from the cloud..");
 	}
 
 	private void onFinishUpdatingStreams() {
@@ -1234,29 +1277,26 @@ public class StreamActivity extends BaseActivity {
 		String post_id = mStreamsCursor
 				.getString(Stream.col_post_id
 						+ ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC);
+		/*
 		String message = mStreamsCursor
 				.getString(Stream.col_message
 						+ ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC);
+						*/
+		/*
 		String attachment = mStreamsCursor
 				.getString(Stream.col_attachment
 						+ ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC);
-
-		Logger.l(Logger.VERBOSE, LOG_TAG, "message: " + message);
+*/
+		//Logger.l(Logger.VERBOSE, LOG_TAG, "message: " + message);
 		Logger.l(Logger.VERBOSE, LOG_TAG, "post_id: " + post_id);
-		Logger.l(Logger.VERBOSE, LOG_TAG, "attachment: " + attachment);
+	
+		//Logger.l(Logger.VERBOSE, LOG_TAG, "attachment: " + attachment);
 
-		Intent showComments = new Intent(StreamActivity.this,
-				ViewCommentsActivity.class);
-		showComments.putExtra(ViewCommentsActivity.XTRA_POSTID, post_id);
-		showComments.putExtra(ViewCommentsActivity.XTRA_CLEARDATA, true);
-		showComments.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
-				| Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
-				| Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-		startActivity(showComments);
+		App.showPost(this, post_id);
 	}
 
-	int fetchMaxStreams = 120;
-	int fetchSizePerFetch = 20;
+	int fetchMaxStreams = 50;
+	int fetchSizePerFetch = 25;
 	int fetchNumTotalFetches = (int)Math.ceil(fetchMaxStreams/fetchSizePerFetch);
 	int fetchCurrentFetch = 0;
 	boolean fetchIsCurrentlyIncrementing = false;
@@ -1288,6 +1328,7 @@ public class StreamActivity extends BaseActivity {
 
 		// incremental fetch section 
 		
+		/*
 		if(!isIncremental && fetchIsCurrentlyIncrementing){
 			return;
 		}
@@ -1305,6 +1346,7 @@ public class StreamActivity extends BaseActivity {
 		}
 				
 		//end of incremental fetch section
+		*/
 		
 		showLoadingIndicator();
 		onStartUpdatingStreams();
@@ -1321,9 +1363,11 @@ public class StreamActivity extends BaseActivity {
 			lastStreamPostUpdateTime = App.INSTANCE.mDBHelper.getStreamLastUpdatedTime(App.INSTANCE.mDB);
 		}
 		
-		mFacebook.getStreamsComplete(				
+		if(mStreamMode != Facebook.STREAMMODE_WALLFEED){
+		
+			mFacebook.getStreamsComplete(				
 				R.id.outhandler_activity_streams,
-				Long.toString(mFacebook.getSession().uid),
+				Long.toString(mUserId),
 				null, 
 				lastStreamPostUpdateTime,
 				ManagerThread.CALLBACK_GET_STREAMS_MQ,
@@ -1333,7 +1377,23 @@ public class StreamActivity extends BaseActivity {
 				offset, //using offset as the limit and 0 as the offset, the behaviour is every fetching increases the fetch size 
 				0,
 				10, 0);
+		}
 		
+		else{
+			
+			Bundle callbackData = new Bundle();
+			mFacebook.getWallPosts(
+				R.id.outhandler_activity_streams,
+				callbackData,				
+				Long.toString(mUserId),
+				0, 
+				ManagerThread.CALLBACK_GET_STREAMS_MQ,
+				ManagerThread.CALLBACK_SERVERCALL_ERROR,
+				ManagerThread.CALLBACK_TIMEOUT_ERROR,
+				1,
+				10,0);
+			
+		}
 	
 	}
 

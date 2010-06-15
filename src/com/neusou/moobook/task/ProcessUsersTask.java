@@ -22,7 +22,7 @@ import com.neusou.moobook.model.database.ApplicationDBHelper;
 
 public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Integer> {
 
-	static final String LOG_TAG = "ProcessUsersTask";
+	static final String LOG_TAG = Logger.registerLog(ProcessUsersTask.class);
 	
 	Handler mOutHandler;
 	//Context mContext;	
@@ -33,18 +33,8 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 	int mStartCode;
 	int mTimeoutCode;
 	
-	int mPeriodicUIUpdateInterval = 5;
-	boolean mPeriodicUIUpdateEnabled = false;
 	
 	ProcessProgressInfo mProgressInfo;
-	
-	public void setPeriodicUIUpdateEnabled(boolean enabled){
-		mPeriodicUIUpdateEnabled = enabled;
-	}
-	
-	public void setPeriodicUIUpdateInterval(int interval){
-		mPeriodicUIUpdateInterval = interval;
-	}
 	
 	public ProcessUsersTask(
 			Handler uiHandler,
@@ -114,7 +104,7 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 		}
 		
 		int num = users.length();
-		Log.d(LOG_TAG,"num users: "+num);
+		Logger.l(Logger.DEBUG, LOG_TAG,"num users: "+num);
 		User user = new User();
 		
 		short[] selection = data.getShortArray(Facebook.XTRA_TABLECOLUMNS_SHORTARRAY);		
@@ -125,27 +115,17 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 				
 		App.INSTANCE.mDB.beginTransaction();
 		
-		for(int i=0,j=mPeriodicUIUpdateInterval;i<num && mStatus == Status.RUNNING;i++){
+		for(int i=0;i<num && mStatus == Status.RUNNING;i++){
 			try {								
 				currentItem = users.getJSONObject(i);
-				Log.d(LOG_TAG,""+currentItem.toString());
+				Logger.l(Logger.DEBUG, LOG_TAG,""+currentItem.toString());
 				user.parse(currentItem, selection);
 				
 				long rowId = App.INSTANCE.mDBHelper.insertUser(user,selection,App.INSTANCE.mDB);
-				Log.d(LOG_TAG, "user new row id: "+rowId);
+				Logger.l(Logger.DEBUG, LOG_TAG, "user new row id: "+rowId);
 				
 				mProgressInfo.current = i+1;
 				mProgressInfo.total = num;
-				
-				// send an UI update message
-				if(mPeriodicUIUpdateEnabled){
-					j--;
-					if(j == 0){
-						j = mPeriodicUIUpdateInterval;
-						Log.d(LOG_TAG,"sending ui update");
-						mOutHandler.sendEmptyMessage(mUpdateCode);
-					}
-				}				
 				
 				publishProgress(mProgressInfo);
 				

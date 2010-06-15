@@ -264,7 +264,7 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 					case ManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{
 						mProgressDialog.dismiss();
 						FBWSResponse fbResponse = (FBWSResponse) msg.obj;					
-						Toast.makeText(ViewAlbumsActivity.this,fbResponse.errorDesc, 1000).show();									
+						Toast.makeText(ViewAlbumsActivity.this,fbResponse.errorMessage, 1000).show();									
 						break;
 					}			
 					case ManagerThread.CALLBACK_TIMEOUT_ERROR:{
@@ -341,7 +341,7 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 			mAdView.setListener(new AdView.AdListener() {			
 				@Override
 				public void onReceiveAd(AdView adView) {
-					mUIHandler.sendEmptyMessage(BaseManagerThread.CALLBACK_ADMOB_ONRECEIVE);
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONRECEIVE);
 					adView.setVisibility(View.VISIBLE);
 				}
 				
@@ -352,7 +352,7 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 				
 				@Override
 				public void onFailedToReceiveAd(AdView adView) {
-					mUIHandler.sendEmptyMessage(BaseManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE);
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE);
 					adView.setVisibility(View.GONE);
 				}			
 			});
@@ -456,7 +456,9 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 	private void getAlbums(){
 		assert mFbUserId != 0;
 		Logger.l(Logger.DEBUG, LOG_TAG, "FbUserId: "+mFbUserId);
-		mFacebook.getAlbums(mFbUserId, NUM_ALBUMS_PER_REQUEST, nextStartIndex , ManagerThread.CALLBACK_GET_ALBUMS, BaseManagerThread.CALLBACK_SERVERCALL_ERROR,  BaseManagerThread.CALLBACK_TIMEOUT_ERROR, 0);		
+		Bundle callbackData = new Bundle();
+		callbackData.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_GET_ALBUMS);
+		mFacebook.getAlbums(R.id.outhandler_activity_viewalbums, callbackData, mFbUserId, NUM_ALBUMS_PER_REQUEST, nextStartIndex , ManagerThread.CALLBACK_GET_ALBUMS, BaseManagerThread.CALLBACK_SERVERCALL_ERROR,  BaseManagerThread.CALLBACK_TIMEOUT_ERROR, 0);		
 		mProgressDialog = createProgressDialog();
 		mProgressDialog.show();
 	}

@@ -24,7 +24,8 @@
         	android:entries="@array/entries_list_preference"
         	android:entryValues="@array/entryvalues_list_preference"
         	android:dialogTitle="Polling interval"        	
-        	android:summary="How often the app will poll for new notifications"        	       
+        	android:summary="How often the app will poll for new notifications"
+        	android:dependency="@string/preference.notification.enabled"        	       
         />
                     
          <RingtonePreference

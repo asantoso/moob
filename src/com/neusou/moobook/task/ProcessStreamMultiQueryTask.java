@@ -12,14 +12,13 @@ import android.os.Handler;
 import android.os.Message;
 
 import com.neusou.Logger;
+import com.neusou.async.UserTask;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
-import com.neusou.moobook.data.Comment;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
-import com.neusou.async.UserTask;
 
 public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgressInfo, Integer> {
 

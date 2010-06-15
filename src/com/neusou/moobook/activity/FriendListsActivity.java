@@ -114,7 +114,7 @@ public class FriendListsActivity extends BaseActivity {
 				
 				case CALLBACK_PROCESS_WSRESPONSE_HAS_ERRORCODE:{
 					FBWSResponse fbResponse = (FBWSResponse) msg.obj;					
-					Toast.makeText(FriendListsActivity.this,fbResponse.errorDesc, 1000).show();
+					Toast.makeText(FriendListsActivity.this,fbResponse.errorMessage, 1000).show();
 					//onFinishUpdatingComments();
 					mProgressDialog.dismiss();
 					break;

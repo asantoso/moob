@@ -10,7 +10,7 @@ import android.widget.BaseExpandableListAdapter;
 
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 
-public class MyExpandableListAdapter extends BaseExpandableListAdapter{
+public abstract class MyExpandableListCursorAdapter extends BaseExpandableListAdapter{
         
 		static final String LOG_TAG = "MyExpandableListAdapter";	
         ApplicationDBHelper mDBHelper;    	
@@ -26,7 +26,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
         		notifyDataSetChanged();
         	};
         	public void onInvalidated(){
-        		notifyDataSetInvalidated();        		
+        		notifyDataSetInvalidated();
         	}
 		};
         
@@ -43,7 +43,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
         	return mViewFactory;
         }
         
-        public MyExpandableListAdapter(Activity ctx) {
+        public MyExpandableListCursorAdapter(Activity ctx) {
 			this.ctx = ctx;			
 			mLayoutInflater = ctx.getLayoutInflater();
 			mDBHelper = new ApplicationDBHelper(ctx);
@@ -79,6 +79,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
         	childDatastore = mDBHelper.getPostComments(groupId);
         }
         
+        /*
         public int getChildrenCount(int groupPosition) {
         	//Log.d(LOG_TAG,"getChildrenCount "+groupPosition);
         	        	
@@ -97,6 +98,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
         	return childDatastore.getCount();    
         	    	
         }
+        */
         
         public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
                 View convertView, ViewGroup parent) {

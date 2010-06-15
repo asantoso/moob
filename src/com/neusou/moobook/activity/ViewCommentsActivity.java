@@ -4,12 +4,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.content.pm.FeatureInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -41,6 +46,8 @@ import android.widget.ViewSwitcher.ViewFactory;
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
 import com.neusou.moobook.App;
+import com.neusou.moobook.AppMenu;
+import com.neusou.moobook.FBApp;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
@@ -49,13 +56,20 @@ import com.neusou.moobook.adapters.CommentsAdapter;
 import com.neusou.moobook.adapters.GenericPageableAdapter;
 import com.neusou.moobook.adapters.IPageableListener;
 import com.neusou.moobook.data.PageableJsonData;
+import com.neusou.moobook.model.RemoteCallResult;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ProfileOnMenuItemClickListener;
 import com.neusou.web.IntelligentPagingInfo;
 import com.neusou.web.PagingInfo;
 
 public class ViewCommentsActivity extends BaseActivity{
+	
+	public static Intent getIntent(Context caller){
+		Intent i = new Intent(caller, ViewCommentsActivity.class);
+		return i;
+	}
 	
 	static final String LOG_TAG = "ViewCommentsActivity";
 	public static final String XTRA_OBJECTID = "xtra.oid";
@@ -72,6 +86,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	static final byte MENUITEM_REFRESH = 0;
 	static final byte MENUITEM_DELETE = 1;
+	static final byte MENUITEM_ACTORNAME = 2;
 
 	static final byte MAX_LINKS = 5;
 	static final int mToastLength = 4000;	
@@ -82,7 +97,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	static final int numThreadInitializations = 1;	
 	
-	static String LABEL_HEADER_COMMENTS = "Comments";
+	String LABEL_HEADER_COMMENTS;
 	ManagerThread mWorkerThread;	
 	
 	//Temporary data stores
@@ -101,6 +116,8 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	String mLblRefresh;
 	String mLblDelete;
+	String mLblActorName;
+	
 	String mLblLoadingComments;
 	String mLblPostingComment;
 	String mLblDeletingComment;	
@@ -109,7 +126,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	SQLiteDatabase mDB;	
 	Facebook mFacebook;
 	
-	CommentsAdapter.ItemTag mLongItemClickData;	
+	CommentsAdapter.DataTag mLongItemClickData;	
 	int commentStartIndex = 0;
 	
 	//Views
@@ -145,6 +162,53 @@ public class ViewCommentsActivity extends BaseActivity{
 	String xtraPostId = "";		
 	
 	LayoutAnimationController mListAnimation; 
+	
+	BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			String action = intent.getAction();
+			if(action.equals(App.INTENT_DELETECOMMENT)){
+				Bundle b = intent.getExtras();
+				RemoteCallResult remoteCallResult = (RemoteCallResult) b.getParcelable(RemoteCallResult.XTRA_PARCELABLE_OBJECT);
+				if(remoteCallResult.status){
+					getCommentsFromCloud(0);				
+				}
+				dismissDialog(DIALOG_DELETINGCOMMENT);
+				hideLoadingIndicator();
+				resetHeaderText();
+			}			
+			else if(action.equals(App.INTENT_POSTCOMMENT)){
+				Bundle b = intent.getExtras();
+				RemoteCallResult remoteCallResult = (RemoteCallResult) b.getParcelable(RemoteCallResult.XTRA_PARCELABLE_OBJECT);
+				if(remoteCallResult.status){
+					getCommentsFromCloud(0);				
+				}				
+				dismissDialog(DIALOG_POSTINGCOMMENT);
+				hideLoadingIndicator();
+				resetHeaderText();
+			}
+			else if(action.equals(App.INTENT_GET_TAGGED_PHOTOS)){
+				Bundle extras = intent.getExtras();
+				FBWSResponse fbresponse = (FBWSResponse) extras.getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);										
+				try{
+					String parsed = fbresponse.jsonArray.toString(2);
+					Logger.l(Logger.DEBUG,  LOG_TAG,"[callback_get_tagged_photos]: "+ parsed); 
+					Intent i = new Intent(App.INSTANCE,ViewPhotosActivity.class);
+					i.putExtra(ViewPhotosActivity.XTRA_PHOTOS, fbresponse.data);						
+					i.putExtra(ViewPhotosActivity.XTRA_FACEBOOKUSERID, extras.getLong(Facebook.param_uid,0));
+					i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT); 
+					mUIHandler.sendEmptyMessage(ManagerThread.MESSAGE_DISMISS_DIALOG);
+					mProgressDialog.dismiss();
+					App.INSTANCE.startActivity(i);
+				}catch(JSONException e){
+				}
+				
+			}
+		}
+		
+	};
 	
 	ManagerThread.IManagerResult mManagerListener = new ManagerThread.IManagerResult() {
 		
@@ -217,16 +281,20 @@ public class ViewCommentsActivity extends BaseActivity{
 	protected void onStart() {
 		super.onStart();		
 		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		
+		mFacebook.registerOutHandler(R.id.outhandler_activity_viewcomments, mWorkerThread.getInHandler());
 		mWorkerThread.setListener(mManagerListener);
-		mFacebook.setOutHandler(mWorkerThread.getInHandler());
 		mWorkerThread.setOutHandler(mUIHandler);		
-		assert(mFacebook != null);
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(App.INTENT_DELETECOMMENT);		
+		intentFilter.addAction(App.INTENT_POSTCOMMENT);
+		intentFilter.addAction(App.INTENT_GET_TAGGED_PHOTOS);
+		registerReceiver(mBroadcastReceiver, intentFilter);		
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
+		unregisterReceiver(mBroadcastReceiver);
 	}
 
 	@Override
@@ -285,6 +353,8 @@ public class ViewCommentsActivity extends BaseActivity{
 	protected void initObjects(){
 		super.initObjects();
 	
+		LABEL_HEADER_COMMENTS = mResources.getString(R.string.comments);
+		
 		try{			
 			if(mHasObjectId){		
 				if(isClearData){
@@ -306,36 +376,6 @@ public class ViewCommentsActivity extends BaseActivity{
 		
 		mObjectId = xtraObjectId;
 		mPostId = xtraPostId;
-		//Initialize static variables 
-		//check if any of the required static threads died, recreate countdown latch and initialize all threads
-		
-		
-		
-		/*
-		boolean initStatics = false;
-		if(mWorkerThread == null || !mWorkerThread.isAlive()){
-			initStatics = true;
-		}
-		if(initStatics){
-			threadsInitCountDown = new CountDownLatch(numThreadInitializations);
-			mWorkerThread = new ManagerThread(threadsInitCountDown);			
-			mWorkerThread.start();						
-			try {
-				Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] waiting thread initializations to complete");			
-				threadsInitCountDown.await();
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}			
-			Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] thread initializations completed.");
-		
-			if(data_comments == null){
-				Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] data comments is null. creating new.");
-				data_comments = new PageableJsonData();
-			}else{
-			
-			}
-		}
-		*/
 		
 		if(data_comments == null){
 			Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] data comments is null. creating new.");
@@ -349,7 +389,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		mListAnimation = AnimationUtils.loadLayoutAnimation(this, R.anim.layout_animation_row_left_slide);
 		
 		mFacebook = Facebook.getInstance();
-		mFacebook.registerOutHandler(R.id.outhandler_activity_viewcomments, mWorkerThread.getInHandler());
+		
 		mDBHelper = new ApplicationDBHelper(this);
 		mDB = mDBHelper.getReadableDatabase();
 	
@@ -372,7 +412,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		mLblPostingComment = mResources.getString(R.string.postingcomment);
 		mLblDeletingComment = mResources.getString(R.string.deletingcomment);
 		mLblLoadingComments = mResources.getString(R.string.loadingcomments);
-		
+				
 		mLblCommentPosted = mResources.getString(R.string.commentposted);
 		mLblCommentDeleted = mResources.getString(R.string.commentdeleted);
 		
@@ -446,7 +486,7 @@ public class ViewCommentsActivity extends BaseActivity{
 				View v, int position, long arg3) {
 			Log.d("debug","onItemLongClick "+position);
 			Log.d("debug","onItemLongClick "+v.getClass().getCanonicalName());			
-			mLongItemClickData = (CommentsAdapter.ItemTag) v.getTag(CommentsAdapter.TAG_ITEM);			
+			mLongItemClickData = (CommentsAdapter.DataTag) v.getTag(CommentsAdapter.TAG_ITEM_DATA);			
 			return false;//return false to pass on the event, so that context menu gets displayed
 		}	
 		
@@ -501,7 +541,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		if(mLongItemClickData == null){
 			return;
 		}
-		String comment = mLongItemClickData.comment.getText().toString();
+		String comment = mLongItemClickData.comment;
 		Matcher matcher = App.mUrlPattern.matcher(comment);	
 		String[] links = new String[MAX_LINKS];
 		byte numLinks = 0;
@@ -541,22 +581,60 @@ public class ViewCommentsActivity extends BaseActivity{
 							
 		}
 				
+		
 		if(mLongItemClickData.fromid > 0 && mLongItemClickData.fromid == mFacebook.getSession().uid){
 			MenuItem deleteComment = menu.add(0,MENUITEM_DELETE,0,mLblDelete);
-			deleteComment.setOnMenuItemClickListener(new OnMenuItemClickListener(){
-
-				@Override
-				public boolean onMenuItemClick(MenuItem item) {
+			deleteComment.setOnMenuItemClickListener(mMenuItemClickListener);	
+		}
+		
+		//mLblActorName = mLongItemClickData.name; 
+		//MenuItem actorMenuItem = menu.add(0, MENUITEM_ACTORNAME, 0, mLblActorName);
+		//actorMenuItem.setOnMenuItemClickListener(mMenuItemClickListener);
+			
+		mProgressDialog.setTitle(null);
+		mProgressDialog.setMessage(App.INSTANCE.mResources.getString(R.string.getting_tagged_photos));
+		
+		OnMenuItemClickListener mContextMenuItemClickListener = 
+			new ProfileOnMenuItemClickListener(
+				mLblActorName,
+				mLongItemClickData.imageUri, 
+				R.id.outhandler_activity_streams, 
+				mLongItemClickData.fromid, 
+				mProgressDialog, 
+				ViewCommentsActivity.this);
+		
+		AppMenu.createActorMenu(
+				menu,
+				mContextMenuItemClickListener,
+				mLongItemClickData.name,
+				mLongItemClickData.imageUri,
+				R.id.outhandler_activity_viewcomments, 
+				mLongItemClickData.fromid, 
+				ViewCommentsActivity.this);
+		
+	}
+	
+	OnMenuItemClickListener mMenuItemClickListener = new OnMenuItemClickListener() {
+		
+		@Override
+		public boolean onMenuItemClick(MenuItem item) {
+			int id = item.getItemId();
+			switch(id){
+				case MENUITEM_ACTORNAME:{
+					//Intent i = ViewProfileActivity.getIntent(ViewCommentsActivity.this);
+					//startActivity(i);
+					break;
+				}
+				case MENUITEM_DELETE:{
 					String comment_id = mLongItemClickData.comment_id;
 					deleteComment(comment_id);
 					return false;
 				}
-				
 			}
-			);			
+			return false;
 		}
-			
-	}
+		
+	};
 	
 	@Override
 	protected Dialog onCreateDialog(int id) {		
@@ -572,12 +650,12 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 		case DIALOG_DELETINGCOMMENT:{
 			d.setMessage(mLblDeletingComment);    	
-			d.setCancelable(false);
+			d.setCancelable(true);
 			break;
 		}
 		case DIALOG_POSTINGCOMMENT:{
 			d.setMessage(mLblPostingComment);
-			d.setCancelable(false);
+			d.setCancelable(true);
 			break;
 		}
 		}
@@ -665,12 +743,16 @@ public class ViewCommentsActivity extends BaseActivity{
 	private void postComment(){
 		showDialog(DIALOG_POSTINGCOMMENT);
 		String comment = mComment.getText().toString(); 
-		mFacebook.postComment(comment, mPostId, ManagerThread.CALLBACK_POSTCOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
+		Bundle callbackDescriptor = new Bundle();
+		callbackDescriptor.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_POSTCOMMENT);
+		mFacebook.postComment(R.id.outhandler_activity_viewcomments, callbackDescriptor, comment, mPostId, ManagerThread.CALLBACK_POSTCOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
 	}
 		
 	private void deleteComment(String comment_id){
 		showDialog(DIALOG_DELETINGCOMMENT);
-		mFacebook.deleteComment(comment_id, ManagerThread.CALLBACK_DELETECOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
+		Bundle callbackData = new Bundle();
+		callbackData.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_DELETECOMMENT);
+		mFacebook.deleteComment(R.id.outhandler_activity_viewcomments, callbackData, comment_id, ManagerThread.CALLBACK_DELETECOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
 	}
 
 	/*
@@ -719,9 +801,13 @@ public class ViewCommentsActivity extends BaseActivity{
 			}
 	}*/
 
+	
 
-	Handler mUIHandler = new Handler(){
+	Handler mUIHandler = new BaseUiHandler(this){
+		
 		public void handleMessage(android.os.Message msg) {
+			super.handleMessage(msg);
+			
 			//Log.d(LOG_TAG,"ui hander handle message what:"+msg.what);
 			int code = msg.what;
 			Bundle data = msg.getData();
@@ -752,12 +838,10 @@ public class ViewCommentsActivity extends BaseActivity{
 					mAdView.setVisibility(View.VISIBLE);
 					break;
 				}
-			
+			/*
 				case BaseManagerThread.CALLBACK_TIMEOUT_ERROR:{
 					Toast.makeText(ViewCommentsActivity.this, "Request to Facebook timed out", 2000).show();
-					onFinishFetchingCommentsFromCloud();
-					mListAdapter.onFinishedLoading();
-					mProgressDialog.dismiss();
+		
 					break;
 				}
 				
@@ -769,12 +853,10 @@ public class ViewCommentsActivity extends BaseActivity{
 						errorCode+=":";
 					}
 					Toast.makeText(ViewCommentsActivity.this, errorCode+reason, 2000).show();			
-					onFinishFetchingCommentsFromCloud();
-					mProgressDialog.dismiss();
-					mListAdapter.onFinishedLoading();
+				
 					break;
 				}
-				
+				*/
 				case UIMETHOD_RELOADCOMMENTS:{					
 					getCommentsFromCloud(1);
 					break;
@@ -782,7 +864,7 @@ public class ViewCommentsActivity extends BaseActivity{
 				
 				case BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{					
 					FBWSResponse fbResponse = (FBWSResponse) data.getParcelable(Facebook.XTRA_RESPONSE);					
-					Toast.makeText(ViewCommentsActivity.this,fbResponse.errorDesc, 1000).show();
+					Toast.makeText(ViewCommentsActivity.this,fbResponse.errorMessage, 1000).show();
 					onFinishFetchingCommentsFromCloud();
 					mProgressDialog.dismiss();
 					mListAdapter.onFinishedLoading();
@@ -790,6 +872,20 @@ public class ViewCommentsActivity extends BaseActivity{
 				}			
 					
 			}
+		}
+
+		@Override
+		public void onServerCallError() {
+			onFinishFetchingCommentsFromCloud();
+			mProgressDialog.dismiss();
+			mListAdapter.onFinishedLoading();
+		}
+
+		@Override
+		public void onTimeoutError() {
+			onFinishFetchingCommentsFromCloud();
+			mListAdapter.onFinishedLoading();
+			mProgressDialog.dismiss();
 		};
 	};	
 		

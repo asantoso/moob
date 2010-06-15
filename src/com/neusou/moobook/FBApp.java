@@ -1,7 +1,7 @@
 package com.neusou.moobook;
 
 /**
- * Facebook application  
+ * Describes data pertaining to the Facebook application   
  * @author asantoso
  *
  */

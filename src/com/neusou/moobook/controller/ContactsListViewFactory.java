@@ -1,38 +1,29 @@
 package com.neusou.moobook.controller;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.content.IntentSender.SendIntentException;
 import android.database.Cursor;
-import android.database.DataSetObservable;
 import android.database.DataSetObserver;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.ConditionVariable;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
-import com.neusou.moobook.Util;
+import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.User;
-import com.neusou.web.ImageUrlLoader2;
-import com.neusou.web.ImageUrlLoader2.AsyncListener;
-import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
-import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderInput;
 
 public class ContactsListViewFactory extends BaseListViewFactory<Cursor> {
 
 	static final String LOG_TAG = "ContactsListViewFactory";
-	static final int INTERNAL_TAG = R.id.tag_contactsadapter_item;
+	//static final int ID_VIEW_TAG = R.id.tag_contactsadapter_item_view;
 	static final int DATAVIEW_RESID = R.layout.t_contact;
 	static final int DEFAULT_PROFILE_IMAGE_RESID = R.drawable.defaultprofileimage;
 	final Bitmap mDefaultProfileImage;
@@ -47,36 +38,51 @@ public class ContactsListViewFactory extends BaseListViewFactory<Cursor> {
 
 	Handler h = new Handler();
 	DataSetObserver mDataSetObserver;
+	
+	StandardImageAsyncLoadListener mAsyncLoaderListener;
 
 	public void setDataSetObserver(DataSetObserver observer){
 		 mDataSetObserver = observer;
 		 mAsyncLoaderListener.setObserver(observer);
 	}
 	
-	ThrottlingImageAsyncLoaderListener mAsyncLoaderListener = new ThrottlingImageAsyncLoaderListener(mFreezeUiRequestWindowSize, 0, true) {	
-		
-		@Override
-		public void onPublishProgress(AsyncLoaderProgress progress) {
-			
-			
-		}
-		
-	}; 
+
 	
 	public void setDisplayColumns(short[] displayColumns) {
 		mDisplayColumns = displayColumns;
 	}
 
 	public ContactsListViewFactory(Activity ctx) {
-		super(ctx);
+		super(ctx, R.id.tag_contactsadapter_item_data, R.id.tag_contactsadapter_item_view);
 		mDefaultProfileImage = BitmapFactory.decodeResource(mResources,
 				DEFAULT_PROFILE_IMAGE_RESID);
+		
+		mAsyncLoaderListener = new StandardImageAsyncLoadListener(
+				ctx, 
+				mCreateViewLock, 
+				(IStatefulListView) this, 
+				200l, 
+				100, 
+				false);
 	}
 
-	class Holder {
-		TextView info0;
-		TextView name;
-		ImageView picture;
+	public class Holder extends BaseRowViewHolder{
+		TextView info0 = null;
+		TextView name = null;
+		ImageView picture = null;
+	}
+	
+	public class Data implements BaseListViewFactory.IBaseListViewData {
+		public String actorname;
+		public long uid;
+		public byte dataState;
+		public String profileImageUri;
+		
+		@Override
+		public void setDataState(byte state) {
+			dataState = state;
+		}
+		
 	}
 
 	private String generateLocationString(String city, String state,
@@ -96,27 +102,35 @@ public class ContactsListViewFactory extends BaseListViewFactory<Cursor> {
 
 	public View createView(Cursor ds, int position, View convertView,
 			final ViewGroup parent) {
-
+		
+		super.createView(ds, position, convertView, parent);
+		
 		try {
 			ds.moveToPosition(position);
 		} catch (Exception e) {
 			return mLayoutInflater.inflate(R.layout.empty, parent, false);
 		}
 
-		Holder tag;
-
+		Holder tag = null;
+		Data data = null;
+		
 		if (convertView != null) {
-			tag = (Holder) convertView.getTag(INTERNAL_TAG);
+			tag = (Holder) convertView.getTag(mTagViewId);
+			data = (Data) convertView.getTag(mTagDataId);
 		} else {
-
 			convertView = mLayoutInflater
 					.inflate(DATAVIEW_RESID, parent, false);
 
 			tag = new Holder();
 			tag.name = (TextView) convertView.findViewById(R.id.name);
 			tag.picture = (ImageView) convertView.findViewById(R.id.profilepic);
-			tag.info0 = (TextView) convertView.findViewById(R.id.info0);
-			convertView.setTag(INTERNAL_TAG, tag);
+			convertView.setTag(mTagViewId, tag);			
+		}
+		
+		tag.setPosition(position);
+		
+		if(data == null){
+			data = new Data();
 		}
 
 		// parse one row of data
@@ -128,6 +142,11 @@ public class ContactsListViewFactory extends BaseListViewFactory<Cursor> {
 			return convertView;
 		}
 
+		data.actorname = user.name;
+		data.uid = user.uid;
+		data.profileImageUri = user.pic_square;
+		
+		convertView.setTag(mTagDataId, data);
 		// fill in data
 
 		if (user != null) {
@@ -139,52 +158,24 @@ public class ContactsListViewFactory extends BaseListViewFactory<Cursor> {
 			String city = null;
 			JSONObject htl;
 
-			try {
-				htl = new JSONObject(user.hometown_location);
-				try {
-					state = htl.getString("state");
-				} catch (JSONException e) {
-				} catch (NullPointerException e) {
-
-				}
-
-				try {
-					zip = htl.getString("zip");
-				} catch (JSONException e) {
-
-				} catch (NullPointerException e) {
-
-				}
-				try {
-					country = htl.getString("country");
-				} catch (JSONException e) {
-				} catch (NullPointerException e) {
-
-				}
-				try {
-					city = htl.getString("city");
-				} catch (JSONException e) {
-				} catch (NullPointerException e) {
-
-				}
-			} catch (JSONException e) {
-			} catch (NullPointerException e) {
-
-			}
-
-			String location = generateLocationString(city, state, zip, country);
-			tag.info0.setText(
-					location
-					+ "\n" + 
-					user.birthday_date
-					+"\n"+
-					user.proxied_email
-					+"\n"+
-					user.timezone);
 			tag.name.setText(user.name);
+			
 			String imageUrl = user.pic_square;
-			Util.fetchImage(App.INSTANCE.mExecScopeImageLoaderTask, tag.picture, mDefaultProfileImage, imageUrl, mAsyncLoaderListener);
-		
+			
+			Bitmap profileImageBitmap = App.mImageUrlLoader2.loadImage(imageUrl, true);
+			if(profileImageBitmap == null){
+				//TODO Object pool AsyncLoaderInput
+				profileImageBitmap = mDefaultProfileImage;
+				AsyncLoaderInput input = new AsyncLoaderInput();
+				input.imageUri = imageUrl;
+				input.imageView = tag.picture;
+				input.groupCode = position;
+				input.code = position;
+				App.mImageUrlLoader2.loadImageAsync(App.INSTANCE.mExecScopeImageLoaderTask, input, mAsyncLoaderListener);
+			}
+			
+			tag.picture.setImageBitmap(profileImageBitmap);
+			
 		}
 
 		return convertView;
