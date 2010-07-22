@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
@@ -231,6 +232,12 @@ public class LoginActivity extends BaseActivity {
 
 	};
 
+	
+	public static Intent getIntent(Context ctx) {		
+		return new Intent(ctx, LoginActivity.class);
+	}
+	
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

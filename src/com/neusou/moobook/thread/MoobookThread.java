@@ -8,12 +8,12 @@ import android.os.Handler;
 import android.os.Message;
 
 
-import com.neusou.LeadingLooperThread;
+import com.neusou.ProactiveThread;
 import com.neusou.Logger;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 
-public abstract class MoobookThread extends LeadingLooperThread{
+public abstract class MoobookThread extends ProactiveThread{
 	public static final String LOG_TAG = "MoobookThread";
 	
 	public MoobookThread(CountDownLatch cdl) {

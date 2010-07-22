@@ -14,7 +14,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
     android:layout_marginBottom="0dp"
-    android:layout_below="@+id/topheader"
+    android:layout_below="@+id/topheader_container"
     android:layout_above="@+id/ad"
     android:background="#00000000"  
 />

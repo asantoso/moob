@@ -40,6 +40,17 @@
 \"users\":\"select name, pic_square, uid from user where uid in (select uid2 from friend where uid1=${uid}) LIMIT ${limit} OFFSET ${offset} \"
 }
 </string>
+
+<!-- 
+\"photo\":\"select pid, aid, src_small, link, caption, created, modified, object_id from photo where owner = ${owner}\"
+\"photo\":\"SELECT pid FROM photo WHERE aid IN ( SELECT aid FROM album WHERE owner=\'${owner}\' ) ORDER BY created DESC LIMIT 1,42\"
+ -->
+<string name="fql_get_photo_attributes">
+{
+\"photo\":\"select pid, aid, src_small, link, caption, created, modified, object_id from photo where pid=\'${pid}\'\"
+}
+</string>
+    
     
 <string name="fql_get_streams">
 { 

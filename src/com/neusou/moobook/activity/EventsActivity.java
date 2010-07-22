@@ -8,6 +8,8 @@ import org.json.JSONArray;
 
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -126,6 +128,9 @@ public class EventsActivity extends BaseActivity {
 		};
 	};
 
+	public static Intent getIntent(Context ctx) {
+		return new Intent(ctx, EventsActivity.class);
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -206,7 +211,7 @@ public class EventsActivity extends BaseActivity {
 
 	protected void bindViews() {
 		mAdView = (AdView) findViewById(R.id.ad);
-		App.initAdView(mAdView, mUIHandler);
+		App.initAdMob(mAdView, mUIHandler);
 		mListView = (ListView) findViewById(R.id.list);
 		mLoadingIndicator = findViewById(R.id.loadingindicator);
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
@@ -269,7 +274,7 @@ public class EventsActivity extends BaseActivity {
 						Log.d("debug", "onItemLongClick " + position);
 						Log.d("debug", "onItemLongClick "
 								+ v.getClass().getCanonicalName());
-						mLongItemClickData = (EventsListViewFactory.Holder) v.getTag();
+						mLongItemClickData = (EventsListViewFactory.Holder) v.getTag(R.id.tag_eventsadapter_item_view);
 						return false;// return false to pass on the event, so
 										// that context menu gets displayed
 					}
@@ -332,8 +337,16 @@ public class EventsActivity extends BaseActivity {
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
-			updateListView();
-			onFinishUpdatingEvents();
+			runOnUiThread(new Runnable() {
+				
+				@Override
+				public void run() {
+					updateListView();
+					onFinishUpdatingEvents();		
+				}
+				
+			});
+			
 		}
 	}
 	

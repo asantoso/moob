@@ -1,33 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
-xmlns:android="http://schemas.android.com/apk/res/android"	
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:background="#00000000">
+
+	<include layout="@layout/custom_title" />
+
+	<ListView android:id="@+id/list" android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:layout_marginBottom="0dp"
+		android:layout_below="@+id/topheader_container"
+		android:layout_above="@+id/bottomheader" 
+		android:background="#00000000" />
+
+	
+<LinearLayout
+	android:layout_width="fill_parent" 
+	android:layout_height="wrap_content"
+	android:layout_alignParentBottom="true"
+	android:orientation="vertical"
+	android:id="@+id/bottomheader"
+	android:nextFocusUp="@+id/list"
 	android:background="#00000000"
 >
 
-<include layout="@layout/custom_title"/>
+<include 
+	android:id="@+id/actionbar"
+	layout="@layout/include_actionbar"
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:layout_above="@+id/ad"
+	/>
 
-<ListView
-	android:id="@+id/list" 
-	android:layout_width="fill_parent" 
-    android:layout_height="fill_parent" 
-    android:layout_marginBottom="0dp"
-    android:layout_below="@+id/topheader"    
-    android:background="#00000000"  
-/>
+<include 
+	layout="@layout/include_admob"
+	android:visibility="gone"
+	/>
 
-<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
-android:id="@+id/ad" 
-android:visibility="visible" 
-android:layout_width="fill_parent" 
-android:layout_height="wrap_content" 
-android:layout_alignParentBottom="true" 
-app:backgroundColor="#00000000" 
-app:textColor="#FFffffff" 
-app:keywords="" 
-app:testing="false"/>
-    
+</LinearLayout>
+
 </RelativeLayout>
 

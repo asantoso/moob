@@ -16,7 +16,7 @@ public class AttachmentPhoto extends AttachmentMedia implements Parcelable{
 	public String mPid;
 	public int mHeight;
 	public int mWidth;
-	public String mAid;		
+	public String mAid;
 
 	public static final String fields_photo = "photo";
 	public static final String fields_owner = "owner";

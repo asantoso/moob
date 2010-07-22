@@ -21,6 +21,7 @@ import org.apache.http.HttpConnection;
 import com.neusou.moobook.FBConnectionException;
 import com.neusou.moobook.R;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,6 +38,11 @@ public class ChatActivity extends BaseActivity{
 
 	public static final String XTRA_UID = "xtra.uid";
 	
+	
+	public static Intent getIntent(Context ctx) {
+		return new Intent(ctx, ChatActivity.class);
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

@@ -1,9 +1,6 @@
 package com.neusou.moobook;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,28 +10,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.StringReader;
-import java.math.BigInteger;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -48,7 +34,6 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.neusou.BasicClientHelper;
 import com.neusou.Logger;
 import com.neusou.SoftHashMap;
 import com.neusou.async.UserTaskExecutionScope;
@@ -544,13 +529,13 @@ public class Util {
 		}
 	}
 	
-	public static String readStringFromLocalCache(Context ctx, String filename) {
+	public static String readStringFromLocalCache(Context ctx, String filename) throws FileNotFoundException {
 		File cacheDir = ctx.getCacheDir();
 		Logger.l(Logger.DEBUG, LOG_TAG, cacheDir.toString());
 		File cacheFile = new File(cacheDir.getPath() + "/" + filename);
 		if(!cacheFile.canRead()){
 			Logger.l(Logger.ERROR, LOG_TAG,"[readStringFromLocalCache()] can not read file:"+cacheFile.toString());
-			return null;
+			throw new FileNotFoundException();
 		}
 		BufferedReader br = null;
 		try {			
@@ -586,19 +571,30 @@ public class Util {
 		return value;
 	}
 	
-	public static String toCSV(long[] uids){	
-		if(uids != null){		
-			String uids_list = "(";
-			for(int i=0;i<uids.length;i++){
-				uids_list += uids[i];
-				if(i < uids.length - 1){
-					uids_list += ",";
+	public static String toCSV(long[] ids, String quote){
+		StringBuffer sb = new StringBuffer();
+		if(quote == null){quote = "";}
+		if(ids != null){
+			String uids_list;
+			sb.append("(");			
+			for(int i=0;i<ids.length;i++){
+				sb.append(quote);
+				sb.append(ids[i]);
+				sb.append(quote);
+				//uids_list += quote+ids[i]+quote;
+				if(i < ids.length - 1){
+					sb.append(",");
+					//uids_list += ",";
 				}
 			}
-			return uids_list;
+			sb.append(")");
+			//uids_list += ")";
+			return sb.toString();
 		}
 		return "";
 	}
+	
+	
 	
 	public static void spitOut(InputStream is){
 		try{
@@ -678,7 +674,6 @@ public class Util {
 		}
 		return true;
 	}
-	
 
 
 }

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.text.StrSubstitutor;
 
-import android.app.Notification;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
@@ -15,11 +14,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.neusou.Logger;
+import com.neusou.moobook.App;
 import com.neusou.moobook.FBPermissions;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
-import com.neusou.moobook.data.Comment;
 import com.neusou.moobook.data.Event;
 import com.neusou.moobook.data.FBApplication;
 import com.neusou.moobook.data.FBNotification;
@@ -78,20 +77,22 @@ public class ApplicationDBHelper extends DBHelper{
 	static final String SQL_GET_STREAM_LASTUPDATEDTIME = "select updated_time from "+STREAMS_TABLE+" order by updated_time desc limit 1 offset 0 ";
 	
 	
-	synchronized public long insertStream(Stream stream, SQLiteDatabase db){		
+	synchronized public long insertStream(Stream stream, SQLiteDatabase db){
+		long rowId = -1;
     	try{    	
-    		long rowId = db.insertOrThrow(STREAMS_TABLE, null, stream.toContentValues(null));
-    		//Log.d("agus","success inserting stream "+rowId+" name:"+stream.post_id+" , ccount: "+stream.comments_count);
+    		rowId = db.insertOrThrow(STREAMS_TABLE, null, stream.toContentValues(null));
+    	//	Log.d("agus","##############  success inserting stream "+rowId+" name:"+stream.post_id+" , ccount: "+stream.comments_count);
+    	}
+    	catch(SQLException e){
+    		//
     		if(rowId == -1){
-    			//Log.d("agus","error inserting stream.. trying to update");
-    			int numRows = 	db.update(STREAMS_TABLE, stream.toContentValues(null), "post_id=?",new String[]{stream.post_id});
+    		//	Log.d("agus","############# error inserting stream.. trying to update ######################");
+    			db.update(STREAMS_TABLE, stream.toContentValues(null), "post_id=?",new String[]{stream.post_id});
     			//Log.d("agus","success updating stream num rows affected: "+numRows);
-    			return 0;
+    			return 0; 
     		}	
     		return rowId;
     	}
-    	catch (SQLException e) {
-        }
     	return -1;
 	}
 	
@@ -203,7 +204,7 @@ public class ApplicationDBHelper extends DBHelper{
 	
 	
 	
-	synchronized public long insertUser(User user, short[] selection, SQLiteDatabase db){
+	public synchronized long insertUser(User user, short[] selection, SQLiteDatabase db){
 		if(user == null){
 			return -1;
 		}		
@@ -440,7 +441,7 @@ public class ApplicationDBHelper extends DBHelper{
 		
 		String orderClause0 = " ";	
 		String whereClause0 = " ";		
-		String hiddenAppIdsCSV = Util.toCSV(hiddenAppIds);
+		String hiddenAppIdsCSV = Util.toCSV(hiddenAppIds,null);
 		
 		HashMap<String, String> args = new HashMap<String, String>();
 		
@@ -503,7 +504,7 @@ public class ApplicationDBHelper extends DBHelper{
     	return 0;
 	}
 	
-	public Cursor getWallPosts(SQLiteDatabase db, long source_id, long limit, long offset){
+	public Cursor getWallPosts(SQLiteDatabase db, int processFlag, long source_id, long limit, long offset){
 		
 		if(db == null || !db.isOpen()){
 			return null;
@@ -513,6 +514,7 @@ public class ApplicationDBHelper extends DBHelper{
 		
 		String sql = createSqlGetStreams(
 				Facebook.STREAMMODE_NEWSFEED,
+				processFlag,
 				source_id, 
 				null, limit, offset);
 		
@@ -529,13 +531,13 @@ public class ApplicationDBHelper extends DBHelper{
 		
 	}
 	
-	public Cursor getStreams(SQLiteDatabase db, byte streamtype, long source_id, long uids_filter[], long limit, long offset){
+	public Cursor getStreams(SQLiteDatabase db, byte streamtype, int processingFlag, long source_id, long uids_filter[], long limit, long offset){
 		
 		if(db == null || !db.isOpen()){
 			return null;
 		}
 		
-		String sql = createSqlGetStreams(streamtype, source_id, uids_filter, limit, offset);
+		String sql = createSqlGetStreams(streamtype, processingFlag, source_id, uids_filter, limit, offset);
 		
 		Logger.l(Logger.DEBUG, LOG_TAG, "SQL:  "+sql);
 		
@@ -575,6 +577,25 @@ public class ApplicationDBHelper extends DBHelper{
     	catch (SQLException e) {
         }
 	}
+
+	/*
+	public int getUsername(SQLiteDatabase db, String uid){
+		if(db == null || !db.isOpen()){
+			return -1;
+		}
+		
+    	try{    		    		
+    		short[] selection = new short[]{User.col_name};
+    		db.rawQuery("select ", selectionArgs);
+    		int rows_affected = db.query(USERS_TABLE, User.createColumnNames(selection), selection, , null, null, orderBy);   		
+    		return rows_affected;
+    	}
+    	catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	return -1;		
+	}
+	*/
 	
 	public int deleteAllNotifications(SQLiteDatabase db){
 		if(db == null || !db.isOpen()){
@@ -633,7 +654,7 @@ public class ApplicationDBHelper extends DBHelper{
 	}
 	
 
-	public String createSqlGetStreams(byte streamType, long source_id, long uids[], long limit, long offset){
+	public String createSqlGetStreams(byte streamType, int processFlag, long source_id, long uids[], long limit, long offset){
 		HashMap<String, String> args = new HashMap<String, String>();
 		String ret = "";
 		String whereClause0 = " where 1=1 ";
@@ -642,14 +663,20 @@ public class ApplicationDBHelper extends DBHelper{
 		String orderClause1 = "";
 		String uidsFilter = null;
 		
+		if(processFlag == App.PROCESS_FLAG_SESSIONUSER){
+			whereClause0 += " and p._process_flag = "+processFlag+" ";
+		}else{
+			//whereClause0 += "and p._process_flag = "+processFlag;PROCESS_FLAG_OTHER IS SAME AS IGNORING THE FLAG.
+		}
+		
 		if(streamType == Facebook.STREAMMODE_LIVEFEED){
-			orderClause0 = "order by p.updated_time desc ";
+			orderClause0 = " order by p.updated_time desc ";
 		}
 		if(streamType == Facebook.STREAMMODE_NEWSFEED){			
-			orderClause0 = "order by p.created_time desc ";
+			orderClause0 = " order by p.created_time desc ";
 		}
 		if(streamType == Facebook.STREAMMODE_WALLFEED){
-			orderClause0 = "order by p.updated_time desc ";
+			orderClause0 = " order by p.updated_time desc ";
 		}
 				
 		if(uids != null){		

@@ -3,9 +3,10 @@
 <merge
 	xmlns:android="http://schemas.android.com/apk/res/android" 
     xmlns="http://schemas.android.com/apk/res/android"
+    android:background="#00000000"
 >
 
-	<RelativeLayout 
+	<LinearLayout 
 		android:id="@+id/actionbar"
 		android:layout_width="fill_parent"
    		android:layout_height="wrap_content"
@@ -14,29 +15,60 @@
     	android:paddingLeft="2dip"
     	android:paddingRight="2dip"
     	android:paddingBottom="1dip"
+    	android:orientation="horizontal"
     	android:background="@drawable/actionbar_bg"
     	>
-		
-		<ImageButton
-			android:id="@+id/ab_refresh"
-			android:layout_width="48dip"
-			android:layout_height="48dip"			
-			android:layout_marginRight="2.5dip"
-			android:layout_alignParentRight="true"
-			android:scaleType="centerInside"
-			android:src="@android:drawable/ic_menu_rotate"
-		/>
 		
 		<ImageButton
 			android:id="@+id/ab_post"
 			android:layout_width="48dip"
 			android:layout_height="48dip"			
 			android:layout_alignParentLeft="true"
+			android:layout_marginRight="2.5dip"
 			android:scaleType="centerInside"
 			android:src="@android:drawable/ic_menu_add"
 		/>
 		
-	</RelativeLayout>
+		<ImageButton
+			android:id="@+id/ab_refresh"
+			android:layout_width="48dip"
+			android:layout_height="48dip"			
+			android:layout_marginRight="2.5dip"
+			android:scaleType="centerInside"
+			android:src="@android:drawable/ic_menu_rotate"
+		/>
+		
+		<ImageButton
+			android:id="@+id/ab_wall"
+			android:layout_width="48dip"
+			android:layout_height="48dip"			
+			android:layout_marginRight="2.5dip"
+			android:scaleType="centerInside"			
+			android:src="@android:drawable/ic_menu_sort_by_size"
+			android:visibility="gone"
+		/>
+		
+		<ImageButton
+			android:id="@+id/ab_albums"
+			android:layout_width="48dip"
+			android:layout_height="48dip"			
+			android:layout_marginRight="2.5dip"
+			android:scaleType="centerInside"
+			android:src="@android:drawable/ic_menu_gallery"
+			android:visibility="gone"
+		/>
+		
+		<ImageButton
+			android:id="@+id/ab_profile"
+			android:layout_width="48dip"
+			android:layout_height="48dip"			
+			android:layout_marginRight="2.5dip"
+			android:scaleType="centerInside"
+			android:src="@android:drawable/ic_menu_info_details"
+			android:visibility="gone"
+		/>
+		
+	</LinearLayout>
      
 </merge>
  

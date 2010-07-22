@@ -55,12 +55,14 @@ import com.neusou.moobook.R;
 import com.neusou.moobook.adapters.CommentsAdapter;
 import com.neusou.moobook.adapters.GenericPageableAdapter;
 import com.neusou.moobook.adapters.IPageableListener;
+import com.neusou.moobook.controller.StandardUiHandler;
+import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.data.PageableJsonData;
 import com.neusou.moobook.model.RemoteCallResult;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
-import com.neusou.moobook.view.ProfileOnMenuItemClickListener;
+import com.neusou.moobook.view.ActionBar;
 import com.neusou.web.IntelligentPagingInfo;
 import com.neusou.web.PagingInfo;
 
@@ -81,7 +83,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	static final int UICALLBACK_ADMOB_ONRECEIVE = 50;
 	static final int UICALLBACK_ADMOB_ONFAILRECEIVE = 51;
 	
-	static final byte DIALOG_POSTINGCOMMENT = 2;
+	
 	static final byte DIALOG_DELETINGCOMMENT = 3;
 	
 	static final byte MENUITEM_REFRESH = 0;
@@ -100,6 +102,8 @@ public class ViewCommentsActivity extends BaseActivity{
 	String LABEL_HEADER_COMMENTS;
 	ManagerThread mWorkerThread;	
 	
+	ActionBar mActionBar;
+	
 	//Temporary data stores
 	static PageableJsonData data_comments = null;
 	static JSONArray data_users = null;
@@ -116,7 +120,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	String mLblRefresh;
 	String mLblDelete;
-	String mLblActorName;
+	//String mLblActorName;
 	
 	String mLblLoadingComments;
 	String mLblPostingComment;
@@ -130,8 +134,8 @@ public class ViewCommentsActivity extends BaseActivity{
 	int commentStartIndex = 0;
 	
 	//Views
-	EditText mComment;
-	Button mPostBtn;
+	//EditText mComment;
+	//Button mPostBtn;
 	AdView mAdView;
 	ListView mListView;
 	CommentsAdapter mListAdapter;
@@ -173,12 +177,14 @@ public class ViewCommentsActivity extends BaseActivity{
 				Bundle b = intent.getExtras();
 				RemoteCallResult remoteCallResult = (RemoteCallResult) b.getParcelable(RemoteCallResult.XTRA_PARCELABLE_OBJECT);
 				if(remoteCallResult.status){
-					getCommentsFromCloud(0);				
+					getCommentsFromCloud(0);
+					Toast.makeText(ViewCommentsActivity.this, "Comment deleted", 2000).show();
 				}
 				dismissDialog(DIALOG_DELETINGCOMMENT);
 				hideLoadingIndicator();
-				resetHeaderText();
+				resetHeaderText();				
 			}			
+			/*
 			else if(action.equals(App.INTENT_POSTCOMMENT)){
 				Bundle b = intent.getExtras();
 				RemoteCallResult remoteCallResult = (RemoteCallResult) b.getParcelable(RemoteCallResult.XTRA_PARCELABLE_OBJECT);
@@ -189,6 +195,9 @@ public class ViewCommentsActivity extends BaseActivity{
 				hideLoadingIndicator();
 				resetHeaderText();
 			}
+			/*
+			 /*
+			 
 			else if(action.equals(App.INTENT_GET_TAGGED_PHOTOS)){
 				Bundle extras = intent.getExtras();
 				FBWSResponse fbresponse = (FBWSResponse) extras.getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);										
@@ -206,6 +215,7 @@ public class ViewCommentsActivity extends BaseActivity{
 				}
 				
 			}
+			*/
 		}
 		
 	};
@@ -243,7 +253,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		public boolean hasPostId(){
 			return mHasPostId;
 		}
-		
+		 
 		public String getObjectId(){
 			return mObjectId;
 		}
@@ -265,42 +275,42 @@ public class ViewCommentsActivity extends BaseActivity{
 		getExtras();
 		initObjects();
 		initViews();
+		mWaitCreation.countDown();
+		//Toast.makeText(this, "Finished onCreate()", 2000).show();
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		mDB.close();
-		mDBHelper.close();		
-		mFacebook.purgeInactiveOutHandlers(false);
-		mFacebook = null;	
-		System.gc();	
+		if(!onActivityResult){
+			mDB.close();
+			mDBHelper.close();		
+			mFacebook.purgeInactiveOutHandlers(false);
+			mFacebook = null;	
+			System.gc();
+		}
 	}
 
 	@Override
 	protected void onStart() {
 		super.onStart();		
-		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		//this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		registerReceivers();
 		mFacebook.registerOutHandler(R.id.outhandler_activity_viewcomments, mWorkerThread.getInHandler());
 		mWorkerThread.setListener(mManagerListener);
 		mWorkerThread.setOutHandler(mUIHandler);		
-		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction(App.INTENT_DELETECOMMENT);		
-		intentFilter.addAction(App.INTENT_POSTCOMMENT);
-		intentFilter.addAction(App.INTENT_GET_TAGGED_PHOTOS);
-		registerReceiver(mBroadcastReceiver, intentFilter);		
+		getCommentsFromCloud(PagingInfo.CURRENT);
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		unregisterReceiver(mBroadcastReceiver);
+		unregisterReceivers();
 	}
 
 	@Override
 	protected void onResume() {
-		super.onResume();
-		getCommentsFromCloud(PagingInfo.CURRENT);
+		super.onResume();	
 		updateList();
 	}
 
@@ -321,14 +331,15 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	protected void bindViews(){
 		mAdView = (AdView) findViewById(R.id.ad);
+		App.initAdMob(mAdView, mUIHandler);		
 		mLoadingIndicator = findViewById(R.id.loadingindicator);
-		App.initAdView(mAdView, mAdViewHandler);		
-		
 		mStub = findViewById(R.id.stub);
 		mListView = (ListView) findViewById(R.id.list);		
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
-		mPostBtn = (Button) findViewById(R.id.post);
-		mComment = (EditText) findViewById(R.id.comment_input);		
+		mActionBar = App.INSTANCE.mActionBar;
+		mActionBar.bindViews(this);
+		//mPostBtn = (Button) findViewById(R.id.post);
+		//mComment = (EditText) findViewById(R.id.comment_input);		
 	}
 		
 	
@@ -342,17 +353,54 @@ public class ViewCommentsActivity extends BaseActivity{
 		
 		if(mHasObjectId){
 			xtraObjectId= i.getStringExtra(XTRA_OBJECTID);
-		}else if(mHasPostId){
+		}
+		
+		if(mHasPostId){
 			xtraPostId = i.getStringExtra(XTRA_POSTID);			
 		}		
 			
-		Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] clearData?:"+isClearData+" postId:"+mPostId);
+		Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] clearData?:"+isClearData+" postId:"+mPostId+", objectId:"+mObjectId);
 		
+	}
+	
+	private void registerReceivers(){
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(App.INTENT_DELETECOMMENT);		
+		//intentFilter.addAction(App.INTENT_POSTCOMMENT);
+		intentFilter.addAction(App.INTENT_GET_TAGGED_PHOTOS);
+		registerReceiver(mBroadcastReceiver, intentFilter);			
+	}
+	
+	private void unregisterReceivers(){
+		unregisterReceiver(mBroadcastReceiver);
 	}
 	
 	protected void initObjects(){
 		super.initObjects();
-	
+
+		
+		mActionBar.setOnAddClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = PostActivity.getIntent(ViewCommentsActivity.this);
+				intent.putExtra(PostActivity.XTRA_OBJECTID, mPostId);
+				intent.putExtra(PostActivity.XTRA_SHOW_COMMENTBAR, true);
+				intent.putExtra(PostActivity.XTRA_FOCUS, PostActivity.COMPONENT_COMMENTBAR);
+				startActivityForResult(intent, PostActivity.REQUESTCODE_POSTCOMMENT);
+			}
+			
+		});
+		
+		mActionBar.setOnReloadClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				getCommentsFromCloud(PagingInfo.CURRENT);				
+			}
+			
+		});
+		
 		LABEL_HEADER_COMMENTS = mResources.getString(R.string.comments);
 		
 		try{			
@@ -367,7 +415,7 @@ public class ViewCommentsActivity extends BaseActivity{
 				if(isClearData){
 					if(xtraPostId != null && !xtraPostId.equals(mPostId)){
 						clearAllData();
-					}						
+					}
 				}					
 			}
 			Logger.l(Logger.DEBUG,LOG_TAG,"[initObjects()] different postId, clearing comments data.");
@@ -398,12 +446,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		
 		// Initialize listeners
 		
-		mPostOnClickLst = new View.OnClickListener() {			
-			@Override
-			public void onClick(View v) {
-				postComment();								
-			}
-		};
+		
 		
 		mProgressDialog = new ProgressDialog(this);				
 		
@@ -444,18 +487,59 @@ public class ViewCommentsActivity extends BaseActivity{
 			}
 			
 		};
-	
+		
+		mUIHandler = new StandardUiHandler(this, mProgressDialog,  findViewById(R.id.adview_wrapper), findViewById(R.id.bottomheader)){
+			
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				
+				int code = msg.what;
+				switch (code) {
+					case ManagerThread.MESSAGE_UPDATELIST:{
+						Logger.l(Logger.DEBUG,LOG_TAG,"[Handler()] [handleMessage()] update list");
+						mListAdapter.onFinishedLoading();
+						mListAdapter.parseUsersJsonData(data_users);
+						mListAdapter.setPagingInfo(mPagingInfo);					
+						mListAdapter.setData(data_comments);	
+						mListAdapter.notifyDataSetChanged();
+						onFinishFetchingCommentsFromCloud();	
+						
+						break;
+					}
+					case UIMETHOD_RELOADCOMMENTS:{					
+						getCommentsFromCloud(1);
+						break;
+					}
+				}
+			}
+			
+			@Override
+			public void onServerCallError() {
+				super.onServerCallError();
+				onFinishFetchingCommentsFromCloud();
+				mListAdapter.onFinishedLoading();
+			}
+
+			@Override
+			public void onTimeoutError() {
+				super.onTimeoutError();
+				onFinishFetchingCommentsFromCloud();
+				mListAdapter.onFinishedLoading();
+			};
+		};
 		
 	}	
 	
 
 	protected void initViews(){
-		mPostBtn.setOnClickListener(mPostOnClickLst);
-		//init comments list
+		App.INSTANCE.mActionBar.bindViews(this);
+		App.INSTANCE.mActionBar.initViews();
 		
 		mListAdapter.setPagingInfo(mPagingInfo);
 		
-		mListView.setLayoutAnimation(mListAnimation);
+		//mListView.setLayoutAnimation(mListAnimation);
+		
 		mListView.setAdapter(mListAdapter);		
 		registerForContextMenu(mListView);
 		mListView.setFocusableInTouchMode(true);
@@ -519,8 +603,6 @@ public class ViewCommentsActivity extends BaseActivity{
 			
 		});
 		
-		
-		
 		mTopHeaderText.setFactory(new ViewFactory() {
 			@Override
 			public View makeView() {				
@@ -531,7 +613,49 @@ public class ViewCommentsActivity extends BaseActivity{
 		});
 
 	}
+	
+	Handler h = new Handler();
+	CountDownLatch mWaitCreation = new CountDownLatch(1);
+	
+	boolean onActivityResult = false;
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {	
+		super.onActivityResult(requestCode, resultCode, data);
 		
+		
+		registerReceivers();	
+		onActivityResult = true;
+		
+		h.postDelayed(new Runnable() {
+			
+			@Override
+			public void run() {
+				try{
+					mWaitCreation.await();
+					//Toast.makeText(ViewCommentsActivity.this, "onStart()", 2000).show();
+					//Logger.l(Logger.DEBUG, ViewCommentsActivity.LOG_TAG, "calling onStart()");
+					onStart();
+				}catch(InterruptedException e){
+				}
+			}
+		} 	
+		,
+		1000l
+		);
+		
+
+	}
+		
+	
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		boolean isHandled = App.onContextItemSelected(this, item, mProgressDialog);
+		if(!isHandled){
+			return super.onContextItemSelected(item);
+		}
+		return isHandled;
+	}
 	
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
@@ -593,24 +717,13 @@ public class ViewCommentsActivity extends BaseActivity{
 			
 		mProgressDialog.setTitle(null);
 		mProgressDialog.setMessage(App.INSTANCE.mResources.getString(R.string.getting_tagged_photos));
-		
-		OnMenuItemClickListener mContextMenuItemClickListener = 
-			new ProfileOnMenuItemClickListener(
-				mLblActorName,
-				mLongItemClickData.imageUri, 
-				R.id.outhandler_activity_streams, 
-				mLongItemClickData.fromid, 
-				mProgressDialog, 
-				ViewCommentsActivity.this);
-		
-		AppMenu.createActorMenu(
-				menu,
-				mContextMenuItemClickListener,
-				mLongItemClickData.name,
-				mLongItemClickData.imageUri,
-				R.id.outhandler_activity_viewcomments, 
-				mLongItemClickData.fromid, 
-				ViewCommentsActivity.this);
+
+		ContextProfileData cpd = new ContextProfileData();
+		cpd.name = mLongItemClickData.name;
+		cpd.actorId =  mLongItemClickData.fromid;
+		cpd.outhandler = R.id.outhandler_activity_streams;
+		cpd.profileImageUri = mLongItemClickData.imageUri;
+		App.createActorMenu(menu, cpd,	ViewCommentsActivity.this);
 		
 	}
 	
@@ -653,11 +766,13 @@ public class ViewCommentsActivity extends BaseActivity{
 			d.setCancelable(true);
 			break;
 		}
+		/*
 		case DIALOG_POSTINGCOMMENT:{
 			d.setMessage(mLblPostingComment);
 			d.setCancelable(true);
 			break;
 		}
+		*/
 		}
 			    
 	}
@@ -694,6 +809,8 @@ public class ViewCommentsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = false;
 		showLoadingIndicator();
 		setTitle("moobook");
+		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, false);
+		mActionBar.setEnabledButton(ActionBar.BUTTON_POST, false);
 		mTopHeaderText.setText("Loading comments from cloud..");	 
 	}
 
@@ -701,6 +818,8 @@ public class ViewCommentsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = true;
 		hideLoadingIndicator();
 		resetHeaderText();
+		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, true);
+		mActionBar.setEnabledButton(ActionBar.BUTTON_POST, true);
 	}
 
 	private void setHeaderText(String text){
@@ -724,6 +843,12 @@ public class ViewCommentsActivity extends BaseActivity{
 		}
 		Logger.l(Logger.DEBUG,LOG_TAG,"getCommentsFromCloud() "+direction);
 		onStartFetchingCommentsFromCloud();
+		
+		if(direction == PagingInfo.FIRSTRECORD){
+			mPagingInfo.clear();
+			direction = PagingInfo.NEXT;
+		}
+		
 		/*
 		onStartUpdatingComments();		
 		int numComments = 0;				
@@ -736,17 +861,13 @@ public class ViewCommentsActivity extends BaseActivity{
 		Logger.l(Logger.DEBUG,LOG_TAG,"getCommentsFromCloud() paging window size: "+ mPagingInfo.windowSize+", start:"+mPagingInfo.getNextStart());		
 		Logger.l(Logger.DEBUG,LOG_TAG,"getCommentsFromCloud() hasObjectId?"+mHasObjectId+" object_id: "+mObjectId+", hasPostId?"+mHasPostId+" post_id:"+mPostId);
 				
-		mFacebook.getPostComments(R.id.outhandler_activity_viewcomments, mHasPostId?Facebook.COMMENT_TYPE_STREAMPOSTS:Facebook.COMMENT_TYPE_OTHERS, mHasObjectId?mObjectId:null, mHasPostId?mPostId:null, ManagerThread.CALLBACK_GET_COMMENTS_MULTIQUERY, BaseManagerThread.CALLBACK_SERVERCALL_ERROR,  BaseManagerThread.CALLBACK_TIMEOUT_ERROR, mPagingInfo.windowSize,mPagingInfo.getNextStart());		
+		//mFacebook.getPostComments(R.id.outhandler_activity_viewcomments, mHasPostId?Facebook.COMMENT_TYPE_STREAMPOSTS:Facebook.COMMENT_TYPE_OTHERS, mHasObjectId?mObjectId:null, mHasPostId?mPostId:null, ManagerThread.CALLBACK_GET_COMMENTS_MULTIQUERY, BaseManagerThread.CALLBACK_SERVERCALL_ERROR,  BaseManagerThread.CALLBACK_TIMEOUT_ERROR, mPagingInfo.windowSize,mPagingInfo.getNextStart());		
+		
+		mFacebook.getPostComments(R.id.outhandler_activity_viewcomments, mHasPostId?Facebook.COMMENT_TYPE_STREAMPOSTS:Facebook.COMMENT_TYPE_OTHERS, mObjectId, mPostId, ManagerThread.CALLBACK_GET_COMMENTS_MULTIQUERY, BaseManagerThread.CALLBACK_SERVERCALL_ERROR,  BaseManagerThread.CALLBACK_TIMEOUT_ERROR, mPagingInfo.windowSize,mPagingInfo.getNextStart());
 	}
 	
 
-	private void postComment(){
-		showDialog(DIALOG_POSTINGCOMMENT);
-		String comment = mComment.getText().toString(); 
-		Bundle callbackDescriptor = new Bundle();
-		callbackDescriptor.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_POSTCOMMENT);
-		mFacebook.postComment(R.id.outhandler_activity_viewcomments, callbackDescriptor, comment, mPostId, ManagerThread.CALLBACK_POSTCOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
-	}
+
 		
 	private void deleteComment(String comment_id){
 		showDialog(DIALOG_DELETINGCOMMENT);
@@ -803,109 +924,9 @@ public class ViewCommentsActivity extends BaseActivity{
 
 	
 
-	Handler mUIHandler = new BaseUiHandler(this){
+	Handler mUIHandler;
 		
-		public void handleMessage(android.os.Message msg) {
-			super.handleMessage(msg);
-			
-			//Log.d(LOG_TAG,"ui hander handle message what:"+msg.what);
-			int code = msg.what;
-			Bundle data = msg.getData();
-		
-			switch(code){
-				case ManagerThread.MESSAGE_DISMISS_DIALOG:{
-					mProgressDialog.dismiss();
-					break;
-				}
-			
-				case ManagerThread.MESSAGE_UPDATELIST:{
-					Logger.l(Logger.DEBUG,LOG_TAG,"[Handler()] [handleMessage()] update list");
-					mListAdapter.onFinishedLoading();
-					mListAdapter.parseUsersJsonData(data_users);
-					mListAdapter.setPagingInfo(mPagingInfo);					
-					mListAdapter.setData(data_comments);	
-					mListAdapter.notifyDataSetChanged();
-					onFinishFetchingCommentsFromCloud();	
-					break;
-				}
-				
-				case UICALLBACK_ADMOB_ONFAILRECEIVE:{					
-					mAdView.setVisibility(View.GONE);
-					break;
-				}
-				
-				case UICALLBACK_ADMOB_ONRECEIVE:{
-					mAdView.setVisibility(View.VISIBLE);
-					break;
-				}
-			/*
-				case BaseManagerThread.CALLBACK_TIMEOUT_ERROR:{
-					Toast.makeText(ViewCommentsActivity.this, "Request to Facebook timed out", 2000).show();
-		
-					break;
-				}
-				
-				case BaseManagerThread.CALLBACK_SERVERCALL_ERROR:{					
-					String reason = (String)data.getString(Facebook.XTRA_SERVERCALL_ERROR_MSG);
-					String errorCode = ""; 
-					if(data.containsKey(Facebook.XTRA_SERVERCALL_ERROR_CODE)){
-						errorCode = Integer.toString(data.getInt(Facebook.XTRA_SERVERCALL_ERROR_CODE));
-						errorCode+=":";
-					}
-					Toast.makeText(ViewCommentsActivity.this, errorCode+reason, 2000).show();			
-				
-					break;
-				}
-				*/
-				case UIMETHOD_RELOADCOMMENTS:{					
-					getCommentsFromCloud(1);
-					break;
-				}
-				
-				case BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{					
-					FBWSResponse fbResponse = (FBWSResponse) data.getParcelable(Facebook.XTRA_RESPONSE);					
-					Toast.makeText(ViewCommentsActivity.this,fbResponse.errorMessage, 1000).show();
-					onFinishFetchingCommentsFromCloud();
-					mProgressDialog.dismiss();
-					mListAdapter.onFinishedLoading();
-					break;
-				}			
-					
-			}
-		}
 
-		@Override
-		public void onServerCallError() {
-			onFinishFetchingCommentsFromCloud();
-			mProgressDialog.dismiss();
-			mListAdapter.onFinishedLoading();
-		}
-
-		@Override
-		public void onTimeoutError() {
-			onFinishFetchingCommentsFromCloud();
-			mListAdapter.onFinishedLoading();
-			mProgressDialog.dismiss();
-		};
-	};	
-		
-	Handler mAdViewHandler = new Handler(){
-		public void handleMessage(Message msg) {
-			int code = msg.what;
-			switch(code){
-				case UICALLBACK_ADMOB_ONRECEIVE:{
-					mAdView.setVisibility(View.VISIBLE);
-					break;
-				}
-				case UICALLBACK_ADMOB_ONFAILRECEIVE:{
-					mAdView.setVisibility(View.INVISIBLE);	
-					break;
-				}
-			}
-			
-		};
-	};
-	
 	
 		
 	@Override

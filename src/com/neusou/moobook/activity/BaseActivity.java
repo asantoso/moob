@@ -1,13 +1,13 @@
 package com.neusou.moobook.activity;
 
-import com.neusou.Logger;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+
+import com.neusou.Logger;
 
 public abstract class BaseActivity extends Activity {
 	protected static String lcloctag;
@@ -23,7 +23,8 @@ public abstract class BaseActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {	
 		super.onActivityResult(requestCode, resultCode, data);
-		Logger.l(Logger.DEBUG,lcloctag,"onActivityResult");
+		lcloctag = this.getClass().getSimpleName();
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onActivityResult");
 	}
 	
 	@Override
@@ -76,14 +77,14 @@ public abstract class BaseActivity extends Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		onDestroy = true;
-		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onDestroy");
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onDestroy, isFinishing?"+isFinishing());		
 	}
 	
 	@Override
 	protected void onPause() {	
 		super.onPause();
-		onPause = true;
-		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onPause()");
+		onPause = true;		
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onPause, isFinishing?"+isFinishing());
 	}
 	
 	protected void bindViews(){

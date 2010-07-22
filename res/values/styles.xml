@@ -42,6 +42,11 @@
         <item name="android:colorForeground">#fff</item>
     </style>
     
+    <style name="Theme.PostAction" parent="android:style/Theme.Translucent">
+        <item name="android:windowBackground">@drawable/translucent_background</item>
+        <item name="android:colorForeground">#00000000</item>
+    </style>
+    
     <style name="TextAppearance.Theme.PlainText" parent="android:TextAppearance.Theme">
         <item name="android:textStyle">normal</item>
     </style>

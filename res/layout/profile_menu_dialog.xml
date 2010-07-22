@@ -1,0 +1,16 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/layout_root"
+              android:orientation="horizontal"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:padding="10dp"
+              >
+    
+    <Button android:id="@+id/view_profile" android:text="Profile" android:layout_width="fill_parent" android:layout_height="wrap_content"  />          
+    <Button android:id="@+id/view_wall" android:text="Wall" android:layout_width="fill_parent" android:layout_height="wrap_content"  />
+    <Button android:id="@+id/view_feed" android:text="Feed" android:layout_width="fill_parent" android:layout_height="wrap_content"  />
+    <Button android:id="@+id/view_photos" android:text="Photos" android:layout_width="fill_parent" android:layout_height="wrap_content"  />
+    <Button android:id="@+id/view_events" android:text="Events" android:layout_width="fill_parent" android:layout_height="wrap_content"  />    
+    <Button android:id="@+id/view_tagged_photos" android:text="Tagged Photos" android:layout_width="fill_parent" android:layout_height="wrap_content"  />
+    
+</LinearLayout>

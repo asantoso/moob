@@ -1,23 +1,30 @@
 package com.neusou.moobook.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
+import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.thread.BaseManagerThread;
 
 public abstract class BaseUiHandler extends Handler {
 	
-	Context ctx;
-	public BaseUiHandler(Context ctx) {
-		this.ctx = ctx;
+	protected Activity mContext;
+	
+	public static final int mMessageDuration = 2000;
+	
+	public BaseUiHandler(Activity ctx) {
+		this.mContext = ctx;
 	}
 	
 	public abstract void onTimeoutError();
 	public abstract void onServerCallError();
+	public abstract void onWsResponseError();
+	
 	
 	@Override
 	public void handleMessage(Message msg) {
@@ -27,8 +34,14 @@ public abstract class BaseUiHandler extends Handler {
 		Bundle data = msg.getData();
 		
 		switch(code){
+			case BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{				
+				FBWSResponse fbresponse = (FBWSResponse) msg.getData().getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);
+				Toast.makeText(mContext,fbresponse.errorMessage , mMessageDuration).show();
+				onWsResponseError();	
+				break;
+			}			
 			case BaseManagerThread.CALLBACK_TIMEOUT_ERROR:{
-				Toast.makeText(ctx, "Request to Facebook timed out", 2000).show();				
+				Toast.makeText(mContext, "Request to Facebook timed out", mMessageDuration).show();				
 				onTimeoutError();
 				break;
 			}			
@@ -39,7 +52,7 @@ public abstract class BaseUiHandler extends Handler {
 					errorCode = Integer.toString(data.getInt(Facebook.XTRA_SERVERCALL_ERROR_CODE));
 					errorCode+=":";
 				}
-				Toast.makeText(this.ctx, errorCode+reason, 2000).show();			
+				Toast.makeText(this.mContext, errorCode+reason,  mMessageDuration).show();			
 				onServerCallError();
 				break;
 			}

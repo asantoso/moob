@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android" 
+	android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#00000000"
+ >
+
+<LinearLayout
+	android:layout_width="wrap_content"
+    android:layout_height="wrap_content"    
+    
+    android:paddingTop="2dip"	
+    android:background="#FFaaaaaa"
+    android:id="@+id/mainwrapper"
+    android:orientation="vertical"
+>
+	<RelativeLayout	
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:id="@+id/commentbar_wrapper"
+		android:layout_marginTop="2dip"
+		android:layout_marginBottom="2dip"
+		android:layout_marginLeft="2dip"
+		android:layout_marginRight="2dip"	
+		android:layout_gravity="top|left"		
+	>
+		<TextView
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:id="@+id/commentbar_title"
+		android:text="Post/Reply Comment"
+		android:textColor="#FF000000"
+		android:textScaleX="1.08"
+		android:paddingTop="2dip"
+		android:paddingBottom="2dip"
+		android:paddingLeft="3dip"
+		android:paddingRight="3dip"
+		android:layout_marginBottom="3dip"
+		android:shadowRadius="2"
+		android:shadowColor="#AAdddddd"
+		android:shadowDx="2"
+		android:shadowDy="1"
+		android:background="@drawable/post_activity_section_bg"
+		/>
+		
+		<EditText android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:layout_marginRight="70dip"
+		android:id="@+id/commentbox"
+		android:hint="enter comment"
+		android:layout_marginLeft="2dip"
+		android:layout_below="@+id/commentbar_title"
+		/>
+		
+		<Button 
+		android:layout_width="70dip" android:layout_height="wrap_content"
+		android:layout_alignParentRight="true"
+		android:layout_alignTop="@+id/commentbox"
+		android:text="Post"
+		android:id="@+id/postcomment"/>
+			
+	</RelativeLayout>
+	
+	
+	<RelativeLayout	
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:id="@+id/photobar_wrapper"
+		android:layout_marginTop="2dip"
+		android:layout_marginBottom="2dip"
+		android:layout_marginLeft="2dip"
+		android:layout_marginRight="2dip"	
+		android:layout_gravity="top|left"
+		
+	>
+		<TextView
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:id="@+id/photobar_title"
+		android:text="Upload Media"
+		android:textColor="#FF000000"
+		android:textScaleX="1.08"
+		android:paddingTop="2dip"
+		android:paddingBottom="2dip"
+		android:paddingLeft="3dip"
+		android:paddingRight="3dip"
+		android:layout_marginBottom="3dip"
+		android:shadowRadius="2"
+		android:shadowColor="#AAdddddd"
+		android:shadowDx="2"
+		android:shadowDy="1"
+		android:background="@drawable/post_activity_section_bg"
+		/>
+
+		<Button 
+		android:id="@+id/uploadphotofromgallery"
+		android:layout_width="100dip" android:layout_height="wrap_content"
+		
+		android:layout_alignLeft="@+id/photobar_title"
+		android:text="Photo"
+		android:layout_below="@+id/photobar_title"
+		/>
+			
+		<Button 
+		android:id="@+id/uploadphotofromcamera"
+		android:layout_width="100dip" android:layout_height="wrap_content"
+		android:layout_toRightOf="@+id/uploadphotofromgallery"
+		android:layout_alignTop="@+id/uploadphotofromgallery"
+		android:text="Video"
+		/>		
+		
+	</RelativeLayout>
+	
+	<RelativeLayout	
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:id="@+id/uploadbar_wrapper"
+		android:layout_marginTop="2dip"
+		android:layout_marginBottom="2dip"
+		android:layout_marginLeft="2dip"
+		android:layout_marginRight="2dip"	
+		android:padding="4dip"
+		android:layout_gravity="top|center_horizontal"
+	>
+		<ImageView
+		android:id="@+id/photopreview"
+		android:layout_width="64dip" android:layout_height="64dip"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
+		android:padding="2dip"
+		android:background="#FFffffff"
+		android:scaleType="centerInside"
+		/>
+		
+
+		
+		<Button 
+		android:id="@+id/upload"
+		android:layout_width="wrap_content" android:layout_height="wrap_content"
+		android:layout_alignTop="@+id/photopreview"
+		android:layout_toRightOf="@+id/photopreview"		
+		android:text="upload"
+		/>		
+			
+		<TextView
+		android:id="@+id/photoinfo"
+		android:layout_width="fill_parent" android:layout_height="14dip"
+		android:layout_below="@+id/photopreview"
+		android:layout_alignLeft="@+id/photopreview"
+		android:text="file byte length"
+		android:textColor="#FF000000"
+		android:textSize="12dip"
+		/>
+		
+		
+		<TextView
+		android:id="@+id/targetalbumname"
+		android:layout_width="wrap_content" android:layout_height="wrap_content"
+		android:text="target album name"
+		android:layout_below="@+id/upload"
+		android:layout_alignLeft="@+id/upload"
+		android:padding="3dip"
+		android:textColor="#FF000000"
+		/>
+		
+		<Button
+		android:id="@+id/getalbums"
+		android:layout_width="wrap_content" android:layout_height="wrap_content"
+		android:text="Choose album"
+		android:layout_below="@+id/targetalbumname"
+		android:layout_alignLeft="@+id/upload"		
+		/>
+		
+		
+	</RelativeLayout>
+</LinearLayout>
+
+
+</FrameLayout>

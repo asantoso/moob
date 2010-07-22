@@ -82,15 +82,14 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 			return mLayoutInflater.inflate(R.layout.empty, parent, false);
 		}
 
-		Holder tag;
+		Holder tag = null;
 
-		if (convertView != null) {
+		if(convertView == null){
+			convertView = mLayoutInflater.inflate(R.layout.t_event, parent,	false);			
+		}else{
 			tag = (Holder) convertView.getTag();
-		} else {
-
-			convertView = mLayoutInflater.inflate(R.layout.t_event, parent,
-					false);
-
+		}
+		if(tag == null){		
 			tag = new Holder();
 			tag.title = (TextView) convertView.findViewById(R.id.title);
 			tag.pic = (ImageView) convertView.findViewById(R.id.pic);
@@ -107,7 +106,10 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 		event = Event.parseCursor(ds, event);
 
 		if (event != null) {
-			tag.title.setText(event.name);
+			if(tag.title != null && event != null){
+				tag.title.setText(event.name);
+			}
+			
 			String desc = null;
 
 			tag.eid = event.eid;

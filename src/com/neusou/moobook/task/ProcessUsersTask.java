@@ -9,6 +9,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.neusou.Logger;
@@ -24,6 +25,7 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 
 	static final String LOG_TAG = Logger.registerLog(ProcessUsersTask.class);
 	
+	
 	Handler mOutHandler;
 	//Context mContext;	
 	
@@ -36,6 +38,10 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 	
 	ProcessProgressInfo mProgressInfo;
 	
+	public ProcessUsersTask(){
+		
+	}
+	
 	public ProcessUsersTask(
 			Handler uiHandler,
 			int startCode,
@@ -45,6 +51,19 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 			int timeoutCode
 			
 	) {
+		init(uiHandler,startCode,updateCode,finishCode,progressCode,timeoutCode);
+	}
+	
+	public void init(
+			Handler uiHandler,
+			int startCode,
+			int updateCode,
+			int finishCode,
+			int progressCode,
+			int timeoutCode
+			
+	) {
+		
 		if(uiHandler == null){
 			throw new NullArgumentException("uihandler can't be null");
 		}
@@ -118,16 +137,16 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 		for(int i=0;i<num && mStatus == Status.RUNNING;i++){
 			try {								
 				currentItem = users.getJSONObject(i);
-				Logger.l(Logger.DEBUG, LOG_TAG,""+currentItem.toString());
+				//Logger.l(Logger.DEBUG, LOG_TAG,""+currentItem.toString());
 				user.parse(currentItem, selection);
 				
 				long rowId = App.INSTANCE.mDBHelper.insertUser(user,selection,App.INSTANCE.mDB);
-				Logger.l(Logger.DEBUG, LOG_TAG, "user new row id: "+rowId);
+				//Logger.l(Logger.DEBUG, LOG_TAG, "user new row id: "+rowId);
 				
-				mProgressInfo.current = i+1;
-				mProgressInfo.total = num;
 				
-				publishProgress(mProgressInfo);
+				//mProgressInfo.current = i+1;
+				//mProgressInfo.total = num;				
+				//publishProgress(mProgressInfo);
 				
 			} 
 			catch (JSONException e) {

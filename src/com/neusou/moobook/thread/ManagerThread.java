@@ -10,9 +10,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.widget.Toast;
 
 import com.neusou.Logger;
-import com.neusou.WaitingThread;
+import com.neusou.LazyThread;
 import com.neusou.async.UserTask;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBWSResponse;
@@ -20,9 +21,12 @@ import com.neusou.moobook.FQL;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
 import com.neusou.moobook.data.Comment;
+import com.neusou.moobook.data.Photo;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.RemoteCallResult;
+import com.neusou.moobook.task.DeniedTaskCreationException;
 import com.neusou.moobook.task.ProcessStreamMultiQueryTask;
+import com.neusou.moobook.task.ProcessTaskFactory;
 import com.neusou.moobook.task.ProcessUsersTask;
 import com.neusou.web.PagingInfo;
 
@@ -52,9 +56,10 @@ public class ManagerThread extends BaseManagerThread {
 	public static final int CALLBACK_GET_CONTACTS = 15;
 	public static final int CALLBACK_GET_SESSION_STREAM = 16;
 	public static final int CALLBACK_GET_WALLPOSTS = 17;
+	public static final int CALLBACK_GET_PHOTO_ATTR = 18;
 
-	public static final int CALLBACK_GET_COMMENTS_FINISHED = 18;
-	public static final int CALLBACK_PROCESS_STREAMS_FINISH = 19;
+	public static final int CALLBACK_GET_COMMENTS_FINISHED = 19;
+	public static final int CALLBACK_PROCESS_STREAMS_FINISH = 20;
 
 	public static final int MESSAGE_UPDATE_TAGS = 30;
 	public static final int MESSAGE_DISMISS_DIALOG = 31;
@@ -71,6 +76,7 @@ public class ManagerThread extends BaseManagerThread {
 	
 	public static final int CALLBACK_ADMOB_ONFAILRECEIVE = 50;					
 	public static final int CALLBACK_ADMOB_ONRECEIVE = 51;
+	public static final int CALLBACK_ADMOB_ONNEWAD = 52;
 	
 
 	ProcessComments mProcessComments;
@@ -255,7 +261,25 @@ public class ManagerThread extends BaseManagerThread {
 		Logger.l(Logger.DEBUG, LOG_TAG, "[doBusiness()] code:" + code);
 
 		switch (code) {
-
+		case CALLBACK_GET_PHOTO_ATTR:{
+			String parsed;
+			try {
+				parsed = fbresponse.jsonArray.toString(2);
+				Logger.l(Logger.DEBUG, LOG_TAG, "[callback_get_photo_attr]: "
+						+ parsed);
+				data.putParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT,
+						fbresponse);
+				JSONArray photoResultSet = App.getFqlResultSet("photo", fbresponse.data);
+				Logger.l(Logger.DEBUG, LOG_TAG, photoResultSet.toString(2));			
+				JSONObject photoObj = photoResultSet.getJSONObject(0);
+				Photo photo = Photo.parseJson(photoObj,null);
+				data.putParcelable(Photo.XTRA_PARCELABLE_OBJECT, photo);
+				broadcastResult(data);
+			} catch (JSONException e) {
+			}
+			break;
+		}
+		
 		case CALLBACK_GET_WALLPOSTS: {
 			String parsed;
 			try {
@@ -287,8 +311,11 @@ public class ManagerThread extends BaseManagerThread {
 		case CALLBACK_GET_STREAMS_MQ: {
 			if (mProcessStreamMultiQueryDataTask == null
 					|| mProcessStreamMultiQueryDataTask.getStatus() == UserTask.Status.FINISHED) {
+				
+				int processFlag = data.getInt(App.FLAG_STREAM_PROCESS_FLAG, 0);
+				
 				mProcessStreamMultiQueryDataTask = new ProcessStreamMultiQueryTask(
-						App.INSTANCE, internalHandler,
+						App.INSTANCE, internalHandler, processFlag,
 						CALLBACK_PROCESS_STREAMS_MQ_FINISH, new Runnable() {
 							final Bundle mData = data;
 
@@ -559,9 +586,19 @@ public class ManagerThread extends BaseManagerThread {
 									+ fbresponse.data);
 					data.putShortArray(Facebook.XTRA_TABLECOLUMNS_SHORTARRAY,
 							mSelectedUserColumns[SELECTEDCOLUMNS_USER_FETCH]);
-					ProcessUsersTask mProcessUsersTask = new
-					ProcessUsersTask(mOutHandler,0,0,ManagerThread.MESSAGE_UPDATELIST,0,0);
-					mProcessUsersTask.execute(data);
+					//ProcessUsersTask mProcessUsersTask = new
+					//ProcessUsersTask(mOutHandler,0,0,ManagerThread.MESSAGE_UPDATELIST,0,0);
+					ProcessUsersTask mProcessUsersTask;
+					
+					try{
+						 mProcessUsersTask = ProcessTaskFactory.create(ProcessUsersTask.class);
+						 mProcessUsersTask.init(mOutHandler,0,0, ManagerThread.MESSAGE_UPDATELIST,0,0);
+						 mProcessUsersTask.execute(data);							
+						Toast.makeText(App.INSTANCE, "Success Task Creation", 2000).show();
+					}catch(DeniedTaskCreationException e){	
+						Toast.makeText(App.INSTANCE, "Denied Task Creation", 2000).show();
+					}
+									
 				}
 			}
 			break;
@@ -570,7 +607,7 @@ public class ManagerThread extends BaseManagerThread {
 
 	}
 
-	public class ProcessComments extends WaitingThread {
+	public class ProcessComments extends LazyThread {
 
 		CountDownLatch mWaitCountdown;
 		Handler mOutHandler;

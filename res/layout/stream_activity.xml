@@ -7,14 +7,15 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:background="#00000000"
 >
 
-<include layout="@layout/custom_title"/>
+<include layout="@layout/custom_title"
+
+/>
     
 <ExpandableListView 
 	android:id="@+id/list" 
 	android:layout_width="fill_parent" 
-    android:layout_height="fill_parent" 
-    android:layout_marginBottom="-12dip"
-    android:layout_below="@+id/topheader"   
+    android:layout_height="fill_parent"    
+    android:layout_below="@+id/topheader_container"   
     android:layout_above="@+id/bottomheader"
     android:background="#00000000"
     android:nextFocusLeft="@+id/ab_refresh"
@@ -28,6 +29,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical"
 	android:id="@+id/bottomheader"
 	android:nextFocusUp="@+id/list"
+	android:background="#00000000"
 >
 
 <include 
@@ -38,15 +40,11 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_above="@+id/ad"	
 	/>
 
-<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
-	android:id="@+id/ad"
-	android:visibility="visible"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	app:backgroundColor="#00000000"
-	app:textColor="#FFffffff" 
-	app:keywords="" 
-	app:testing="false"/>
+<include 
+	layout="@layout/include_admob"
+	android:visibility="gone"
+	/>
+	
 </LinearLayout>
     
 </RelativeLayout>

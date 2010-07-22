@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
@@ -114,6 +115,10 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 	
 	static long mFbUserId;
 
+	public static Intent getIntent(Context ctx){
+		return new Intent(ctx, ViewAlbumsActivity.class);
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);			

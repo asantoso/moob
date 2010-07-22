@@ -11,7 +11,7 @@
 	<drawable name="darkgray">#AA444444</drawable>
 	
 	<drawable name="screen_background_black">#ff000000</drawable>
-    <drawable name="translucent_background">#6A000000</drawable>
+    <drawable name="translucent_background">#AA000000</drawable>
     <drawable name="transparent_background">#00000000</drawable>
 
     <color name="solid_red">#f00</color>

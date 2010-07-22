@@ -27,6 +27,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 	Context mContext;
 	Handler mUIHandler;	
 	int mFinishCode;
+	int mProcessFlag;
 	int numUpdatedPosts;
 	ProcessProgressInfo mProgressInfo;
 	ApplicationDBHelper dbHelper;
@@ -46,7 +47,8 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 			User.col_pic_square, User.col_type };
 
 	Runnable mFinishRunnable;
-	public ProcessStreamMultiQueryTask(Context ctx, Handler uiHandler, int finishCode, Runnable finishRunnable) throws NullArgumentException {
+	
+	public ProcessStreamMultiQueryTask(Context ctx, Handler uiHandler, int processFlag, int finishCode, Runnable finishRunnable) throws NullArgumentException {
 		if (uiHandler == null) {
 			throw new NullArgumentException("uihandler can't be null");
 		}
@@ -57,6 +59,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		mContext = ctx;
 		mUIHandler = uiHandler;
 		mFinishCode = finishCode;
+		mProcessFlag = processFlag;
 		
 		mProgressInfo = new ProcessProgressInfo();
 		dbHelper = App.INSTANCE.mDBHelper;			
@@ -167,7 +170,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		for (int i = 0; i < num	&& getStatus() == Status.RUNNING; i++) {
 			JSONObject itemJson;			
 			try {
-				itemJson = data.getJSONObject(i);
+				itemJson = data.getJSONObject(i);				
 				
 				String strJson = itemJson.toString(2);
 				Logger.l(Logger.DEBUG, LOG_TAG, "[processPosts()] ["+i+"] json: "+strJson);
@@ -180,6 +183,13 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				stream.source_id = itemJson.getLong(Stream.cn_source_id);
 				stream.target_id = itemJson.getString(Stream.cn_target_id);
 				stream.actor_id = itemJson.getLong(Stream.cn_actor_id);
+								
+				//don't save flag if it is not session user
+				if(mProcessFlag == App.PROCESS_FLAG_SESSIONUSER){
+					stream._process_flag = mProcessFlag;						
+				}else{
+					stream._process_flag = App.PROCESS_FLAG_IGNORE;
+				}
 				
 				try{
 					stream.app_id = itemJson.getInt(Stream.fields_appid);
@@ -286,61 +296,6 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		Logger.l(Logger.DEBUG, LOG_TAG, "[processPosts()] finished");
 		return true;
 	}
-
-	/*
-	private boolean processComments(final JSONArray data) {
-
-		if (data == null) {
-			return false;
-		}
-
-		// Log.d("agus3", "processComments total_comments: "+data.length());
-
-		Comment comment = new Comment();
-		int numComments = 0;
-		if (data == null) {
-			return false;
-
-		} else {
-			numComments = data.length();
-			if (numComments == 0) {
-				return false;
-			}
-		}
-
-		JSONObject commentObj = null;
-
-
-		db.beginTransaction();
-		for (int i = 0; i < numComments; i++) {
-			try {
-				commentObj = data.getJSONObject(i);
-				comment.post_id = commentObj.getString("post_id");
-				comment.from_id = commentObj.getLong("fromid");
-				comment.time = commentObj.getLong("time");
-				comment.comment = commentObj.getString("text");
-				comment.comment_id = commentObj.getString("id");
-
-				if (mStatus == Status.RUNNING && db != null && db.isOpen()) {
-					long commentRowId = dbHelper.insertComment(comment, db);
-				} else {
-					
-					return false;
-				}
-				// Log.d("agus", "new comment with post_id: " +
-				// comment.post_id);
-				// Log.d("agus", "new comment row id: " + commentRowId);
-			} catch (JSONException e) {
-
-			}
-		}
-		db.setTransactionSuccessful();
-		db.endTransaction();
-	
-		Logger.l(Logger.DEBUG, LOG_TAG, "[processComments()] finished");
-		return true;
-	}
-*/
 	
 	private boolean processUsers(final JSONArray data, short[] selection) {
 		if (data == null) {

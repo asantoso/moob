@@ -51,7 +51,7 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 	
 	static final int NOTIFICON_SUCCESS = android.R.drawable.ic_menu_manage;
 	static final int NOTIFICON_ERROR = android.R.drawable.ic_menu_close_clear_cancel;
-	static final int NOTIFICON_PROGRESS = android.R.drawable.ic_menu_directions;
+	static final int NOTIFICON_PROGRESS = android.R.drawable.ic_menu_upload;
 		
 	
 	
@@ -73,6 +73,7 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 			
 		}
 				
+		
 		mUploadPhotoNotification.icon = icon;
 		mUploadPhotoNotification.contentView = new RemoteViews(packageName,	R.layout.remote_photo_upload);
 		mUploadPhotoNotification.contentView.setProgressBar(R.id.progress, max,	progress, false);

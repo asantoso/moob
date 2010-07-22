@@ -1,5 +1,6 @@
 package com.neusou.moobook.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,6 +15,11 @@ import com.neusou.moobook.thread.BaseManagerThread;
 public class LandingActivity extends BaseActivity {
 	
 	Facebook mFacebook;
+	
+	public static Intent getIntent(Context ctx) {		
+		return new Intent(ctx, LandingActivity.class);
+	}
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

@@ -165,8 +165,8 @@ public class ResponseProcessor {
 			}
 		}	
 		
-		db.endTransaction();
 		db.setTransactionSuccessful();
+		db.endTransaction();		
 	}
 	
 	public static void processNotifications(

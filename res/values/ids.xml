@@ -19,6 +19,8 @@
   
   <item type="id" name="tag_standardimageasynclistener" />
   
+  <item type="id" name="tag_contextmenu_data" />
+  
   <item type="id" name="asyncimageloader_profileimage" />
   
   <item type="id" name="imagetype_profileimage" />
@@ -33,13 +35,16 @@
   <item type="id" name="table_users" />
   <item type="id" name="table_posts" />
             
-  <item type="id" name="outhandler.app" />
+  <item type="id" name="outhandler.app" /> 
+  <item type="id" name="outhandler.activity.post" />
   <item type="id" name="outhandler.activity.streams" />
   <item type="id" name="outhandler.activity.viewcomments" />
   <item type="id" name="outhandler.activity.viewphotos" />
   <item type="id" name="outhandler.activity.gallery" />   
   <item type="id" name="outhandler_activity_viewcontacts" />
-  <item type="id" name="outhandler_activity_viewalbums" />             
+  <item type="id" name="outhandler_activity_viewalbums" />
+  <item type="id" name="outhandler_activity_notifications" />         
+  
   
   
                             

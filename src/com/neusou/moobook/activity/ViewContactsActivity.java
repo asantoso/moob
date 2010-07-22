@@ -65,15 +65,18 @@ import com.neusou.moobook.adapters.PageableDataStore;
 import com.neusou.moobook.controller.BaseListViewFactory;
 import com.neusou.moobook.controller.ContactsListViewFactory;
 import com.neusou.moobook.controller.GetTaggedPhotosReceiver;
+import com.neusou.moobook.controller.StandardUiHandler;
 import com.neusou.moobook.controller.StreamListViewFactory;
 import com.neusou.moobook.data.Comment;
+import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
+import com.neusou.moobook.task.DeniedTaskCreationException;
+import com.neusou.moobook.task.ProcessTaskFactory;
 import com.neusou.moobook.task.ProcessUsersTask;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
-import com.neusou.moobook.view.ProfileOnMenuItemClickListener;
 import com.neusou.web.IntelligentPagingInfo;
 import com.neusou.web.PagingInfo;
 
@@ -108,6 +111,8 @@ public class ViewContactsActivity extends BaseActivity{
 	IPageableListener mAdapterListener;
 	
 	
+	ContactsListViewFactory.Data longClickedItemData;
+	
 	boolean mIsAsyncLoadingFinished = true;
 		
 	public static final int DEFAULT_PAGING_WINDOW_SIZE = 5;
@@ -115,8 +120,7 @@ public class ViewContactsActivity extends BaseActivity{
 	JSONArray data_comments = null;
 	PagingInfo mPagingInfo; 
 	static String LABEL_HEADER_COMMENTS = "Contacts";
-	ProfileOnMenuItemClickListener mContextMenuItemClickListener;
-	
+		
 	static final byte SELECTEDCOLUMNS_USER_DISPLAY = 0;
 	static final byte SELECTEDCOLUMNS_USER_FETCH = 1;
 	
@@ -126,28 +130,14 @@ public class ViewContactsActivity extends BaseActivity{
 		{User.col_name, User.col_pic,  User.col_timezone, User.col_pic_square, User.col_uid, User.col_hometown_location, User.col_current_location,  User.col_birthday, User.col_birthday_date, User.col_proxied_email}
 	};
 		
-	Handler mUIHandler = new Handler(){
+	Handler mUIHandler; /*= new StandardHandler(){
 		public void handleMessage(android.os.Message msg) {
 			Logger.l(Logger.DEBUG, LOG_TAG, "[handleMessage()] "+msg.what);
 			int code = msg.what;
 			Bundle data = msg.getData();
 		
 			switch(code){
-			/*
-			case MESSAGE_START:{
-				onStartUpdatingContacts();
-				break;
-			}
-			case MESSAGE_UPDATE:{
-				
-				break;
-			}			
-			case MESSAGE_TIMEOUT:
-			case MESSAGE_FINISH:{
-				onFinishUpdatingContacts();
-				break;
-			}
-			*/
+		
 			
 			case ManagerThread.MESSAGE_DISMISS_DIALOG:{
 				mProgressDialog.dismiss();
@@ -198,7 +188,7 @@ public class ViewContactsActivity extends BaseActivity{
 		};
 	
 	};
-	
+*/	
 	
 	class PageableJsonData implements PageableDataStore<JSONArray>{
 		JSONArray data;
@@ -240,6 +230,10 @@ public class ViewContactsActivity extends BaseActivity{
 		
 	};
 		
+	
+	public static Intent getIntent(Context ctx){
+		return new Intent(ctx, ViewContactsActivity.class);
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -317,14 +311,16 @@ public class ViewContactsActivity extends BaseActivity{
 	protected void bindViews(){
 		mAdView = (AdView) findViewById(R.id.ad);
 		mLoadingIndicator = findViewById(R.id.loadingindicator);
-		App.initAdView(mAdView, mAdViewHandler);		
-		
+				
 		mListView = (ListView) findViewById(R.id.list);		
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
 	}
 	
 	protected void initObjects(){
 		super.initObjects();
+		
+		mProgressDialog = new ProgressDialog(this);
+		
 		//Initialize static variables 
 		//check if any of the required static threads died, recreate countdown latch and initialize all threads
 		boolean initStatics = false;
@@ -402,12 +398,37 @@ public class ViewContactsActivity extends BaseActivity{
 	
 		mPagingInfo = new PagingInfo(0);
 		
+		mUIHandler = new StandardUiHandler(this, mProgressDialog,  findViewById(R.id.adview_wrapper), findViewById(R.id.bottomheader)){
+			@Override
+			public void handleMessage(Message msg) {
+				
+				super.handleMessage(msg);
+		
+				int code = msg.what;
+		
+				switch(code){		
+			
+					case ManagerThread.MESSAGE_DISMISS_DIALOG:{
+						mProgressDialog.dismiss();
+						break;
+					}
+			
+					case ManagerThread.MESSAGE_UPDATELIST:{
+						Logger.l(Logger.DEBUG,LOG_TAG,"[Handler()] [handleMessage()] update list");
+						mListAdapter.notifyDataSetChanged();
+						onFinishUpdatingContacts();	
+						break;
+					}
+				}
+			}
+		};		
 	}	
 	
-	ContactsListViewFactory.Data longClickedItemData;
+	
+
 	protected void initViews(){
 	
-		mProgressDialog = new ProgressDialog(this);
+		
 		
 		mListAdapter.setFilterQueryProvider(mFilterQueryProvider);
 		
@@ -487,6 +508,7 @@ public class ViewContactsActivity extends BaseActivity{
 			}
 		});
 
+		App.initAdMob(mAdView, mUIHandler);
 	}
 
 	public void resolveCursor(){
@@ -510,29 +532,29 @@ public class ViewContactsActivity extends BaseActivity{
 		};
 	}
 		
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		boolean isHandled = App.onContextItemSelected(this, item, mProgressDialog);
+		if(!isHandled){
+			return super.onContextItemSelected(item);
+		}
+		return isHandled;
+	}
+	
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 	
 		super.onCreateContextMenu(menu, v, menuInfo);
 		menu.clearHeader();
 			
-		mContextMenuItemClickListener = 
-			new ProfileOnMenuItemClickListener(
-				longClickedItemData.actorname,
-				longClickedItemData.profileImageUri, 
-				R.id.outhandler_activity_viewcontacts, 
-				longClickedItemData.uid, 
-				mProgressDialog, 
-				this);
-		
-		AppMenu.createActorMenu(
-				menu,
-				mContextMenuItemClickListener,
-				longClickedItemData.actorname,
-				longClickedItemData.profileImageUri,
-				R.id.outhandler_activity_viewcontacts, 
-				longClickedItemData.uid, 
-				this);
+
+		ContextProfileData cpd = new ContextProfileData();
+		cpd.name = longClickedItemData.actorname;
+		cpd.actorId = longClickedItemData.uid;
+		cpd.outhandler = R.id.outhandler_activity_streams;
+		cpd.profileImageUri = longClickedItemData.profileImageUri;
+		App.createActorMenu(menu, cpd,	ViewContactsActivity.this);
 			
 	}
 	
@@ -653,35 +675,17 @@ public class ViewContactsActivity extends BaseActivity{
          
         return true;
     }
-		
-
-
-	Handler mAdViewHandler = new Handler(){
-		public void handleMessage(Message msg) {
-			int code = msg.what;
-			switch(code){
-				case ManagerThread.CALLBACK_ADMOB_ONRECEIVE:{
-					mAdView.setVisibility(View.VISIBLE);
-					break;
-				}
-				case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE:{
-					mAdView.setVisibility(View.INVISIBLE);	
-					break;
-				}
-			}
-			
-		};
-	};
-	
 	
 	
 	public static class WorkerManagerThread extends BaseManagerThread {		
 		
 		CountDownLatch mProcessCommentsWaitCountdown;
 		ProcessUsersTask mProcessUsersTask;
+		Context ctx;
 		
-		public WorkerManagerThread(CountDownLatch cdl) {
+		public WorkerManagerThread(CountDownLatch cdl, Context ctx) {
 			super(cdl);
+			this.ctx = ctx;
 		}
 		
 		public void finalize(){
@@ -703,7 +707,16 @@ public class ViewContactsActivity extends BaseActivity{
 							String[] uids = App.getCommentsUids(fbresponse.jsonArray, null);									
 							Logger.l(Logger.DEBUG, LOG_TAG, "[ViewContactsAct] [callback_get_contacts] response: "+fbresponse.data);							
 							data.putShortArray(Facebook.XTRA_TABLECOLUMNS_SHORTARRAY, mSelectedUserColumns[SELECTEDCOLUMNS_USER_FETCH]);
-							mProcessUsersTask = new ProcessUsersTask(mOutHandler,MESSAGE_START,MESSAGE_UPDATE, ManagerThread.MESSAGE_UPDATELIST, MESSAGE_PROGRESS, MESSAGE_TIMEOUT);
+							
+							ProcessUsersTask procUsersTask;
+							try{
+								 procUsersTask = ProcessTaskFactory.create(ProcessUsersTask.class);
+									Toast.makeText(ctx, "Success Task Creation", 2000).show();
+							}catch(DeniedTaskCreationException e){	
+								Toast.makeText(ctx, "Denied Task Creation", 2000).show();
+							}
+							
+							mProcessUsersTask.init(mOutHandler,MESSAGE_START,MESSAGE_UPDATE, ManagerThread.MESSAGE_UPDATELIST, MESSAGE_PROGRESS, MESSAGE_TIMEOUT);
 							mProcessUsersTask.execute(data);
 						}
 					}				

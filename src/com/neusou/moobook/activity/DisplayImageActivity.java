@@ -1,5 +1,7 @@
 package com.neusou.moobook.activity;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +17,10 @@ public class DisplayImageActivity extends BaseActivity{
 	//public static final String XTRA_IMAGE = "xtra.image";
 	public static final String XTRA_IMAGE_URL = "xtra.image.url";
 	public static final String XTRA_PHOTO_ID = "xtra.photo.id";
+
+	public static Intent getIntent(Context ctx) {
+		return new Intent(ctx, DisplayImageActivity.class);
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

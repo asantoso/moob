@@ -2,24 +2,26 @@ package com.neusou.moobook;
 
 import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.accessibilityservice.AccessibilityService;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -28,7 +30,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.IntentSender.SendIntentException;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -40,17 +41,14 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
-import android.media.SoundPool;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.os.Parcel;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -58,32 +56,42 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.view.accessibility.AccessibilityManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import com.admob.android.ads.AdManager;
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
-import com.neusou.async.UserTask;
 import com.neusou.async.UserTaskExecutionScope;
+import com.neusou.moobook.activity.EventsActivity;
+import com.neusou.moobook.activity.HomeActivity;
 import com.neusou.moobook.activity.LoginActivity;
 import com.neusou.moobook.activity.NotificationsActivity;
 import com.neusou.moobook.activity.StreamActivity;
+import com.neusou.moobook.activity.ViewAlbumsActivity;
 import com.neusou.moobook.activity.ViewCommentsActivity;
+import com.neusou.moobook.activity.ViewContactsActivity;
+import com.neusou.moobook.activity.ViewPhotosActivity;
+import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.receiver.OnAlarmReceiver;
-import com.neusou.moobook.task.ProcessStreamMultiQueryTask;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ActionBar;
 import com.neusou.web.ImageUrlLoader;
 import com.neusou.web.ImageUrlLoader2;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderInput;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class App extends Application {
 	static final String LOG_TAG = "App";
 	
 	public static App INSTANCE;
 	public Resources mResources;
+	public ActionBar mActionBar;
 	
 	public Notification mNotification;
 	public UserTaskExecutionScope mExecScopeListViewTask =
@@ -118,14 +126,61 @@ public class App extends Application {
 	static final int CALLBACK_PROCESS_STREAMS_PROGRESS = 3;
 	static final int CALLBACK_PROCESS_STREAMS_TIMEOUT = 4;
 	
-	public static final byte MENUITEM_LOGOFF = 0;
-	public static final byte MENUITEM_SETTINGS = 1;
-	public static final byte MENUITEM_CLEAR = 2;
-	public static final byte MENUITEM_GET_WALLCOMMENTS = 3;
-	public static final byte MENUITEM_GET_WALLPOSTS = 4;
-	public static final byte MENUITEM_TOGGLE_LOGGER = 5;
-	public static final byte MENUITEM_USER_WALL = 6;
+	public static final int MENUITEM_LOGOFF = 1;
+	public static final int MENUITEM_SETTINGS = 2;
+	public static final int MENUITEM_CLEAR = 3;
+	public static final int MENUITEM_GET_WALLCOMMENTS = 4;
+	public static final int MENUITEM_GET_WALLPOSTS = 5;
+	public static final int MENUITEM_TOGGLE_LOGGER = 6;
+	public static final int MENUITEM_USER_WALL = 7;
+	public static final int MENUITEM_VIEWALBUMS = 8;
+	public static final int MENUITEM_STREAMS = 9;
+	public static final int MENUITEM_NETWORKS = 10;
+	public static final int MENUITEM_NOTIFICATIONS = 11;
+	public static final int MENUITEM_EVENTS = 12;
+	public static final int MENUITEM_TOGGLE_MODE = 13;
+	public static final int MENUITEM_REFRESH_STREAM = 14;
+	public static final int MENUITEM_CLEAR_STREAM = 15;
+	public static final int MENUITEM_CHAT = 16;
+	public static final int MENUITEM_CLEARALL = 17;	
+	public static final int CONTEXT_MENUITEM_PROFILE  = 18;
 	
+	public static final int CONTEXT_MENU_TOPHEADER_PROFILE  = 1;
+	public static final int CONTEXT_MENU_OTHERS  = 2;
+	
+	public static final String ACTION_VIEW_FEED = "view.feed";
+	public static final String ACTION_VIEW_WALL = "view.wall";
+	public static final String ACTION_VIEW_PROFILE = "view.profile";
+	public static final String ACTION_VIEW_PHOTOS = "view.photos";
+	public static final String ACTION_VIEW_TAGGED_PHOTOS = "view.tagged.photos";
+	public static final String ACTION_VIEW_EVENTS = "view.events";
+		
+	public static final int PROCESS_FLAG_SESSIONUSER = 1;
+	public static final int PROCESS_FLAG_OTHER = 2;
+	public static final int PROCESS_FLAG_IGNORE = 0;
+	
+	public static final int USERACTION_VIEWWALL = 1;
+	public static final int USERACTION_VIEWSTREAM = 2;	
+	public static final int USERACTION_VIEWCOMMENT = 3;
+	public static final int USERACTION_OTHERS = 4;
+	
+	
+	public static final int ACTIVITY_VIEW_MY_FEED = 1;
+	public static final int ACTIVITY_VIEW_MY_WALL = 2;
+	public static final int ACTIVITY_VIEW_MY_EVENTS = 3;
+	public static final int ACTIVITY_VIEW_MY_NOTIFICATIONS = 4;
+	public static final int ACTIVITY_VIEW_MY_NETWORK = 5;
+	public static final int ACTIVITY_VIEW_MY_PHOTOS = 6;
+	public static final int ACTIVITY_VIEW_MY_TAGGED_PHOTOS = 7;
+	public static final int ACTIVITY_VIEW_MY_PROFILE = 8;
+	public static final int ACTIVITY_VIEW_COMMENTS = 9;
+	public static final int ACTIVITY_VIEW_SETTINGS = 10;	
+	public static final int ACTIVITY_VIEW_OTHER_WALL = 11;
+	public static final int ACTIVITY_VIEW_OTHER_PHOTOS = 12;
+	public static final int ACTIVITY_VIEW_OTHER_TAGGED_PHOTOS = 13;
+	public static final int ACTIVITY_VIEW_OTHER_PROFILE = 14;
+	
+	public static final String FLAG_STREAM_PROCESS_FLAG = "process.stream.flag";
 	public static ColorMatrix mWhitishColorMatrix;
 	public static ColorMatrixColorFilter mColorFilterWhitish;
 	public static ColorMatrix mBlueishColorMatrix;
@@ -223,14 +278,12 @@ public class App extends Application {
 	}
 	
 	@Override
-	public void onCreate() {
-		
+	public void onCreate() {		
 		super.onCreate();
-		INSTANCE = this;
-		mAlarmManager = (AlarmManager) getSystemService(Service.ALARM_SERVICE);
-		
-		Prefs.init(this);
 		Logger.l(Logger.DEBUG,LOG_TAG,"onCreate()");
+		INSTANCE = this;
+		mAlarmManager = (AlarmManager) getSystemService(Service.ALARM_SERVICE);		
+		Prefs.init(this);
 		initObjects();
 		updateNotificationAlarm();
 		initBroadcastReceivers();
@@ -241,6 +294,8 @@ public class App extends Application {
 		AnimationDrawable ad = new AnimationDrawable(){
 			
 		};
+		
+		AdManager.setInTestMode(false);
 	}
 
 	@Override
@@ -263,6 +318,7 @@ public class App extends Application {
 	private void initObjects(){
 		loadNotificationRingtone();
 		Resources res = getResources();
+		mActionBar = new ActionBar();
 		mDefaultProfileBitmap = BitmapFactory.decodeResource(res, R.drawable.defaultprofileimage);
 		mEmptyBitmap = BitmapFactory.decodeResource(res, R.drawable.empty_bitmap);
 		mResources = getResources();
@@ -522,9 +578,48 @@ public class App extends Application {
 		}
 		
 		
-	public void test(){
+	public static User getUserSessionData() throws FileNotFoundException{
+		String cachedUserInfo = null;
 		
-	}	
+		cachedUserInfo = Util.readStringFromLocalCache(App.INSTANCE, App.LOCALCACHEFILE_SESSIONUSERDATA);
+		
+		if(cachedUserInfo == null){
+			return null;
+		}
+		
+		User user = new User();
+		try{
+			JSONArray users = new JSONArray(cachedUserInfo);
+			JSONObject userJson = users.getJSONObject(0);													
+			String firstname = userJson.getString(FBUser.fields_first_name);
+			String lastname = userJson.getString(FBUser.fields_last_name);
+			user.name = firstname + " " + lastname;			
+			user.pic  = userJson.getString(FBUser.fields_pic);
+			user.pic_big  = userJson.getString(FBUser.fields_pic_big);
+			JSONObject statusJson = userJson.getJSONObject(FBUser.fields_status);
+			user.status = statusJson.getString(FBUser.fields_status_message);
+			user.profile_blurb = userJson.getString(FBUser.fields_profile_blurb);
+			user.timezone = userJson.getString(FBUser.fields_timezone);
+			user.current_location = userJson.getString(FBUser.fields_current_location);			
+		}catch(JSONException e){				
+			e.printStackTrace();
+		}
+		
+		return user;
+	}
+	
+	public void showVirtualKeyboard(View view){
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.showSoftInput(view, InputMethodManager.SHOW_FORCED);
+		
+
+	}
+	
+	public void hideVirtualKeyboard(View view){
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
+	
 	
 	public void getWallPostsFromCloud(long created_date){
 		Logger.l(Logger.DEBUG, LOG_TAG, "[getWallPosts()] created_date: "+created_date);
@@ -552,7 +647,7 @@ public class App extends Application {
 		FBSession session = mFacebook.getSession();
 		//get the first post entry
 		
-		Cursor c = mDBHelper.getStreams(mDB, Facebook.STREAMMODE_NEWSFEED, session.uid, null, 1, 0);
+		Cursor c = mDBHelper.getStreams(mDB, Facebook.STREAMMODE_NEWSFEED, PROCESS_FLAG_SESSIONUSER, session.uid, null, 1, 0);
 		int numComments = 0;
 		if(c != null){
 			numComments = c.getCount();
@@ -574,29 +669,32 @@ public class App extends Application {
 	Ringtone mNotifRingtone;
 	public Uri mNotifRingtoneUri;
 	
-	public static void initAdView(final AdView mAdView, final Handler mUIHandler){
+	public static void initAdMob(final AdView mAdView, final Handler mUIHandler){		
 		mAdView.setVisibility(View.VISIBLE);
-		mAdView.setKeywords("gift");		
+		mAdView.setKeywords("games flower gifts dating iphone love");
 		mAdView.setBackgroundColor(0xFFaaaaaa);
 		mAdView.setTextColor(0xFF111111);
-		mAdView.setGoneWithoutAd(false);
-		mAdView.setRequestInterval(60);
+		mAdView.setGoneWithoutAd(true);
+		mAdView.setRequestInterval(30);
 		mAdView.setListener(new AdView.AdListener() {			
 			@Override
 			public void onReceiveAd(AdView adView) {
 				if(mUIHandler != null){
-					mUIHandler.sendEmptyMessage(CALLBACK_ADMOB_ONRECEIVE);
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONRECEIVE);
 				}				
 			}
 			
 			@Override
-			public void onNewAd() {				
+			public void onNewAd() {		
+				if(mUIHandler != null){
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONNEWAD);
+				}
 			}
 			
 			@Override
 			public void onFailedToReceiveAd(AdView adView) {
 				if(mUIHandler != null){
-					mUIHandler.sendEmptyMessage(CALLBACK_ADMOB_ONFAILRECEIVE);
+					mUIHandler.sendEmptyMessage(ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE);
 				}				
 			}			
 		});		
@@ -804,7 +902,12 @@ public class App extends Application {
     }
     
     public JSONArray getAppIgnoreList(){
-    	String text = Util.readStringFromLocalCache(this, App.LOCALCACHEFILE_APPIGNORELIST);
+    	String text = null;
+    	try{
+    		text = Util.readStringFromLocalCache(this, App.LOCALCACHEFILE_APPIGNORELIST);
+    	}catch(FileNotFoundException e){
+    		return null;
+    	}
     	try{
     		JSONArray jsonArray = new JSONArray(text);
     		return jsonArray;
@@ -813,9 +916,10 @@ public class App extends Application {
     	}
     }
         
-    public static void showPost(Activity act, String post_id) {	
+    public static void showPost(Activity act, String id) {	
 		Intent showComments = ViewCommentsActivity.getIntent(act);
-		showComments.putExtra(ViewCommentsActivity.XTRA_POSTID, post_id);
+		showComments.putExtra(ViewCommentsActivity.XTRA_POSTID, id);
+		showComments.putExtra(ViewCommentsActivity.XTRA_OBJECTID, id);
 		showComments.putExtra(ViewCommentsActivity.XTRA_CLEARDATA, true);
 		showComments.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
 				| Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
@@ -823,13 +927,372 @@ public class App extends Application {
 		act.startActivity(showComments);
 	}
     
-    public static void showUserWall(Activity act, long uid) {
+    public static void showUserWall(Activity act, long uid, String username) {
     	Intent viewWall = StreamActivity.getIntent(act);
+    	//viewWall.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
     	Bundle b = new Bundle();    	
+    	ContextProfileData cpd = new ContextProfileData();
+    	cpd.name = username;
+    	cpd.actorId = uid;    	
+    	//b.putString(StreamActivity.XTRA_USERNAME, username);
+    	b.putParcelable(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
     	b.putLong(StreamActivity.XTRA_USERID, uid);
     	b.putByte(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_WALLFEED);
-    	viewWall.putExtras(b);
+    	viewWall.putExtras(b);    	
     	act.startActivity(viewWall);
     }
     
+    /**
+     * Extracts one fql result set out of the larger multi queries result set.
+     * 
+     * @param key The FQL key in the multiquery result set.
+     * @param jsonMultiQueriesResult The larger multiqueries result set.
+     * @return  The JSON array corresponding to the FQL key.
+     */
+    public static JSONArray getFqlResultSet(String key, String jsonMultiQueriesResult){
+    	try{
+    		JSONArray multiQueryResult = new JSONArray(jsonMultiQueriesResult);
+    		return getFqlResultSet(key, multiQueryResult);
+    	}catch(JSONException e){
+    		return null;
+    	}
+    }
+    
+    /**
+     * Extracts one fql result set out of the larger multi queries result set.
+     * 
+     * @param key The FQL key in the multiquery result set.
+     * @param jsonMultiQueriesResult The larger multiqueries result set.
+     * @return  The JSON array corresponding to the FQL key.
+     */
+    public static JSONArray getFqlResultSet(String key, JSONArray multiQueriesResult){
+    	int num = multiQueriesResult.length();
+    	try{
+    	Iterator<String> it = multiQueriesResult.toJSONObject(null).keys();
+    	for(int i=0;it.hasNext();i++){
+    		if(it.next().equals(key)){
+    			return multiQueriesResult.getJSONObject(i).getJSONArray(FQL.FQL_RESULT_SET);
+    		}
+    	}
+    	}catch(JSONException e){    		
+    	}
+    	return null;
+    }
+    
+    
+    public static boolean isSessionUser(long userId){
+    	return(userId == Facebook.getInstance().getSession().uid);	
+    }
+    
+    public static Dialog createProfileMenuDialog(ContextProfileData cpd){
+		
+		Context mContext = App.INSTANCE.getApplicationContext();
+		Dialog dialog = new Dialog(mContext);
+	
+		dialog.setContentView(R.layout.profile_menu_dialog);
+		dialog.setTitle(cpd.name);
+		
+		return dialog;
+	}
+
+	public static void createActorMenu(
+		Menu menu,
+		ContextProfileData cpd,
+		Context ctx){
+		
+		Logger.l(Logger.DEBUG, "App","createActorMenu() uid:"+cpd.actorId+", name:"+cpd.name);
+		
+		
+		Resources res = ctx.getResources();
+		final SubMenu actorNameSM = menu.addSubMenu(cpd.name);		
+    	Bitmap headerIconBmp = App.mImageUrlLoader2.loadImage(cpd.profileImageUri, true);
+    	Drawable actorProfileDrawable = null;
+    	if(headerIconBmp != null){
+    		actorProfileDrawable = new BitmapDrawable(headerIconBmp);
+    		actorNameSM.setHeaderIcon(actorProfileDrawable);
+    		//actorNameSM.setIcon(actorProfileDrawable);
+    	}else{
+    		//asynchronously load profile image
+    		
+    		AsyncLoaderInput input = new AsyncLoaderInput();
+    		input.imageUri = cpd.profileImageUri;
+    		App.mImageUrlLoader2.loadImageAsync(    				
+    				App.INSTANCE.mExecScopeImageLoaderTask,
+    				input,
+    				new ImageUrlLoader2.AsyncListener(){
+    					
+				@Override
+				public void onCancelled() {
+				}
+
+				@Override
+				public void onPostExecute(AsyncLoaderResult result) {
+				}
+
+				@Override
+				public void onPreExecute() {
+				}
+
+				@Override
+				public void onPublishProgress(final AsyncLoaderProgress progress) {
+					
+					
+					try{
+						BitmapDrawable bd = new BitmapDrawable(progress.bitmap);
+						actorNameSM.setHeaderIcon(bd);
+					}catch(Throwable e){
+						
+					}
+				}
+    			
+    		});
+    	}
+    	
+		actorNameSM.setHeaderTitle(cpd.name);
+		MenuItem viewFeedMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE,0, res.getString(R.string.view_feed));
+		MenuItem viewWallMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE,0, res.getString(R.string.view_wall));		
+		MenuItem viewProfileMenuItem = actorNameSM.add(0,App.CONTEXT_MENUITEM_PROFILE,1, res.getString(R.string.view_profile));
+		MenuItem viewPhotosMenuItem = actorNameSM.add(0,App.CONTEXT_MENUITEM_PROFILE,2, res.getString(R.string.view_photos));
+		MenuItem viewTaggedPhotosMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE, 3, res.getString(R.string.view_tagged_photos));
+		
+
+		Intent i;
+		i = new Intent(ACTION_VIEW_FEED);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewFeedMenuItem.setIntent(i);
+		
+		i = new Intent(ACTION_VIEW_WALL);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewWallMenuItem.setIntent(i);
+		
+		i = new Intent(ACTION_VIEW_PROFILE);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewProfileMenuItem.setIntent(i);
+		
+		i = new Intent(ACTION_VIEW_PHOTOS);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewPhotosMenuItem.setIntent(i);
+		
+		i = new Intent(ACTION_VIEW_TAGGED_PHOTOS);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewTaggedPhotosMenuItem.setIntent(i);
+		
+    }
+	
+    /**
+     * 
+     * @param ctx
+     * @param cpd If null then will use the current session user
+     * @param activity
+     * @param menu
+     */
+	public static void prepareOptionsMenu(Activity ctx, ContextProfileData cpd, int activity, Menu menu){
+		menu.clear();		
+		MenuItem streams = menu.add(0,App.MENUITEM_STREAMS, 0, "Feed");
+		MenuItem events = menu.add(0,App.MENUITEM_EVENTS, 1, "Events");
+		MenuItem networks = menu.add(0,App.MENUITEM_NETWORKS, 2, "Network");
+		MenuItem notifications = menu.add(0,App.MENUITEM_NOTIFICATIONS, 3, "Notifications");
+		//MenuItem clear = menu.add(0,App.MENUITEM_CLEAR,4,"Clear");
+		MenuItem logoff = menu.add(0,App.MENUITEM_LOGOFF, 5,"Logoff");
+		//MenuItem settings = menu.add(0,App.MENUITEM_SETTINGS, 6,"Settings");
+		
+		if(cpd == null){
+			FBSession fbSession = Facebook.getInstance().getSession();
+			cpd = new ContextProfileData();
+			User sessionUser;
+			try{
+				sessionUser = App.getUserSessionData();
+				cpd.name = sessionUser.name;
+				cpd.profileImageUri = sessionUser.pic;
+			}catch(FileNotFoundException e){				
+			}
+			
+			cpd.actorId = fbSession.uid;						
+		}
+			
+		Intent i = new Intent();	
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		streams.setIntent(i);
+		events.setIntent(i);
+		networks.setIntent(i);
+		notifications.setIntent(i);
+		logoff.setIntent(i);
+		OptionsMenu.createPreference(ctx, menu, 0, App.MENUITEM_SETTINGS, 6);
+		
+	}
+
+	/**
+	 * 
+	 * 
+	 * @param ctx
+	 * @param cpd if the contextprofiledata in the intent is not null then it will be used to override this data
+	 * @param activity
+	 * @param item
+	 * @return
+	 */
+	public static boolean onOptionsItemSelected(Activity ctx, ContextProfileData cpd, int activity, MenuItem item){
+	    	
+			Toast.makeText(ctx, "onMenuItemSelected()", 3000).show();
+	    	Intent itemIntent = item.getIntent();
+	    	if(itemIntent != null){
+	    		if(cpd == null || itemIntent.hasExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT)){
+	    			cpd = itemIntent.getParcelableExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT);
+	    		}
+	    	}
+	    	
+			int id = item.getItemId();
+	    	
+			
+			switch(id){
+			
+				case App.MENUITEM_EVENTS:{
+					Intent viewEvents = EventsActivity.getIntent(ctx);
+					viewEvents.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+					ctx.startActivity(viewEvents);
+					return true;
+				}
+				
+				case App.MENUITEM_NOTIFICATIONS:{
+					Intent viewNotificationsIntent = NotificationsActivity.getIntent(ctx);
+					viewNotificationsIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+					ctx.startActivity(viewNotificationsIntent);
+					return true;
+				}
+				
+				case App.MENUITEM_STREAMS:{
+					Intent i = StreamActivity.getIntent(ctx);
+					//ContextProfileData cpd = new ContextProfileData();
+					//FBSession fbSession = Facebook.getInstance().getSession();
+					//User userSessionData = App.getUserSessionData();
+					//cpd.name = userSessionData.name;
+					//cpd.profileImageUri = userSessionData.pic;
+					//cpd.actorId = fbSession.uid;
+					//Toast.makeText(ctx, Long.toString(fbSession.uid), 3000).show();								
+					
+					//we need to set both intents because
+					//the first one is intended when no instance is created.
+					i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);			
+					i.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
+					i.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+					
+					//the second intent is to modify the first instance extras
+					Intent currentIntent = ctx.getIntent();
+					currentIntent.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+					currentIntent.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
+		            ctx.startActivity(i);		           
+		            return true;
+				}
+				
+				case App.MENUITEM_NETWORKS:{				
+					Intent i = ViewContactsActivity.getIntent(ctx);
+					i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+					ctx.startActivity(i); 
+					return true;
+				}
+				
+				case App.MENUITEM_VIEWALBUMS:{
+					Intent i = ViewAlbumsActivity.getIntent(ctx);
+					ctx.startActivity(i);
+					return true;
+				}
+				
+				case App.MENUITEM_LOGOFF:{
+	//				Toast.makeText(ctx, "LOGOFF", 3000).show();
+					App.INSTANCE.deleteSessionInfo();
+					return true;
+				}
+				
+				case App.MENUITEM_SETTINGS:{
+					
+					return true;
+				}
+				
+				case App.MENUITEM_CLEAR:{
+					App.INSTANCE.mDBHelper.deleteAllNotifications(App.INSTANCE.mDB);
+					return true;
+				}
+				
+				case App.MENUITEM_GET_WALLCOMMENTS:{
+					App.INSTANCE.getWallPostsCommentsFromCloud();
+					return true;
+				}
+				
+				case App.MENUITEM_GET_WALLPOSTS:{
+					App.INSTANCE.getWallPostsFromCloud(0);
+					return true;
+				}
+				
+				case App.MENUITEM_TOGGLE_LOGGER:{
+					Logger.show = !Logger.show;
+					return true;
+				}
+				
+				case App.MENUITEM_USER_WALL:{		
+					//Intent viewStreamsIntent = StreamActivity.getIntent(ctx);
+					//viewStreamsIntent.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
+					//iewStreamsIntent.putExtra(StreamActivity.XTRA_USERID, Facebook.INSTANCE.getSession().uid);
+					//iewStreamsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+					//ctx.startActivity(viewStreamsIntent);
+					
+					App.showUserWall(ctx, cpd.actorId, cpd.name);
+					/*
+					Intent viewWall = StreamActivity.getIntent(this);
+					Bundle b = new Bundle();
+					b.putLong(StreamActivity.XTRA_USERID,Facebook.INSTANCE.getSession().uid);
+					b.putByte(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_WALLFEED);
+					viewWall.putExtras(b);
+					startActivity(viewWall);
+					*/
+					return true;
+				}
+			}
+			
+			return false;
+			
+	    }
+
+	public static boolean onContextItemSelected(Activity ctx, MenuItem item, ProgressDialog pd) {
+		Toast.makeText(ctx, "onContextItemSelected()", 3000).show();
+		int itemId = item.getItemId();
+		switch(itemId){
+			case App.CONTEXT_MENUITEM_PROFILE:{
+				Intent i = item.getIntent();
+				String action = i.getAction();
+				ContextProfileData cpd = i.getParcelableExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT);
+			
+				if(action.equals(App.ACTION_VIEW_PROFILE)){
+				
+				}
+				else if(action.equals(App.ACTION_VIEW_PHOTOS)){
+					
+				}
+				else if(action.equals(App.ACTION_VIEW_TAGGED_PHOTOS)){			
+					Bundle data = new Bundle();
+					data.putString(ManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_GET_TAGGED_PHOTOS);
+					data.putLong(Facebook.param_uid, cpd.actorId);
+					Facebook.INSTANCE.getTaggedPhotos(
+							cpd.outhandler,
+							data,
+							cpd.actorId,
+							ViewPhotosActivity.NUM_PHOTOS_PER_REQUEST, 0,
+							ManagerThread.CALLBACK_GET_TAGGED_PHOTOS,
+							BaseManagerThread.CALLBACK_SERVERCALL_ERROR,
+							BaseManagerThread.CALLBACK_TIMEOUT_ERROR, 0);
+					pd.setTitle("Loading");
+					pd.setMessage("Getting tagged photos");
+					pd.show();
+					return true;						
+				}				
+				else if(action.equals(App.ACTION_VIEW_WALL)){
+					App.showUserWall(ctx, cpd.actorId, cpd.name);	
+					return true;
+				}
+				break;
+			}
+		}
+		return false;
+	}
+	
+	
+	
 }

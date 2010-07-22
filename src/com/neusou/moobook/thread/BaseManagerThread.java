@@ -8,14 +8,14 @@ import android.os.Handler;
 import android.os.Message;
 
 
-import com.neusou.LeadingLooperThread;
+import com.neusou.ProactiveThread;
 import com.neusou.Logger;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 
-public abstract class BaseManagerThread extends LeadingLooperThread{
+public abstract class BaseManagerThread extends ProactiveThread{
 	
-	public static final String LOG_TAG = "ManagerThread";
+	public static final String LOG_TAG = "BaseManagerThread";
 	public static final int CALLBACK_SERVERCALL_ERROR = 600;
 	public static final int CALLBACK_TIMEOUT_ERROR = 601;	
 	public static final int CALLBACK_PROCESS_WSRESPONSE_ERROR = 602; 
@@ -25,7 +25,7 @@ public abstract class BaseManagerThread extends LeadingLooperThread{
 		super(cdl);
 	}
 	
-	CountDownLatch cdl;
+	CountDownLatch mWaitLatch;
 	
 	protected Handler mInHandler = new Handler();
 	protected Handler mOutHandler = new Handler();
@@ -66,6 +66,8 @@ public abstract class BaseManagerThread extends LeadingLooperThread{
 		mInHandler = new Handler(){
 
 			public void handleMessage(android.os.Message msg) {
+				FBWSResponse fbresponse;
+				
 				int code = msg.what;
 				//Log.d(LOG_TAG, name + " handleMessage msg.what:" + msg.what);					
 				Bundle data = msg.getData();
@@ -73,8 +75,7 @@ public abstract class BaseManagerThread extends LeadingLooperThread{
 				if(code == BaseManagerThread.CALLBACK_TIMEOUT_ERROR){						
 					if(waitOutHandler()){
 						Message msgError =  mOutHandler.obtainMessage(BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
-						msgError.setData(data);
-						msgError.sendToTarget();
+						sendMessageToTarget(msgError, data, null);
 					}
 					return;
 				}
@@ -85,8 +86,7 @@ public abstract class BaseManagerThread extends LeadingLooperThread{
 				if(servercallstatus == Facebook.SERVERCALL_ERROR){
 					if(waitOutHandler()){
 						Message msgError =  mOutHandler.obtainMessage(BaseManagerThread.CALLBACK_SERVERCALL_ERROR);
-						msgError.setData(data);
-						msgError.sendToTarget();
+						sendMessageToTarget(msgError, data, null);				
 					}
 					return;
 				}				
@@ -100,15 +100,14 @@ public abstract class BaseManagerThread extends LeadingLooperThread{
 				
 				// Parse the entire JSON response outputted by Facebook webservice endpoint 
 				 
-				FBWSResponse fbresponse = FBWSResponse.parse(response);
+				fbresponse = FBWSResponse.parse(response);
 				
 				// Send an error code if it has error.
 				
 				if(fbresponse == null || fbresponse.hasErrorCode){
 					if(waitOutHandler()){
-						Message m = mOutHandler.obtainMessage(BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR);
-						m.obj = fbresponse;
-						m.sendToTarget();
+						Message msgError = mOutHandler.obtainMessage(BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR);
+						sendMessageToTarget(msgError, data, fbresponse);						
 					}
 					return;
 				}
@@ -117,6 +116,15 @@ public abstract class BaseManagerThread extends LeadingLooperThread{
 			}
 		};		
 	
+	}
+	
+	private void sendMessageToTarget(Message m, Bundle data, FBWSResponse fbresponse){
+		Bundle b = new Bundle(data);
+		if(fbresponse != null){
+			b.putParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT, fbresponse);
+		}
+		m.setData(b);
+		m.sendToTarget();
 	}
 	
 }

@@ -32,7 +32,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.http.impl.conn.tsccm.WaitingThread;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,7 +39,6 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -48,15 +46,11 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.neusou.BasicClientHelper;
-import com.neusou.LeadingLooperThread;
 import com.neusou.Logger;
 import com.neusou.async.IUserTaskListener;
 import com.neusou.async.UserTask;
-import com.neusou.moobook.activity.StreamActivity;
 import com.neusou.moobook.data.Event;
 import com.neusou.moobook.data.User;
-import com.neusou.moobook.model.database.ApplicationDBHelper;
-import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.moobook.thread.MoobookThread;
 
@@ -113,6 +107,8 @@ public class Facebook {
 	public static final String param_filterkey = "filterkey";
 	public static final String param_owner = "owner";
 	public static final String param_aid = "aid";
+	public static final String param_pids = "pids";
+	public static final String param_pid = "pid";
 	
 	public static final String subkey_columns = "columns";	
 	public static final String subkey_lastUpdateTime = "lastUpdateTime";	
@@ -164,10 +160,17 @@ public class Facebook {
 	public static final String XTRA_FBURL_SCRIPTNAME = "fburl.scrnm";
 	public static final String XTRA_FBURL_VERSION = "fburl.ver";
 	public static final String XTRA_FBURL_USERID = "fburl.uid";
-	public static final String XTRA_FBURL_STORYID = "fburl.storyid";
-	
+	public static final String XTRA_FBURL_STORYID = "fburl.storyid";	
+	public static final String XTRA_FBURL_OBJECTTYPE = "fbu.objtype";
+	public static final String XTRA_FBURL_OBJECTID = "fbu.objid";
+	public static final String XTRA_FBURL_PHOTOID = "fbu.photoid";	
+	public static final byte FBURL_OBJECTTYPE_STREAM = 1;
+	public static final byte FBURL_OBJECTTYPE_VIDEO = 2;
+	public static final byte FBURL_OBJECTTYPE_PHOTO = 3;	
+	public static final String FBURL_SCRIPT_PROFILE = "profile";
+	public static final String FBURL_SCRIPT_VIDEO = "video";
 	public static final String FBURL_VERSION_WALL = "wall";
-	
+		
 	public static final byte ERROR_HTTPCONNECTION = 0;
 	public static final byte ERROR_FBAPIMETHOD = 1;	
 	
@@ -202,6 +205,7 @@ public class Facebook {
 	public String FQL_GET_NOTIFICATIONS;
 	public String FQL_GET_EVENTS;
 	public String FQL_GET_TAGGED_PHOTOS;
+	public String FQL_GET_PHOTO_ATTRIBUTES;
 	public String FQL_GET_PHOTOTAGS;
 	public String FQL_GET_COMMENTS;
 	public String FQL_GET_COMMENTS_USERS;
@@ -396,9 +400,9 @@ public class Facebook {
      * @param comment_limit
      * @param comment_offset
      */
-    public void getStreamsComplete(int outHandlerKey, String uid, String filterKey, long lastStreamPostUpdateTime, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs, long limit, long offset, long comment_limit, long comment_offset){
+    public void getStreamsComplete(int outHandlerKey, Bundle extraData, String uid, String filterKey, long lastStreamPostUpdateTime, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs, long limit, long offset, long comment_limit, long comment_offset){
 
-    	Bundle data = new Bundle();
+    	Bundle data = new Bundle(extraData);
 		
 		fqlmap.clear();		
 		fqlmap.put(param_uid, uid);		
@@ -458,8 +462,10 @@ public class Facebook {
 		
 		Bundle data = new Bundle();
 		fqlmap.clear();
-		fqlmap.put(param_object_id, type==COMMENT_TYPE_OTHERS?object_id:"");
-		fqlmap.put(param_post_id, type==COMMENT_TYPE_STREAMPOSTS?post_id:"");
+		//fqlmap.put(param_object_id, type==COMMENT_TYPE_OTHERS?object_id:"");
+		//fqlmap.put(param_post_id, type==COMMENT_TYPE_STREAMPOSTS?post_id:"");
+		fqlmap.put(param_object_id, object_id);
+		fqlmap.put(param_post_id, post_id);
 		fqlmap.put(subkey_limit, Long.toString(limit));
 		fqlmap.put(subkey_offset,  Long.toString(offset));	
 		
@@ -960,6 +966,37 @@ public class Facebook {
 		executeFQL(data, 0);
 	}
 	
+	public void getPhotoAttributes (int outHandlerKey, Bundle extraData, long pid, long owner, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillis){
+		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
+		
+		Bundle data;
+		
+		if(extraData != null){
+			data = new Bundle(extraData);
+		}else{
+			data = new Bundle();
+		}
+		
+		fqlmap.clear();
+		//String pids_csv = Util.toCSV(pids,"'");
+		
+		fqlmap.put(param_pid,owner+"_"+Long.toString(pid));
+		fqlmap.put(param_owner, Long.toString(owner));
+		
+		String fql_query = StrSubstitutor.replace(FQL_GET_PHOTO_ATTRIBUTES, fqlmap).trim();		
+		Logger.l(Logger.DEBUG,LOG_TAG, "[getPhotoAttributes()] fql: "+fql_query);
+		
+		
+		data.putString(XTRA_FQL_QUERIES, fql_query);
+		data.putString(XTRA_FQL_QUERY_TYPE, wsmethod_fql_multiquery);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
+		executeFQL(data, 0);
+	}
+	
 	public void getContacts (int outHandlerId, long uid, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMilli, long limit, long offset){
 		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
 		
@@ -1047,7 +1084,7 @@ public class Facebook {
 			}
 						
 			TreeMap<String,String> mapping = (TreeMap<String,String>)((TreeMap<String,String>) inData.getSerializable(XTRA_METHODPARAMETERSMAP)).clone();			
-			mapping.put(param_call_id,  Long.toString(SystemClock.elapsedRealtime()));			
+			mapping.put(param_call_id,  Long.toString(SystemClock.elapsedRealtime()));
 			
 			String requestSignature = computeRequestSig(mapping, mSession.secret);						
 			if(requestSignature == null){ //can't compute signature?
@@ -1318,11 +1355,12 @@ public class Facebook {
 				return;
 			}
 			int messageCode = data.getInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE);
-			Logger.l(Logger.DEBUG,LOG_TAG,"[FQLTask] [onConnectionError()] sending error message to listener handler. Code:"+messageCode+", CodeName:"+XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE);
+			String exceptionMessage = e.getMessage();
+			Logger.l(Logger.DEBUG,LOG_TAG,"[FQLTask] [onConnectionError()] "+exceptionMessage+" Sending error message to listener handler. Code:"+messageCode+", CodeName:"+XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE);
 			
 			Message msg = outHandler.obtainMessage(messageCode);			
 			data.putInt(XTRA_SERVERCALL_STATUS_CODE, SERVERCALL_ERROR);
-			data.putString(XTRA_SERVERCALL_ERROR_MSG, e.getMessage());			
+			data.putString(XTRA_SERVERCALL_ERROR_MSG, exceptionMessage);			
 			msg.setData(data);
 			msg.sendToTarget();
 		}
@@ -1571,6 +1609,7 @@ public class Facebook {
 		FQL_GET_EVENTS = mResources.getString(R.string.fql_get_events);		
 		FQL_GET_TAGGED_PHOTOS = mResources.getString(R.string.fql_get_taggedphotos); 
 		FQL_GET_PHOTOTAGS = mResources.getString(R.string.fql_get_tags_with_users);
+		FQL_GET_PHOTO_ATTRIBUTES = mResources.getString(R.string.fql_get_photo_attributes);
 		FQL_GET_COMMENTS = mResources.getString(R.string.fql_get_comments);
 		FQL_GET_COMMENTS_USERS = mResources.getString(R.string.fql_get_comments_users);
 		FQL_GET_ALBUMS = mResources.getString(R.string.fql_get_albums);
@@ -1640,9 +1679,9 @@ public class Facebook {
 			fbc.setRequestProperty("Content-type", REQUEST_CONTENT_TYPE);			
 			fbc.setRequestProperty("User-Agent",REQUEST_USER_AGENT);
 			fbc.setRequestProperty("Accept-Language", REQUEST_ACCEPT_LANGUAGE);
-						
-			Log.d(LOG_TAG,"post content: "+content.substring(0,content.length()/2));
-			Log.d(LOG_TAG,"post content: "+content.substring(content.length()/2,content.length()));
+								
+			Logger.l(Logger.DEBUG, LOG_TAG, "post content: "+content.substring(0,content.length()/2));
+			Logger.l(Logger.DEBUG, LOG_TAG, "post content: "+content.substring(content.length()/2,content.length()));
 			DataOutputStream dos = new DataOutputStream(fbc.getOutputStream());
 			dos.writeBytes(content);
 			dos.flush();
@@ -1791,7 +1830,7 @@ public class Facebook {
 			Logger.l(Logger.VERBOSE, LOG_TAG, g0+", "+g1+", "+g2);
 		}	
 		
-		if(g1 != null){			
+		if(g1 != null){
 			return FBObject.parseFromIdName(g1,g2);						
 		}
 		
@@ -1920,26 +1959,25 @@ public class Facebook {
 	}
 	
 	 public static Bundle extractDataFromFacebookUrl(String url){
-	    	String regex = "/(\\w*).php\\?id=([\\d]*)&v=(\\w*)&story_fbid=(\\d*)";
+	    	String regex = "/(\\w*).php\\?id=([\\d]*)&v=(\\w*)&story_fbid=(\\d*)";	    	
 	    	Pattern pattern = Pattern.compile(regex);
 	    	Matcher matcher = pattern.matcher(url);
-	    	final int GROUP_SCRIPTNAME = 1;
-	    	final int GROUP_ID = 2;
-	    	final int GROUP_VERSION = 3;
-	    	final int GROUP_STORYID = 4;
 	    	
+	    	final int GROUP_SCRIPTNAME = 1;
 	    	
 	    	Bundle b = null;
 	    	
 	    	if(matcher.find()){
 	    		String scriptName = matcher.group(GROUP_SCRIPTNAME);
-	    		String userId = matcher.group(GROUP_ID);
-	    		String versionName = matcher.group(GROUP_VERSION);
-	    		String storyId = matcher.group(GROUP_STORYID);
+	    		String userId = matcher.group(2);
+	    		String versionName = matcher.group(3);
+	    		String storyId = matcher.group(4);
 	    		
 	    		b = new Bundle();
 	    		
 	    		b.putString(XTRA_FBURL_SCRIPTNAME, scriptName);
+	    		b.putByte(XTRA_FBURL_OBJECTTYPE, FBURL_OBJECTTYPE_STREAM);
+	    		b.putString(XTRA_FBURL_OBJECTID, userId + "_"+storyId);
 	    		b.putString(XTRA_FBURL_STORYID, storyId);
 	    		b.putString(XTRA_FBURL_VERSION, versionName);
 	    		b.putString(XTRA_FBURL_USERID, userId);
@@ -1948,6 +1986,41 @@ public class Facebook {
 	    		
 	    		return b;
 	    	}
+	    	
+	    	String regexParseVideo = "/video.php\\?v=(\\d*)&?";
+	    	pattern = Pattern.compile(regexParseVideo);
+	    	matcher = pattern.matcher(url);
+	    	if(matcher.find()){
+	    		String scriptName = matcher.group(GROUP_SCRIPTNAME);
+	    		String id = matcher.group(1);
+	    		b = new Bundle();	    		
+	    		b.putString(XTRA_FBURL_SCRIPTNAME, scriptName);
+	    		b.putByte(XTRA_FBURL_OBJECTTYPE, FBURL_OBJECTTYPE_VIDEO);
+	    		b.putString(XTRA_FBURL_OBJECTID, id);
+	    	//	b.putString(XTRA_FBURL_VERSION, versionName);
+	    		//Logger.l(Logger.DEBUG,"TEST", "script:"+scriptName+", versionName:"+versionName);
+	    		Logger.l(Logger.DEBUG,"TEST", "video, objid:"+id);
+	    		return b;
+	    	}
+	    	
+	    	
+	    	String regexParsePhoto = "/photo.php\\?pid=(\\d*)&id=(\\d*)";
+	    	//http://www.new.facebook.com/photo.php?pid=264896&id=100000425751479
+	    	pattern = Pattern.compile(regexParsePhoto);
+	    	matcher = pattern.matcher(url);
+	    	if(matcher.find()){
+	    		String scriptName = matcher.group(GROUP_SCRIPTNAME);
+	    		String pid = matcher.group(1);
+	    		String uid = matcher.group(2);
+	    		b = new Bundle();	    		
+	    		b.putString(XTRA_FBURL_SCRIPTNAME, scriptName);
+	    		b.putByte(XTRA_FBURL_OBJECTTYPE, FBURL_OBJECTTYPE_PHOTO);    		
+	    		b.putString(XTRA_FBURL_USERID, uid);
+	    		b.putString(XTRA_FBURL_PHOTOID, pid);
+	    		Logger.l(Logger.DEBUG,"TEST", "photo, objid:"+pid);
+	    		return b;
+	    	}	
+	    	
 	    	
 	    	return null;	    	
 	    }

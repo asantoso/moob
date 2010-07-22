@@ -8,42 +8,25 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 >
        
 <include layout="@layout/custom_title" />
- 
-<EditText
- 	android:id="@+id/comment_input"
- 	android:layout_width="fill_parent" 
-	android:layout_height="50dip" 
-	android:layout_marginTop="2dp"
-	android:layout_marginRight="70dp"
-	android:layout_marginLeft="1dp"
-	android:layout_below="@+id/topheader"	
-		
-	android:hint="tap here to comment.."
-	android:textSize="13dp"
-	android:textStyle="bold"
-	
-	android:typeface="sans"
-	android:maxLines="3"
-	android:minLines="1"
-	
-	android:gravity="center_vertical|left"
-/>
 
-<Button
-	android:id="@+id/post"	
-	android:layout_width="70dp" 
-	android:layout_height="49dip"	
-	android:layout_below="@+id/topheader"
-	android:layout_alignParentRight="true"
-	android:layout_alignTop="@+id/comment_input"	
-	android:text="post"
-/>
-    
+<!-- 
+<RelativeLayout
+	android:id="@+id/commentbox_wrapper"
+	android:layout_width="fill_parent" 
+	android:layout_height="wrap_content"
+	android:visibility="visible"
+	
+>
+	<include layout="@layout/include_commentbox"/>
+
+</RelativeLayout>
+ -->
+ 
 <ListView
 	android:id="@+id/list" 
 	android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
-    android:layout_below="@+id/comment_input"
+    android:layout_below="@+id/topheader_container"
     android:layout_above="@+id/bottomheader"
     android:background="#00000000"  
 />
@@ -62,18 +45,14 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	layout="@layout/include_actionbar"
 	android:layout_width="wrap_content" 
 	android:layout_height="wrap_content"
-	android:layout_above="@+id/ad"	
+	android:layout_above="@+id/ad"
 	/>
 
-<com.admob.android.ads.AdView xmlns:app="com.admob.android.ads.AdView"
-	android:id="@+id/ad"
-	android:visibility="visible"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	app:backgroundColor="#00000000"
-	app:textColor="#FFffffff" 
-	app:keywords="" 
-	app:testing="false"/>
+<include 
+	layout="@layout/include_admob"
+	android:visibility="gone"
+	/>
+
 </LinearLayout>
 
 </RelativeLayout>

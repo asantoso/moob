@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -111,6 +112,10 @@ public class Gallery extends BaseActivity
 	long mImageLoadingCode;
 	
 	static HashMap<String, JSONArray> mPhotoTagsMap = new HashMap<String, JSONArray>(2,0.75f);
+	
+	public static Intent getIntent(Context ctx) {		
+		return new Intent(ctx, Gallery.class);
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

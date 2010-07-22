@@ -42,7 +42,7 @@ CREATE TABLE app_users(
 DROP TABLE IF EXISTS streams;
 CREATE TABLE streams(
 	post_rowid INTEGER PRIMARY KEY AUTOINCREMENT,
-	post_id TEXT UNIQUE ON CONFLICT REPLACE, 
+	post_id TEXT UNIQUE ON CONFLICT ABORT, 
 	actor_id INTEGER,
 	target_id TEXT,
 	viewer_id TEXT,
@@ -61,7 +61,7 @@ CREATE TABLE streams(
 	comments_count INTEGER,
 	comments_can_post INTEGER,
 	comments_can_remove INTEGER,
-	_sessionUserId INTEGER
+	_process_flag INTEGER
 );
 	
 DROP TABLE IF EXISTS comments;

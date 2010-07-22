@@ -8,18 +8,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -55,17 +51,17 @@ import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBPhotoUploadTask;
 import com.neusou.moobook.FBSession;
-import com.neusou.moobook.FBUser;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.OptionsMenu;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
 import com.neusou.moobook.adapters.CommentsAdapter;
+import com.neusou.moobook.controller.StandardUiHandler;
 import com.neusou.moobook.data.PageableJsonData;
 import com.neusou.moobook.data.User;
-import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ActionBar;
 import com.neusou.web.ImageUrlLoader2;
 import com.neusou.web.PagingInfo;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
@@ -88,14 +84,14 @@ public class HomeActivity extends BaseActivity {
 	Button mPostLinkBtn;
 	View.OnClickListener mPostLinkOnClick;
 	
-	Button mViewStreamsBtn;
-	View.OnClickListener mViewStreamsOnClick;
+	//Button mViewStreamsBtn;
+	//View.OnClickListener mViewStreamsOnClick;
 	
-	Button mViewFriendsBtn;
-	View.OnClickListener mViewFriendsOnClick;
+	//Button mViewFriendsBtn;
+	//View.OnClickListener mViewFriendsOnClick;
 	
-	Button mViewNotificationsBtn;
-	View.OnClickListener mViewNotificationsOnClick;
+	//Button mViewNotificationsBtn;
+	//View.OnClickListener mViewNotificationsOnClick;
 	
 	/*
 	Button mGetPhotosBtn;
@@ -107,14 +103,14 @@ public class HomeActivity extends BaseActivity {
 	Button mViewAllUserPhotosBtn;
 	View.OnClickListener mViewAllUserPhotosOnClick;
 	
-	Button mViewTaggedPhotosBtn;
-	View.OnClickListener mViewTaggedPhotosOnClick;	
+	//Button mViewTaggedPhotosBtn;
+	//View.OnClickListener mViewTaggedPhotosOnClick;	
 	
-	Button mTestBtn;
-	View.OnClickListener mTestOnClick;
+	//Button mTestBtn;
+	//View.OnClickListener mTestOnClick;
 		
-	Button mNetworksBtn;
-	View.OnClickListener mNetworksOnClick;
+	//Button mNetworksBtn;
+	//View.OnClickListener mNetworksOnClick;
 	
 	TextSwitcher mTopHeader;
 	ViewFactory mTopHeaderViewFactory;
@@ -141,18 +137,7 @@ public class HomeActivity extends BaseActivity {
 	TextView mStatusBox; 
 	Notification mUploadPhotoNotification;
 	NotificationManager mNotificationManager;
-	
-	
-	//temporary variables
-	String firstname;
-	String lastname;
-	String pic;
-	String pic_big;
-	JSONObject statusJson;
-	String status;
-	String profileblurb;
-	String timezone;
-	String current_location;
+	ActionBar mActionBar;
 	
 	static final byte DIALOG_STATUSUPDATE = 0;
 	static final byte DIALOG_CONTACTS = 1;
@@ -160,6 +145,11 @@ public class HomeActivity extends BaseActivity {
 	
 	
 	BroadcastReceiver mCommentsUpdatedReceiver;
+	ProgressDialog mProgressDialog;
+	
+	public static Intent getIntent(Context ctx) {		
+		return new Intent(ctx, HomeActivity.class);
+	}
 	
 	
 	@Override
@@ -190,6 +180,19 @@ public class HomeActivity extends BaseActivity {
 		
 		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);		  
 	
+		mActionBar.setUserId(Facebook.getInstance().getSession().uid);
+		//mActionBar.setUserName(mUserInSession.name);
+		
+		mActionBar.setOnAddClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent i = PostActivity.getIntent(HomeActivity.this);
+				startActivity(i);
+			}
+			
+		});
+		
 	}
 
 	@Override
@@ -217,51 +220,53 @@ public class HomeActivity extends BaseActivity {
 		super.onDestroy();
 		if(!onResume){ //strange activity lifecycle. onDestroy is called immediately after onResume() when the previous starting activity started this activity inside the onResume code.
 			return;
-		}		
-		
+		}				
 	}
-
 	
-	protected void bindViews() {
-		
-		
+	protected void bindViews() {		
 		//mStatusUpdateBtn = (Button) findViewById(R.id.poststatus);
 		mProfileImage = (ImageView) findViewById(R.id.profilepic);
 		mStatusBox = (TextView) findViewById(R.id.message); 
 		mPostPictureBtn = (Button) findViewById(R.id.post);
-		mNetworksBtn =  (Button) findViewById(R.id.network);
+		//mNetworksBtn =  (Button) findViewById(R.id.network);
 		//mPostVideoBtn = (Button) findViewById(R.id.postvideo);
 		//mPostLinkBtn = (Button) findViewById(R.id.postlink);
 		mTopHeader = (TextSwitcher) findViewById(R.id.topheader);
-		mViewStreamsBtn = (Button) findViewById(R.id.streams);
+		//mViewStreamsBtn = (Button) findViewById(R.id.streams);
 		//mViewFriendsBtn = (Button) findViewById(R.id.viewfriends);
 		//mViewEventsBtn = (Button) findViewById(R.id.viewevents);
-		mViewNotificationsBtn = (Button) findViewById(R.id.notifs);
+		//mViewNotificationsBtn = (Button) findViewById(R.id.notifs);
 		mViewAllUserPhotosBtn = (Button) findViewById(R.id.photos);
 		//mViewTaggedPhotosBtn = (Button) findViewById(R.id.viewtaggedphotos);
-		mTestBtn = (Button) findViewById(R.id.test);
+		//mTestBtn = (Button) findViewById(R.id.test);
 		mListView = (ListView) findViewById(R.id.list);
 		mAdView = (AdView) findViewById(R.id.ad);
 	}
 
 	protected void initViews() {
+		App.initAdMob(mAdView, mUIHandler);		
+		mProgressDialog = new ProgressDialog(this);
 		mTopHeader.setFactory(mTopHeaderViewFactory);
-		mTopHeader.setText("Dashboard");		
-	
-		setOnClick(mNetworksBtn,mNetworksOnClick); 
+		mTopHeader.setText("Dashboard");
+		//setOnClick(mNetworksBtn,mNetworksOnClick); 
 		setOnClick(mStatusBox,mStatusBoxOnClick); 
 		setOnClick(mPostPictureBtn, mPostPictureOnClick);
 		setOnClick(mPostVideoBtn, mPostVideoOnClick);
-		setOnClick(mViewStreamsBtn, mViewStreamsOnClick);
+		//setOnClick(mViewStreamsBtn, mViewStreamsOnClick);
 		setOnClick(mViewEventsBtn, mViewEventsOnClick);
-		setOnClick(mViewNotificationsBtn, mViewNotificationsOnClick);	
-		
+		//setOnClick(mViewNotificationsBtn, mViewNotificationsOnClick);
 	}
-	
-	Cursor mCommentsCursor;
-	Cursor mStreamsCursor;
 
+	
 	protected void initObjects() {
+		
+		mUIHandler = new StandardUiHandler(this, mProgressDialog, findViewById(R.id.adview_wrapper), findViewById(R.id.bottomheader)){	
+		};
+		
+		
+		mActionBar = App.INSTANCE.mActionBar;
+		mActionBar.bindViews(this);
+		mActionBar.initViews();
 		
 		//data = new ArrayList<Map<String,?>>();
 		
@@ -326,7 +331,7 @@ public class HomeActivity extends BaseActivity {
 				
 				else if(action.equals(App.INTENT_WALLPOSTS_UPDATED)){
 					FBSession session = mFacebook.getSession();
-					mStreamsCursor = App.INSTANCE.mDBHelper.getWallPosts(App.INSTANCE.mDB, session.uid, 1, 0);					
+					mStreamsCursor = App.INSTANCE.mDBHelper.getWallPosts(App.INSTANCE.mDB, App.PROCESS_FLAG_SESSIONUSER, session.uid, 1, 0);					
 					int numPosts = mStreamsCursor.getCount();				
 					Logger.l(Logger.DEBUG,LOG_TAG,"numPosts:"+numPosts);					
 					
@@ -357,6 +362,8 @@ public class HomeActivity extends BaseActivity {
 			}
 		};
 		*/
+		
+		/*
 		mNetworksOnClick = new OnClickListener(){
 			@Override
 			public void onClick(View v) {
@@ -365,6 +372,7 @@ public class HomeActivity extends BaseActivity {
 	            startActivity(i); 
 			}
 		};
+		*/
 		
 		mPostPictureOnClick = new OnClickListener() {
 			@Override
@@ -382,41 +390,14 @@ public class HomeActivity extends BaseActivity {
 				Logger.l(Logger.DEBUG,LOG_TAG,"onPostVideo");		
 			}
 		};
-		
-		mViewStreamsOnClick = new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent viewStreamsIntent = StreamActivity.getIntent(HomeActivity.this);
-				viewStreamsIntent.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
-				viewStreamsIntent.putExtra(StreamActivity.XTRA_USERID, Facebook.INSTANCE.getSession().uid);
-				viewStreamsIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-				startActivity(viewStreamsIntent);
-			}
-		};
-		
-		mViewFriendsOnClick= new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				createDialog(DIALOG_CONTACTS).show();
-			}
-		};
-		
+	
 		mViewEventsOnClick= new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				createDialog(DIALOG_EVENTS).show();
 			}
 		};
-		
-		mViewNotificationsOnClick= new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent viewNotificationsIntent = new Intent(HomeActivity.this,NotificationsActivity.class);
-				viewNotificationsIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-				startActivity(viewNotificationsIntent);
-			}
-		};	
-		
+				
 		mViewAllUserPhotosOnClick= new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -428,17 +409,6 @@ public class HomeActivity extends BaseActivity {
 			}
 		};
 		
-		mTestOnClick= new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				//Intent test = new Intent(HomeActivity.this, TestGallery.class);
-				//test.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-				//startActivity(test);
-				//App.INSTANCE.postPhotoToFacebook(null);
-				App.INSTANCE.test();
-			}
-		};
-	
 		mStatusBoxOnClick = new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
@@ -471,37 +441,39 @@ public class HomeActivity extends BaseActivity {
 			
 			@Override
 			public boolean hasPostId() {
-
+	
 				return false;
 			}
 			
 			@Override
 			public boolean hasObjectId() {
-
+	
 				return false;
 			}
 			
 			@Override
 			public String getPostId() {
-
+	
 				return null;
 			}
 			
 			@Override
 			public PagingInfo getPagingInfoData() {
-
+	
 				return null;
 			}
 			
 			@Override
 			public String getObjectId() {
-
+	
 				return null;
 			}
 		};
 	}
 
-	
+	Cursor mCommentsCursor;
+	Cursor mStreamsCursor;
+
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch(requestCode){
 			case REQUEST_PICKPHOTO:{
@@ -551,7 +523,6 @@ public class HomeActivity extends BaseActivity {
 			v.setOnClickListener(l);	
 		}
 	}
-
 	
 	private Handler createUploadPhotoStatusListener(){
 		return new Handler(){
@@ -670,40 +641,28 @@ public class HomeActivity extends BaseActivity {
 		
 	};
 	
-
+	User mUserInSession;
 	private void showSessionUserData(){
+		try{
+		mUserInSession = App.getUserSessionData();
 		
-		String cachedUserInfo = Util.readStringFromLocalCache(App.INSTANCE, App.LOCALCACHEFILE_SESSIONUSERDATA);
-		if(cachedUserInfo == null){
+		if(mUserInSession == null){
 			return;
 		}
-		
-		try{
-			JSONArray users = new JSONArray(cachedUserInfo);
-			JSONObject userJson = users.getJSONObject(0);													
-			firstname = userJson.getString(FBUser.fields_first_name);
-			lastname = userJson.getString(FBUser.fields_last_name);
-			pic  = userJson.getString(FBUser.fields_pic);
-			pic_big  = userJson.getString(FBUser.fields_pic_big);
-			statusJson = userJson.getJSONObject(FBUser.fields_status);
-			status = statusJson.getString(FBUser.fields_status_message);
-			profileblurb = userJson.getString(FBUser.fields_profile_blurb);
-			timezone = userJson.getString(FBUser.fields_timezone);
-			current_location = userJson.getString(FBUser.fields_current_location);
-			mTopHeader.setText(firstname+" "+lastname);
-			Bitmap profileImage = App.mImageUrlLoader2.loadImage(pic_big, true);			
-			if(profileImage == null){
-				ImageUrlLoader2.AsyncLoaderInput input = new ImageUrlLoader2.AsyncLoaderInput();
-				input.imageUri = pic_big;
-				input.code = R.id.asyncimageloader_profileimage;
-				App.mImageUrlLoader2.loadImageAsync(App.INSTANCE.mExecScopeImageLoaderTask, input, mAsyncImageLoaderListener);
-			}else{
-				mProfileImage.setImageBitmap(profileImage);
-			}
-			mStatusBox.setText(status);
-		}catch(JSONException e){				
-			e.printStackTrace();
-		}		
+		}catch(FileNotFoundException e){
+			return;
+		}
+		mTopHeader.setText(mUserInSession.name);
+		Bitmap profileImage = App.mImageUrlLoader2.loadImage(mUserInSession.pic_big, true);			
+		if(profileImage == null){
+			ImageUrlLoader2.AsyncLoaderInput input = new ImageUrlLoader2.AsyncLoaderInput();
+			input.imageUri = mUserInSession.pic_big;
+			input.code = R.id.asyncimageloader_profileimage;
+			App.mImageUrlLoader2.loadImageAsync(App.INSTANCE.mExecScopeImageLoaderTask, input, mAsyncImageLoaderListener);
+		}else{
+			mProfileImage.setImageBitmap(profileImage);
+		}
+		mStatusBox.setText(mUserInSession.status);
 	}
 
 	static final short[] mSelectedUserFields = new short[]{User.col_first_name, User.col_last_name, User.col_status, User.col_profile_blurb, User.col_pic, User.col_pic_big};
@@ -722,8 +681,6 @@ public class HomeActivity extends BaseActivity {
              .setTitle("Events")             
              .setItems(R.array.events_options, new DialogInterface.OnClickListener() {
                  public void onClick(DialogInterface dialog, int which) {                	                     
-                   
-                     
                      Intent showEvents = new Intent(HomeActivity.this, EventsActivity.class);
                      startActivity(showEvents);
                  }
@@ -776,34 +733,26 @@ public class HomeActivity extends BaseActivity {
 	
 	
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		menu.clear();
-		OptionsMenu.createPreference(this,menu, 0, App.MENUITEM_SETTINGS, 0);
-		MenuItem clear = menu.add(0,App.MENUITEM_CLEAR,2,"Clear");
-		MenuItem logoff = menu.add(0,App.MENUITEM_LOGOFF, 1,"Logoff");
-		MenuItem getWallComments = menu.add(0,App.MENUITEM_GET_WALLCOMMENTS, 1,"Test");
-		MenuItem getWallPosts = menu.add(0,App.MENUITEM_GET_WALLPOSTS, 1,"Get wall posts");
-		MenuItem toggleLogger = menu.add(0,App.MENUITEM_TOGGLE_LOGGER, 1,"Logger");
-		MenuItem showUserWall = menu.add(0,App.MENUITEM_USER_WALL, 1,"Wall");
-		//MenuItem settings = menu.add(0,App.MENUITEM_SETTINGS, 2,"Settings");
+		App.prepareOptionsMenu(this, null, 0, menu);
 		return true;
 	}
 	
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		boolean isHandled = App.onOptionsItemSelected(this, null, 0, item);
+		
+		if(isHandled){
+			return true;
+		}
+		
 		int id = item.getItemId();
 		switch(id){
-			case App.MENUITEM_LOGOFF:{
-				App.INSTANCE.deleteSessionInfo();
+			case App.MENUITEM_VIEWALBUMS:{
+				Intent i = ViewAlbumsActivity.getIntent(this);
+				startActivity(i);
 				break;
 			}
-			case App.MENUITEM_SETTINGS:{
-				
-				break;
-			}
-			case App.MENUITEM_CLEAR:{
-				App.INSTANCE.mDBHelper.deleteAllNotifications(App.INSTANCE.mDB);
-				break;
-			}
+			
 			case App.MENUITEM_GET_WALLCOMMENTS:{
 				App.INSTANCE.getWallPostsCommentsFromCloud();
 				break;
@@ -817,7 +766,9 @@ public class HomeActivity extends BaseActivity {
 				break;
 			}
 			case App.MENUITEM_USER_WALL:{		
-				App.showUserWall(HomeActivity.this, Facebook.INSTANCE.getSession().uid);
+				FBSession session = Facebook.getInstance().getSession();
+				Toast.makeText(this.getApplicationContext(), Long.toString(session.uid), 3000).show();
+				App.showUserWall(HomeActivity.this, session.uid, mUserInSession.name);
 				/*
 				Intent viewWall = StreamActivity.getIntent(this);
 				Bundle b = new Bundle();
@@ -842,7 +793,11 @@ public class HomeActivity extends BaseActivity {
 	
 	CommentsAdapter mListAdapter;
 	
-	Handler mUIHandler = new Handler(){
+	Handler mUIHandler;
+	
+	/*
+	 Handler(){
+	 
 		public void handleMessage(android.os.Message msg) {
 			//Log.d(LOG_TAG,"ui hander handle message what:"+msg.what);
 			int code = msg.what;
@@ -910,6 +865,6 @@ public class HomeActivity extends BaseActivity {
 		};
 	};	
 		
-
+*/
 
 }

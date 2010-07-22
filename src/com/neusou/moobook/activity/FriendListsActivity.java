@@ -10,6 +10,8 @@ import com.neusou.moobook.Facebook;
 import com.neusou.moobook.data.Stream;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -22,6 +24,11 @@ import android.widget.Toast;
 public class FriendListsActivity extends BaseActivity {
 	public static final String LOG_TAG = "FriendListsActivity";
 
+	public static Intent getIntent(Context ctx) {
+	
+		return new Intent(ctx, FriendListsActivity.class);
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

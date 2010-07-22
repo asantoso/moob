@@ -1,5 +1,10 @@
 package com.neusou.moobook.activity;
 
+import java.util.concurrent.CountDownLatch;
+
+import com.admob.android.ads.AdView;
+import com.neusou.DecoupledHandlerThread;
+import com.neusou.ProactiveThread;
 import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.Facebook;
@@ -7,9 +12,14 @@ import com.neusou.moobook.R;
 import com.neusou.moobook.adapters.AdapterDataSetObserver;
 import com.neusou.moobook.controller.CursorListAdapter;
 import com.neusou.moobook.controller.NotificationsListViewFactory;
+import com.neusou.moobook.controller.StandardImageAsyncLoadListener;
+import com.neusou.moobook.controller.StandardUiHandler;
 import com.neusou.moobook.data.FBNotification;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
+import com.neusou.moobook.thread.BaseManagerThread;
+import com.neusou.moobook.thread.ManagerThread;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -20,6 +30,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -32,6 +44,16 @@ import android.widget.ViewSwitcher.ViewFactory;
 public class NotificationsActivity extends BaseActivity{
 	public static final String LOG_TAG = "NotificationsActivity";
 
+	DecoupledHandlerThread mHT = new DecoupledHandlerThread();
+	Handler mUIHandler;
+	ProgressDialog mProgressDialog;
+	ManagerThread mWorkerThread;
+	
+	public static Intent getIntent(Context ctx) {		
+		return new Intent(ctx, NotificationsActivity.class);
+	}
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -91,9 +113,15 @@ public class NotificationsActivity extends BaseActivity{
 		super.onDestroy();	
 	}
 	
-	protected void bindViews(){
+	protected void bindViews(){		
+		mProgressDialog = new ProgressDialog(this);
+		mLoadingIndicator = findViewById(R.id.loadingindicator);
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
 		mListView = (ListView) findViewById(R.id.list);
+		mAdView = (AdView) findViewById(R.id.ad);
+		mAdViewWrapper = findViewById(R.id.adview_wrapper);
+		mBottomHeader = findViewById(R.id.bottomheader);
+		
 	}
 	
 	protected void initBroadcastReceivers(){		
@@ -116,9 +144,14 @@ public class NotificationsActivity extends BaseActivity{
 	}	
 	
 	protected void initObjects(){
-		mLoadingIndicator = findViewById(R.id.loadingindicator);
-		mFacebook = Facebook.getInstance();
-			
+		mHT.start();
+				
+		mWorkerThread = App.INSTANCE.mManagerThread;
+		mWorkerThread.setOutHandler(mUIHandler);
+		
+		mFacebook = Facebook.getInstance();			
+		mFacebook.registerOutHandler(R.id.outhandler_activity_notifications, mWorkerThread.getInHandler());
+		
 		mListViewFactory = new NotificationsListViewFactory(this, mListView);
 		mListAdapter = new CursorListAdapter(this, mListViewFactory, FBNotification.col_rowid);
 		mTopHeaderText.setFactory(new ViewFactory() {
@@ -131,9 +164,21 @@ public class NotificationsActivity extends BaseActivity{
 				return t;
 			}
 		});
-		
-		
+				
 		mListViewFactory.setDataSetObserver(new AdapterDataSetObserver(mListAdapter));
+		mUIHandler = new StandardUiHandler(this, null, mAdViewWrapper, mBottomHeader){
+			@Override
+			public void handleMessage(Message msg) {			
+				super.handleMessage(msg);
+				int code = msg.what;
+				switch (code) {
+					case ManagerThread.CALLBACK_GET_PHOTO_ATTR:{
+						
+						break;
+					}
+				}
+			}
+		};
 		
 		initBroadcastReceivers();
 	}
@@ -146,7 +191,45 @@ public class NotificationsActivity extends BaseActivity{
 		}
 	}
 	
+	public void showComments(Bundle data){
+		byte objectType = data.getByte(Facebook.XTRA_FBURL_OBJECTTYPE);
+		
+		switch(objectType){
+			case Facebook.FBURL_OBJECTTYPE_STREAM:{
+				String oid = data.getString(Facebook.XTRA_FBURL_OBJECTID);
+				App.showPost(NotificationsActivity.this, oid);
+				break;
+			}
+			case Facebook.FBURL_OBJECTTYPE_PHOTO:{
+				String pid = data.getString(Facebook.XTRA_FBURL_PHOTOID);
+				String oid = data.getString(Facebook.XTRA_FBURL_USERID);
+				showPhotoComments(pid, Long.parseLong(oid));
+				break;
+			}
+		}
+	}
+	
+	CountDownLatch mPhotoCommentsLatch;
+	public void showPhotoComments(String pid_str, long owner){
+		long pid = Long.parseLong(pid_str);
+		mPhotoCommentsLatch = new CountDownLatch(1);
+		mFacebook.getPhotoAttributes(R.id.outhandler_activity_notifications, null, pid, owner, ManagerThread.CALLBACK_GET_PHOTO_ATTR, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR,  3000);
+		
+		mHT.h.post(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					mPhotoCommentsLatch.await();
+				}catch(InterruptedException e){			
+				}
+				
+			}
+		});
+	}
+	
 	protected void initViews(){
+		
+		
 		mListView.setFocusableInTouchMode(true);
 		mListView.setFocusable(true);
 		mListView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
@@ -178,18 +261,32 @@ public class NotificationsActivity extends BaseActivity{
 							int position, long arg3) {
 						c.moveToPosition(position);
 						FBNotification note = FBNotification.parseCursor(c, null);
+						Logger.l(Logger.DEBUG, LOG_TAG, note.href);
 						//Toast.makeText(NotificationsActivity.this, note.href, 3000).show();
 						Bundle data = Facebook.extractDataFromFacebookUrl(note.href);
-						String version = data.getString(Facebook.XTRA_FBURL_VERSION);
-						String story_id = data.getString(Facebook.XTRA_FBURL_STORYID);
-						String user_id = data.getString(Facebook.XTRA_FBURL_USERID);
-						if(version.equals(Facebook.FBURL_VERSION_WALL)){
-							App.showPost(NotificationsActivity.this, user_id+"_"+story_id);
+						if(data != null){
+							//String scriptName = data.getString(Facebook.XTRA_FBURL_SCRIPTNAME);
+							//byte objectType = data.getByte(Facebook.XTRA_FBURL_OBJECTTYPE);
+							//String genericId = data.getString(Facebook.XTRA_FBURL_OBJECTID);
+							//String version = data.getString(Facebook.XTRA_FBURL_VERSION);
+							//String story_id = data.getString(Facebook.XTRA_FBURL_STORYID);
+							//String user_id = data.getString(Facebook.XTRA_FBURL_USERID);
+							
+							showComments(data);
+							/*
+							if(version.equals(Facebook.FBURL_VERSION_WALL) && 
+								scriptName.equals(Facebook.FBURL_SCRIPT_PROFILE)){
+								App.showPost(NotificationsActivity.this, user_id+"_"+story_id);
+							}else if(scriptName.equals(Facebook.FBURL_SCRIPT_VIDEO)){
+								App.showPost(NotificationsActivity.this, version);
+							}
+							*/
 						}
 					}			
 				}
 		);
 				
+		App.initAdMob(mAdView, mUIHandler);
 	}	
 
 	private void showLoadingIndicator(){	
@@ -215,6 +312,9 @@ public class NotificationsActivity extends BaseActivity{
 	Cursor c;
 	Facebook mFacebook;
 	ListView mListView;
+	AdView mAdView;
+	View mAdViewWrapper;
+	View mBottomHeader;
 	TextSwitcher mTopHeaderText;
 	BroadcastReceiver mBroadcastReceiver;
 }
