@@ -21,6 +21,9 @@
   
   <item type="id" name="tag_contextmenu_data" />
   
+  <item type="id" name="tag_streamsadapter_item_media_array" />
+  <item type="id" name="tag_streamsadapter_item_media_array_selectedindex"/>
+  
   <item type="id" name="asyncimageloader_profileimage" />
   
   <item type="id" name="imagetype_profileimage" />
@@ -35,6 +38,7 @@
   <item type="id" name="table_users" />
   <item type="id" name="table_posts" />
             
+  <item type="id" name="outhandler.ignore" />
   <item type="id" name="outhandler.app" /> 
   <item type="id" name="outhandler.activity.post" />
   <item type="id" name="outhandler.activity.streams" />

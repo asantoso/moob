@@ -28,6 +28,7 @@
     	<meta-data android:value="a14b2fdb6c6a773" android:name="ADMOB_PUBLISHER_ID"/>
     	<meta-data android:value="false" android:name="ADMOB_TEST_MODE"/>
     	 
+    	 <!-- 
     	<service 
     		android:name=".LocalService" 
     		android:label="OstrichService"
@@ -36,6 +37,7 @@
     		android:exported="false"    	
     		android:process="com.neusou.moobook"
     	/>
+    	-->
     	
     	<receiver android:name=".receiver.BootCompletedReceiver" android:exported="true">
     		<intent-filter> 
@@ -43,6 +45,12 @@
     		</intent-filter>
     	</receiver>
     	
+    	<receiver android:name=".receiver.SessionUserInfoReceiver" android:exported="false">
+    		<intent-filter android:priority="0">  
+    			<action android:name="com.neusou.moobook.intent.SESSIONUSER_PROFILE_RECEIVED"/>
+    		</intent-filter>
+    	</receiver>    	 
+    	 
     	<receiver android:name=".receiver.OnAlarmReceiver" android:exported="false">
     	</receiver>
     	    	
@@ -58,12 +66,16 @@
         </activity>
         
         <activity android:name=".activity.LoginActivity"
-                  android:label="@string/app_name">
+                  android:label="@string/app_name"
+                  android:configChanges="orientation"
+                  >
       
         </activity>
         
         <activity android:name=".activity.StreamActivity"
-                  android:label="@string/app_name">          
+                  android:label="@string/app_name"
+                  android:configChanges="orientation"
+                  >          
         </activity>
         
         <activity android:name=".activity.ViewContactsActivity"
@@ -145,6 +157,7 @@
 				android:name=".activity.PostActivity"		  		  
 				android:label="@string/app_name"
                 android:theme="@style/Theme.PostAction"
+                android:configChanges="orientation"
 		>
 		
 		</activity>

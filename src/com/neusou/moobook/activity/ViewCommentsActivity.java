@@ -4,7 +4,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -13,8 +12,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
-import android.content.pm.FeatureInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -30,12 +27,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
@@ -46,12 +40,9 @@ import android.widget.ViewSwitcher.ViewFactory;
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
 import com.neusou.moobook.App;
-import com.neusou.moobook.AppMenu;
-import com.neusou.moobook.FBApp;
-import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
-
+import com.neusou.moobook.activity.PostActivity.PostActivityInvocationData;
 import com.neusou.moobook.adapters.CommentsAdapter;
 import com.neusou.moobook.adapters.GenericPageableAdapter;
 import com.neusou.moobook.adapters.IPageableListener;
@@ -63,7 +54,6 @@ import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.moobook.view.ActionBar;
-import com.neusou.web.IntelligentPagingInfo;
 import com.neusou.web.PagingInfo;
 
 public class ViewCommentsActivity extends BaseActivity{
@@ -73,7 +63,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		return i;
 	}
 	
-	static final String LOG_TAG = "ViewCommentsActivity";
+	static final String LOG_TAG = Logger.registerLog(ViewCommentsActivity.class);
 	public static final String XTRA_OBJECTID = "xtra.oid";
 	public static final String XTRA_POSTID = "xtra.pid";
 	public static final String XTRA_CLEARDATA = "xtra.cleardata";
@@ -133,17 +123,13 @@ public class ViewCommentsActivity extends BaseActivity{
 	CommentsAdapter.DataTag mLongItemClickData;	
 	int commentStartIndex = 0;
 	
-	//Views
-	//EditText mComment;
-	//Button mPostBtn;
+	
 	AdView mAdView;
 	ListView mListView;
 	CommentsAdapter mListAdapter;
-	//PageableAdapter mListAdapter;
 	View mStub;			
 	TextSwitcher mTopHeaderText;
 	ProgressDialog mProgressDialog;
-	View.OnClickListener mPostOnClickLst;
 	IPageableListener mAdapterListener;
 	
 	//used to check if the arriving batch of data is different than the previous batch.
@@ -335,11 +321,8 @@ public class ViewCommentsActivity extends BaseActivity{
 		mLoadingIndicator = findViewById(R.id.loadingindicator);
 		mStub = findViewById(R.id.stub);
 		mListView = (ListView) findViewById(R.id.list);		
-		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
-		mActionBar = App.INSTANCE.mActionBar;
-		mActionBar.bindViews(this);
-		//mPostBtn = (Button) findViewById(R.id.post);
-		//mComment = (EditText) findViewById(R.id.comment_input);		
+		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);	
+		
 	}
 		
 	
@@ -377,32 +360,9 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	protected void initObjects(){
 		super.initObjects();
-
-		
-		mActionBar.setOnAddClick(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				Intent intent = PostActivity.getIntent(ViewCommentsActivity.this);
-				intent.putExtra(PostActivity.XTRA_OBJECTID, mPostId);
-				intent.putExtra(PostActivity.XTRA_SHOW_COMMENTBAR, true);
-				intent.putExtra(PostActivity.XTRA_FOCUS, PostActivity.COMPONENT_COMMENTBAR);
-				startActivityForResult(intent, PostActivity.REQUESTCODE_POSTCOMMENT);
-			}
-			
-		});
-		
-		mActionBar.setOnReloadClick(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				getCommentsFromCloud(PagingInfo.CURRENT);				
-			}
-			
-		});
-		
 		LABEL_HEADER_COMMENTS = mResources.getString(R.string.comments);
-		
+		mActionBar = new ActionBar();
+		mActionBar.bindViews(this);	
 		try{			
 			if(mHasObjectId){		
 				if(isClearData){
@@ -533,8 +493,6 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 
 	protected void initViews(){
-		App.INSTANCE.mActionBar.bindViews(this);
-		App.INSTANCE.mActionBar.initViews();
 		
 		mListAdapter.setPagingInfo(mPagingInfo);
 		
@@ -611,6 +569,43 @@ public class ViewCommentsActivity extends BaseActivity{
 				return t;
 			}
 		});
+		
+		
+
+		mActionBar.setOnAddClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				Intent intent = PostActivity.getIntent(ViewCommentsActivity.this);
+				PostActivityInvocationData invocationData = new PostActivityInvocationData();
+				invocationData.focusedView = PostActivity.COMPONENT_COMMENTBAR;
+				invocationData.showCommentBar = true;
+				invocationData.objId = mPostId;
+				intent.putExtra(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT, invocationData);
+				
+				//String msg = "objectId:"+mPostId;
+				//Log.d("DEBUG","############################ message: "+msg);
+				//Toast.makeText(ViewCommentsActivity.this,msg,2000).show();
+				startActivityForResult(intent, PostActivity.REQUESTCODE_POSTCOMMENT);
+			
+				
+			}
+			
+		});
+		
+		
+		
+		mActionBar.setOnReloadClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				getCommentsFromCloud(PagingInfo.CURRENT);				
+			}
+			
+		});
+		
+		
 
 	}
 	
@@ -809,8 +804,8 @@ public class ViewCommentsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = false;
 		showLoadingIndicator();
 		setTitle("moobook");
-		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, false);
-		mActionBar.setEnabledButton(ActionBar.BUTTON_POST, false);
+//		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, false);
+	//	mActionBar.setEnabledButton(ActionBar.BUTTON_POST, false);
 		mTopHeaderText.setText("Loading comments from cloud..");	 
 	}
 
@@ -818,8 +813,8 @@ public class ViewCommentsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = true;
 		hideLoadingIndicator();
 		resetHeaderText();
-		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, true);
-		mActionBar.setEnabledButton(ActionBar.BUTTON_POST, true);
+	//	mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, true);
+		//mActionBar.setEnabledButton(ActionBar.BUTTON_POST, true);
 	}
 
 	private void setHeaderText(String text){

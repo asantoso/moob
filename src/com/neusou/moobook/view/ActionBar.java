@@ -11,6 +11,7 @@ import android.widget.ImageButton;
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
 import com.neusou.moobook.activity.PostActivity;
+import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.data.User;
 
 public class ActionBar{
@@ -25,9 +26,6 @@ public class ActionBar{
 	
 	ImageButton mAbPostButton;
 	ImageButton mAbReloadButton;
-	ImageButton mAbWallButton;
-	ImageButton mAbAlbumsButton;
-	ImageButton mAbProfileButton;
 	
 	View.OnClickListener mAbPostButtonOnClick;
 	View.OnClickListener mAbReloadButtonOnClick;
@@ -71,26 +69,27 @@ public class ActionBar{
 	
 	public void setEnabledButton(byte which, boolean state){
 		switch(which){
-			case BUTTON_GALLERY:{
-				mAbAlbumsButton.setEnabled(state);
-				break;
-			}
 			case BUTTON_POST:{
-				mAbPostButton.setEnabled(state);
+				if(mAbPostButton != null){
+					mAbPostButton.setEnabled(state);	
+				}
+				
 				break;
 			}
 			case BUTTON_RELOAD:{
-				mAbReloadButton.setEnabled(state);
+				if(mAbReloadButton != null){
+					mAbReloadButton.setEnabled(state);
+				}
 				break;
 			}
-			case BUTTON_WALL:{
-				mAbWallButton.setEnabled(state);
-				break;
-			}
-			case BUTTON_PROFILE:{
-				mAbProfileButton.setEnabled(state);
-				break;
-			}
+		
+		}
+	}
+	
+	public void setProfileData(ContextProfileData cpd){
+		if(cpd != null){
+			setUserId(cpd.actorId);
+			setUserName(cpd.name);
 		}
 	}
 	
@@ -104,16 +103,14 @@ public class ActionBar{
 	public void bindViews(Activity act){
 		mContext = act;
 		mAbReloadButton = (ImageButton) act.findViewById(R.id.ab_refresh);
-		mAbPostButton = (ImageButton) act.findViewById(R.id.ab_post);		
-		mAbWallButton = (ImageButton) act.findViewById(R.id.ab_wall);
-		mAbAlbumsButton = (ImageButton) act.findViewById(R.id.ab_albums);
-		mAbProfileButton = (ImageButton) act.findViewById(R.id.ab_profile);
+		mAbPostButton = (ImageButton) act.findViewById(R.id.ab_post);
 	}
 	
 	public void initObjects(){
 		mAbPostButtonOnClick = new View.OnClickListener() {			
 			@Override
-			public void onClick(View v) {				
+			public void onClick(View v) {	
+				/*
 				Intent i = PostActivity.getIntent(mContext);				
 				if(App.isSessionUser(mUserId)){
 					if(mScreenId == R.layout.stream_activity){						
@@ -128,6 +125,7 @@ public class ActionBar{
 					
 				}
 				mContext.startActivity(i);
+				*/
 			}
 		};
 		
@@ -170,29 +168,26 @@ public class ActionBar{
 	}
 	
 	public void initViews(){
-	
-		mAbAlbumsButton.setOnClickListener(mAbAlbumsButtonOnClick);
-		mAbPostButton.setOnClickListener(mAbPostButtonOnClick);
-		mAbReloadButton.setOnClickListener(mAbReloadButtonOnClick);
-		mAbProfileButton.setOnClickListener(mAbProfileButtonOnClick);
-		mAbWallButton.setOnClickListener(mAbWallButtonOnClick);
-		
-	//	App.showUserWall(HomeActivity.this, Facebook.INSTANCE.getSession().uid, mUserInSession.name);	
+		if(mAbPostButton != null){
+			mAbPostButton.setOnClickListener(mAbPostButtonOnClick);
+		}
+		if(mAbReloadButton != null){
+			mAbReloadButton.setOnClickListener(mAbReloadButtonOnClick);
+		}
 	}
 	
 	public void updateViews(){
 		
 	}
 	
-	public void setOnReloadClick(View.OnClickListener listener){
-		mAbReloadButton.setOnClickListener(listener);
+	public void setOnReloadClick(View.OnClickListener listener){		
+		mAbReloadButtonOnClick = listener;
+		initViews();
 	}
-	
+			
 	public void setOnAddClick(View.OnClickListener listener){
-		mAbPostButton.setOnClickListener(listener);
+		mAbPostButtonOnClick = listener;
+		initViews();
 	}
-	
-	
-
-	
+			
 }

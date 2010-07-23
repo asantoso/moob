@@ -3,6 +3,7 @@ package com.neusou.moobook.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +20,27 @@ public abstract class BaseActivity extends Activity {
 	protected boolean onResume;
 	protected boolean onStart;
 	protected boolean onPause;
+	
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		lcloctag = this.getClass().getSimpleName();
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onRetainNonConfiguration");
+		return super.onRetainNonConfigurationInstance();
+	}
+	
+	@Override
+	public Object getLastNonConfigurationInstance() {
+		lcloctag = this.getClass().getSimpleName();
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->getLastNonConfigurationInstance");
+		return super.getLastNonConfigurationInstance();
+	}
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		lcloctag = this.getClass().getSimpleName();
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onConfigurationChanged");
+		super.onConfigurationChanged(newConfig);
+	}
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {	

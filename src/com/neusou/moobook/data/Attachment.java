@@ -16,7 +16,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class Attachment implements Parcelable, Poolable<Attachment>{
-	final String LOG_TAG = "Attachment";
+	final String LOG_TAG = Logger.registerLog(Attachment.class);
 
 	public String toString(){
 		StringBuffer sb = new StringBuffer();
@@ -26,29 +26,7 @@ public class Attachment implements Parcelable, Poolable<Attachment>{
 		.append(mHref).append(space).append(mNumMedias);
 		return sb.toString();
 	}
-	
-	/*
-	public static final byte ATTACHMENT_TYPE_MEDIALINK = 0;
-	public static final byte ATTACHMENT_TYPE_MEDIAIMAGE = 1;
-	public static final byte ATTACHMENT_TYPE_MEDIAVIDEO = 2;
-	public static final byte ATTACHMENT_TYPE_MEDIAMP3 = 3;
-	public static final byte ATTACHMENT_TYPE_NOTE = 4;
-	*/
-	/*
-	public static final String MEDIATYPE_LINK = "link";
-	public static final String MEDIATYPE_IMAGE = "photo";
-	public static final String MEDIATYPE_FLASH = "video";
-	public static final String MEDIATYPE_MP3 = "mp3";
-	*/
-	/*
-	 public static final byte col_atid = 1;  
-	 public static final byte col_post_id = 2;
-	 public static final byte col_data = 3;
-	 
-	 public static final String cn_atid = "atid";  
-	 public static final String cn_post_id = "post_id";
-	 public static final String cn_data = "data"; 
-	 */
+		
 	 public String atid;
 	 public String post_id;
 	 public String data; //raw json data
@@ -58,42 +36,7 @@ public class Attachment implements Parcelable, Poolable<Attachment>{
 		 post_id = null;
 		 data = null;
 	 }
-	 
-	 /*
-	 public static Attachment parseCursor(Cursor c, Attachment s){
-		
-		boolean valid = c.moveToNext();
-		if(!valid){
-			return null;
-		}
-		
-		if(s == null){
-			s = new Attachment();
-		}
-		
-		s.atid = c.getString(col_atid);
-		s.post_id = c.getString(col_post_id);
-		s.data = c.getString(col_data);
-		
-		c.close();
-		return s;
-	}
-	*/
-	 
-	 /*
-	public ContentValues toContentValues(ContentValues cv){
-		
-		if(cv == null){
-			cv = new ContentValues();
-		}
-		
-		cv.put(cn_atid, atid);		
-		cv.put(cn_post_id, post_id);
-		cv.put(cn_data, data);		
-		
-		return cv;
-	}
-		*/
+
 	public static final String fields_icon = "icon";
 	public static final String fields_fb_object_type = "fb_object_type";
 	public static final String fields_description = "description";

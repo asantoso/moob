@@ -2,86 +2,181 @@ package com.neusou.moobook.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
-import com.neusou.moobook.Util;
+import com.neusou.moobook.data.MediaImageTag;
+import com.neusou.web.ImageUrlLoader2;
+import com.neusou.web.ImageUrlLoader2.AsyncListener;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
+import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class DisplayImageActivity extends BaseActivity{
 	
-	//public static final String XTRA_IMAGE = "xtra.image";
-	public static final String XTRA_IMAGE_URL = "xtra.image.url";
-	public static final String XTRA_PHOTO_ID = "xtra.photo.id";
-
+	public static final String XTRA_MEDIAIMAGETAGS = "xtra.mediaimagetags";
+	
+	DisplayImageActivityInvocationData mInvocationData;
+	
+	int mCurrentIndex;
+	int mNumMedia;
+			
 	public static Intent getIntent(Context ctx) {
 		return new Intent(ctx, DisplayImageActivity.class);
 	}
 	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public static class DisplayImageActivityInvocationData implements Parcelable{			
+		
+		int mNumMediaImageTags;
+		MediaImageTag[] mMediaImageTags;
+		public int mSelectedIndex; //the index selected in the media tag array.
+		
+		public void setMediaImageTags(MediaImageTag[] data){
+			mMediaImageTags = data;
+			mNumMediaImageTags = data.length;
+		}		
+		
+		public static final String XTRA_PARCELABLE_OBJECT = DisplayImageActivityInvocationData.class.getCanonicalName();
+			
+		public static Creator CREATOR = new DisplayImageActivityInvocationData.Creator();
+		
+		static class Creator implements Parcelable.Creator<DisplayImageActivityInvocationData>{
+
+			@Override
+			public DisplayImageActivityInvocationData createFromParcel(Parcel source) {
+				int numMediaImageTags = source.readInt();
+				DisplayImageActivityInvocationData d = new DisplayImageActivityInvocationData();
+				d.mNumMediaImageTags = numMediaImageTags;
+				d.mMediaImageTags = new MediaImageTag[numMediaImageTags];
+				for(int i=0;i<numMediaImageTags;i++){
+					d.mMediaImageTags[i] = MediaImageTag.CREATOR.createFromParcel(source);
+				}			
+				d.mSelectedIndex = source.readInt();
+				return d;
+			}
+
+			@Override
+			public DisplayImageActivityInvocationData[] newArray(int size) {
+				return null;
+			}
+			
+		}
+		
+		@Override
+		public int describeContents() {
+			return 1212;
+		}
+		
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			if(mNumMediaImageTags == 0){
+				return;
+			}
+			dest.writeInt(mNumMediaImageTags);
+			for(int i=0;i<mNumMediaImageTags;i++){		
+				mMediaImageTags[i].writeToParcel(dest, flags);
+			}	
+			dest.writeInt(mSelectedIndex);
+		}
+		
+	}
 	
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {	
 		super.onCreate(savedInstanceState);
 		getWindow().setBackgroundDrawable(null);
 		setContentView(R.layout.viewimage_activity);
 		bindViews();
-		initObjects();
-		initViews();
-		
+		getIntentExtras();
+		initObjects();		
+		initViews();		
 	}
 	
 	@Override
-	protected void onResume() {
-	
+	protected void onResume() {	
 		super.onResume();
+		mNumMedia = mInvocationData.mMediaImageTags.length;
+		Toast.makeText(this, "numMedias:"+mNumMedia, 1000).show();
+		loadImage(mInvocationData.mSelectedIndex);
+	}
+	
+	AsyncListener mImgAsyncListener = new AsyncListener() {
 		
-		//Drawable d = (Drawable) getIntent().getParcelableExtra(XTRA_IMAGE);
-		String imageUrl =  getIntent().getStringExtra(XTRA_IMAGE_URL);
-		long photo_id =  getIntent().getLongExtra(XTRA_PHOTO_ID,0);
+		@Override
+		public void onPublishProgress(final AsyncLoaderProgress progress) {
+			runOnUiThread(new Runnable() {				
+				@Override
+				public void run() {
+					progress.imageView.setImageBitmap(progress.bitmap);					
+				}
+			});			
+		};
 		
-		Toast.makeText(this, imageUrl, 1000).show();
-		Util util = new Util();
-		//TODO Logger remove
-		Log.d("debug","loading image... url: "+imageUrl);
-		Drawable d = App.mImageUrlLoader.loadImage(imageUrl, false);
-		Log.d("debug","loading image... done.");
-		mImageView.setImageDrawable(d);
+		@Override
+		public void onPreExecute() {
+		}
 		
+		@Override
+		public void onPostExecute(AsyncLoaderResult result) {
+		}
+		
+		@Override
+		public void onCancelled() {
+		}
+		
+	};
+	public void loadImage(int index){
+		if(index < mNumMedia && index >= 0) {
+		ImageUrlLoader2.AsyncLoaderInput input = new ImageUrlLoader2.AsyncLoaderInput();
+		
+		//Log.d("DisplayImage","num medias? "+mInvocationData.mNumMediaImageTags);
+		//Log.d("DisplayImage","medias null? "+(mInvocationData.mMediaImageTags == null));
+		
+		input.imageUri = mInvocationData.mMediaImageTags[index].imageSrc;
+		input.imageView = mImageView;
+		App.INSTANCE.mImageUrlLoader2.loadImageAsync(
+				App.INSTANCE.mExecScopeImageLoaderTask, 
+				input, mImgAsyncListener
+				);
+		}
 	}
 	
 	@Override
-	protected void bindViews() {
-	
-		super.bindViews();
-		
+	protected void bindViews() {	
+		super.bindViews();		
 		mImageView = (ImageView) findViewById(R.id.image);
 	}
 	
-	@Override
-	protected void initViews() {
+	public void getIntentExtras() {
+		Intent i = getIntent();
+		mInvocationData = i.getParcelableExtra(DisplayImageActivityInvocationData.XTRA_PARCELABLE_OBJECT);
+	//	Log.d("getIntentExtras. ", " number of media tags: "+mInvocationData.mNumMediaImageTags);
+	//	Log.d("getIntentExtras. ", " length of media tags: "+mInvocationData.mMediaImageTags.length);
+	}
 	
+	@Override
+	protected void initViews() {	
 		super.initViews();
 	}
 	
 	@Override
 	protected void initObjects() {
-
 		super.initObjects();
 	}
 	
 	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-	
+	protected void onSaveInstanceState(Bundle outState) {	
 		super.onSaveInstanceState(outState);
 	}
 	
 	@Override
-	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-	
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {	
 		super.onRestoreInstanceState(savedInstanceState);
 	}
 	

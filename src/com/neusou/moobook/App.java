@@ -108,7 +108,8 @@ public class App extends Application {
 	public static final String INTENT_CHECK_NOTIFICATIONS = packageprefix+".intent.CHECK_NOTIFICATIONS";
 	public static final String INTENT_CHECK_STREAMS = packageprefix+".intent.CHECK_STREAMS";
 	public static final String INTENT_LOGIN = packageprefix+".intent.LOGIN_FACEBOOK";///packageprefix+".action.LOGIN_FACEBOOK";
-	public static final String INTENT_PROFILE_UPDATED = packageprefix+".intent.PROFILE_UPDATED";
+	public static final String INTENT_SESSIONUSER_PROFILE_RECEIVED = packageprefix+".intent.SESSIONUSER_PROFILE_RECEIVED";
+	public static final String INTENT_SESSIONUSER_PROFILE_UPDATED = packageprefix+".intent.SESSIONUSER_PROFILE_UPDATED";
 	public static final String INTENT_NEW_NOTIFICATIONS = packageprefix+".intent.NEW_NOTIFICATIONS";
 	public static final String INTENT_STREAMCOMMENTS_UPDATED = packageprefix+".intent.STREAMCOMMENTS_UPDATED";
 	public static final String INTENT_WALLPOSTS_UPDATED = packageprefix+".intent.WALLPOSTS_UPDATED";
@@ -119,6 +120,15 @@ public class App extends Application {
 	public static final String INTENT_DELETECOMMENT = packageprefix+".intent.DELETE_COMMENT";
 	public static final String INTENT_POSTCOMMENT = packageprefix+".intent.POST_COMMENT";
 	public static final String INTENT_GET_ALBUMS =  packageprefix+".intent.GET_ALBUMS";
+	
+	public static final String INTENT_ACTION_VIEW_FEED = "view.feed";
+	public static final String INTENT_ACTION_VIEW_WALL = "view.wall";
+	public static final String INTENT_ACTION_VIEW_PROFILE = "view.profile";
+	public static final String INTENT_ACTION_VIEW_PHOTOS = "view.photos";
+	public static final String INTENT_ACTION_VIEW_TAGGED_PHOTOS = "view.tagged.photos";
+	public static final String INTENT_ACTION_VIEW_EVENTS = "view.events";
+	
+	public static final String XTRA_SESSION_USER_SELECTED_FIELDS = "xtr.sess.usr.sel.flds";
 	
 	static final int CALLBACK_PROCESS_STREAMS_START = 0;
 	static final int CALLBACK_PROCESS_STREAMS_UPDATE = 1;
@@ -148,12 +158,7 @@ public class App extends Application {
 	public static final int CONTEXT_MENU_TOPHEADER_PROFILE  = 1;
 	public static final int CONTEXT_MENU_OTHERS  = 2;
 	
-	public static final String ACTION_VIEW_FEED = "view.feed";
-	public static final String ACTION_VIEW_WALL = "view.wall";
-	public static final String ACTION_VIEW_PROFILE = "view.profile";
-	public static final String ACTION_VIEW_PHOTOS = "view.photos";
-	public static final String ACTION_VIEW_TAGGED_PHOTOS = "view.tagged.photos";
-	public static final String ACTION_VIEW_EVENTS = "view.events";
+
 		
 	public static final int PROCESS_FLAG_SESSIONUSER = 1;
 	public static final int PROCESS_FLAG_OTHER = 2;
@@ -330,11 +335,11 @@ public class App extends Application {
 				
 				switch(code){
 					case CALLBACK_PROCESS_STREAMS_START:{
-						Toast.makeText(App.INSTANCE, "Start", 2000).show();
+						
 						break;	
 					}
 					case CALLBACK_PROCESS_STREAMS_FINISH:{
-						Toast.makeText(App.INSTANCE, "Start", 2000).show();
+						
 						break;	
 					}
 					case CALLBACK_PROCESS_STREAMS_TIMEOUT:{
@@ -453,6 +458,10 @@ public class App extends Application {
 		mAlarmManager.cancel(pi);		
 	}
 	
+	/**
+	 * Gets basic information about current user session.
+	 * These information are retrieved: Name, Picture
+	 */
 	public void getSessionUserInfo(){		
 		mFacebook.getSessionUserInfo(mSelectedUserFields);		
 	}
@@ -577,7 +586,15 @@ public class App extends Application {
 			return holder;
 		}
 		
-		
+		/**
+		 * Saves current session user profile data
+		 * @param data JSON text data
+		 * @throws FileNotFoundException
+		 */
+	public static void saveUserSessionData(String data) {
+		Util.writeToLocalCache(App.INSTANCE,data,App.LOCALCACHEFILE_SESSIONUSERDATA);
+	}
+	
 	public static User getUserSessionData() throws FileNotFoundException{
 		String cachedUserInfo = null;
 		
@@ -921,8 +938,7 @@ public class App extends Application {
 		showComments.putExtra(ViewCommentsActivity.XTRA_POSTID, id);
 		showComments.putExtra(ViewCommentsActivity.XTRA_OBJECTID, id);
 		showComments.putExtra(ViewCommentsActivity.XTRA_CLEARDATA, true);
-		showComments.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
-				| Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
+		showComments.setFlags( Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
 				| Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		act.startActivity(showComments);
 	}
@@ -1057,27 +1073,45 @@ public class App extends Application {
 		
 
 		Intent i;
-		i = new Intent(ACTION_VIEW_FEED);
+		i = new Intent(INTENT_ACTION_VIEW_FEED);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewFeedMenuItem.setIntent(i);
 		
-		i = new Intent(ACTION_VIEW_WALL);
+		i = new Intent(INTENT_ACTION_VIEW_WALL);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewWallMenuItem.setIntent(i);
 		
-		i = new Intent(ACTION_VIEW_PROFILE);
+		i = new Intent(INTENT_ACTION_VIEW_PROFILE);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewProfileMenuItem.setIntent(i);
 		
-		i = new Intent(ACTION_VIEW_PHOTOS);
+		i = new Intent(INTENT_ACTION_VIEW_PHOTOS);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewPhotosMenuItem.setIntent(i);
 		
-		i = new Intent(ACTION_VIEW_TAGGED_PHOTOS);
+		i = new Intent(INTENT_ACTION_VIEW_TAGGED_PHOTOS);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewTaggedPhotosMenuItem.setIntent(i);
 		
     }
+	
+	
+	public static ContextProfileData createSessionUserContextProfileData(){
+		FBSession fbSession = Facebook.getInstance().getSession();
+		ContextProfileData cpd = new ContextProfileData();
+		User sessionUser;
+		try{
+			sessionUser = App.getUserSessionData();
+			cpd.name = sessionUser.name;
+			cpd.profileImageUri = sessionUser.pic;
+		}catch(FileNotFoundException e){	
+			cpd.name = "";
+			cpd.profileImageUri = null;
+		}
+		
+		cpd.actorId = fbSession.uid;	
+		return cpd;
+	}
 	
     /**
      * 
@@ -1132,7 +1166,6 @@ public class App extends Application {
 	 */
 	public static boolean onOptionsItemSelected(Activity ctx, ContextProfileData cpd, int activity, MenuItem item){
 	    	
-			Toast.makeText(ctx, "onMenuItemSelected()", 3000).show();
 	    	Intent itemIntent = item.getIntent();
 	    	if(itemIntent != null){
 	    		if(cpd == null || itemIntent.hasExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT)){
@@ -1252,7 +1285,7 @@ public class App extends Application {
 	    }
 
 	public static boolean onContextItemSelected(Activity ctx, MenuItem item, ProgressDialog pd) {
-		Toast.makeText(ctx, "onContextItemSelected()", 3000).show();
+		
 		int itemId = item.getItemId();
 		switch(itemId){
 			case App.CONTEXT_MENUITEM_PROFILE:{
@@ -1260,13 +1293,13 @@ public class App extends Application {
 				String action = i.getAction();
 				ContextProfileData cpd = i.getParcelableExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT);
 			
-				if(action.equals(App.ACTION_VIEW_PROFILE)){
+				if(action.equals(App.INTENT_ACTION_VIEW_PROFILE)){
 				
 				}
-				else if(action.equals(App.ACTION_VIEW_PHOTOS)){
+				else if(action.equals(App.INTENT_ACTION_VIEW_PHOTOS)){
 					
 				}
-				else if(action.equals(App.ACTION_VIEW_TAGGED_PHOTOS)){			
+				else if(action.equals(App.INTENT_ACTION_VIEW_TAGGED_PHOTOS)){			
 					Bundle data = new Bundle();
 					data.putString(ManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_GET_TAGGED_PHOTOS);
 					data.putLong(Facebook.param_uid, cpd.actorId);
@@ -1283,7 +1316,7 @@ public class App extends Application {
 					pd.show();
 					return true;						
 				}				
-				else if(action.equals(App.ACTION_VIEW_WALL)){
+				else if(action.equals(App.INTENT_ACTION_VIEW_WALL)){
 					App.showUserWall(ctx, cpd.actorId, cpd.name);	
 					return true;
 				}

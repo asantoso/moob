@@ -1,11 +1,11 @@
 package com.neusou.moobook.controller;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
 
 import android.app.Activity;
 import android.content.Context;
@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.neusou.DataState;
 import com.neusou.Logger;
@@ -33,11 +34,13 @@ import com.neusou.moobook.App;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
 import com.neusou.moobook.activity.DisplayImageActivity;
+import com.neusou.moobook.activity.DisplayImageActivity.DisplayImageActivityInvocationData;
 import com.neusou.moobook.data.Attachment;
 import com.neusou.moobook.data.AttachmentMedia;
 import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.Comment;
 import com.neusou.moobook.data.MediaImageTag;
+//import com.neusou.moobook.data.MediaImageTag;
 import com.neusou.moobook.data.ProcessedData;
 import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
@@ -49,7 +52,7 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,ProcessedData>{
 	
-	static final String LOG_TAG = "StreamListViewFactory";
+	static final String LOG_TAG = Logger.registerLog(StreamListViewFactory.class);
 	
 	static class GroupImageKey {
 		public String uri;
@@ -143,15 +146,21 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	View.OnClickListener mMediaImageOnClickListener = new View.OnClickListener() {
 
 		@Override
-		public void onClick(View v) {
-			// Toast.makeText(ctx, (String)(v.getTag()), 2000).show();
+		public void onClick(View v) {			
 			Intent i = new Intent(ctx, DisplayImageActivity.class);
-			MediaImageTag tag = (MediaImageTag) v.getTag();
-
-			i.putExtra(DisplayImageActivity.XTRA_IMAGE_URL, tag.imageSrc);
-			i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-			ctx.startActivity(i);
+			
+			MediaImageTag[] tags = (MediaImageTag[]) v.getTag(R.id.tag_streamsadapter_item_media_array);
+			int selectedIndex = (Integer) v.getTag(R.id.tag_streamsadapter_item_media_array_selectedindex);
+			
+			if(tags != null && tags.length > 0){
+				Toast.makeText(ctx, "# mediatags:"+tags.length,2000).show();
+				DisplayImageActivityInvocationData invData = new DisplayImageActivityInvocationData();
+				invData.setMediaImageTags(tags);
+				invData.mSelectedIndex = selectedIndex;
+				i.putExtra(DisplayImageActivityInvocationData.XTRA_PARCELABLE_OBJECT, invData);
+				i.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_HISTORY);
+				ctx.startActivity(i);
+			}
 		}
 
 	};
@@ -569,7 +578,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 			groupViewHolder.mediaImagesContainer = convertView.findViewById(R.id.mediaimagescontainer);
 			groupViewHolder.mProgressImage = (ImageView) convertView.findViewById(R.id.progress);
 	
-			//set event listeners
+			//set event listeners for images
 			
 			for (int i = 0; i < 3; i++) {
 				groupViewHolder.mediaimages[i].setOnClickListener(mMediaImageOnClickListener);
@@ -904,33 +913,39 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		// load attachment images
 				
 		int numShownImages = processedData.numMediaImages;
-		Logger.l(Logger.DEBUG,LOG_TAG,"[loadAttachmentImages()] numShownImages: "+numShownImages);
+		//Logger.l(Logger.DEBUG,LOG_TAG,"[loadAttachmentImages()] numShownImages: "+numShownImages);
 		loadAsyncImageUris.clear();
 		imageViewIndices.clear();
 				
-		Logger.l(Logger.DEBUG, LOG_TAG,"[loadAttachmentImages()] position:"+position+". Loading attachment image. numImages:"+numShownImages);
+		//Logger.l(Logger.DEBUG, LOG_TAG,"[loadAttachmentImages()] position:"+position+". Loading attachment image. numImages:"+numShownImages);
 		
 		int numOfInvalidImageUris = 0;
 		
 		//TODO Attachment # images
-		for (int i = 0; i < Math.min(MAX_ATTACHMENTS,numShownImages); i++) {
-					
-			//Logger.l(Logger.DEBUG, LOG_TAG, "loading attachment image "+i);
-			groupViewHolder.mediaimages[i].setVisibility(View.VISIBLE);
-			
+
+		//Create array of mediatags
+		
+		int numShownMediaImages = Math.min(MAX_ATTACHMENTS,numShownImages);
+		MediaImageTag[] mediaImageTags = new MediaImageTag[numShownMediaImages];
+		
+		//SoftReference<MediaImageTag[]> softRefMediaImageTags = new SoftReference<MediaImageTag[]>(mediaImageTags);
+		
+		for (int i = 0; i < numShownMediaImages; i++) {
+			mediaImageTags[i] = new MediaImageTag();
+			mediaImageTags[i].imageSrc =  processedData.mediaImagesSrcs[i];			
+		}
+		
+		//Assign media tags to stream post images		
+		
+		for (int i = 0; i < numShownMediaImages; i++) {					
+			groupViewHolder.mediaimages[i].setVisibility(View.VISIBLE);			
 			String imageUri = processedData.mediaImagesSrcs[i];
-			
 			Logger.l(Logger.DEBUG, LOG_TAG, "[loadAttachmentImages()] Loading attachment image. i:"+i+", uri:"+imageUri);
+		
+			//set media tag to each ImageView
+			groupViewHolder.mediaimages[i].setTag(R.id.tag_streamsadapter_item_media_array, mediaImageTags);
+			groupViewHolder.mediaimages[i].setTag(R.id.tag_streamsadapter_item_media_array_selectedindex, i);
 			
-			//set tag
-			MediaImageTag mediaTag = (MediaImageTag) groupViewHolder.mediaimages[i].getTag();
-			if (mediaTag == null) {
-				mediaTag = new MediaImageTag();
-			}
-			mediaTag.imageSrc = imageUri;
-			groupViewHolder.mediaimages[i].setTag(mediaTag);
-			//end of set tag
-	
 			//Logger.l(Logger.DEBUG, "crucial" ,"[loadAttachmentImages()] position:"+position+", loading image#:"+i+", imageUri:"+imageUri);
 			Bitmap bmp;			
 			bmp = getBitmapFromCache(position, imageUri);
@@ -958,8 +973,8 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		
 		Iterator<Integer> unloadedImageViewIndicesIterator = imageViewIndices.iterator();
 	
-		Logger.l(Logger.DEBUG, LOG_TAG,"[loadAttachmentImages()] total async load:"+loadAsyncImageUris.size());
-		Logger.l(Logger.DEBUG, LOG_TAG,"[loadAttachmentImages()] total image indices:"+imageViewIndices.size());
+		//Logger.l(Logger.DEBUG, LOG_TAG,"[loadAttachmentImages()] total async load:"+loadAsyncImageUris.size());
+		//Logger.l(Logger.DEBUG, LOG_TAG,"[loadAttachmentImages()] total image indices:"+imageViewIndices.size());
 		
 		Iterator<Integer> imageViewIndicesIterator = imageViewIndices.iterator();
 		

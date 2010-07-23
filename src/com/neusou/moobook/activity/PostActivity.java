@@ -1,7 +1,6 @@
 package com.neusou.moobook.activity;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -13,12 +12,12 @@ import java.util.concurrent.TimeUnit;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
@@ -29,6 +28,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -38,20 +40,17 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.neusou.DecoupledHandlerThread;
-import com.neusou.ProactiveThread;
 import com.neusou.Logger;
 import com.neusou.Utility;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBPhotoUploadTask;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
-
 import com.neusou.moobook.controller.StandardUiHandler;
 import com.neusou.moobook.model.RemoteCallResult;
 import com.neusou.moobook.thread.BaseManagerThread;
@@ -60,29 +59,70 @@ import com.neusou.moobook.thread.ManagerThread;
 public class PostActivity extends BaseActivity{
 	public static final String LOG_TAG = Logger.registerLog(PostActivity.class);
 	
-	public static final String XTRA_COMMENTBAR_EDITTEXT_HINT = "xtr.pa.cbar.et.hint";
-	public static final String XTRA_COMMENTBAR_HEADER_TEXT = "xtr.pa.cbar.he.txt";	
-	public static final String XTRA_SHOW_COMMENTBAR = "pa.xtr.shw.cmmtbar";
-	public static final String XTRA_SHOW_PHOTOBAR = "pa.xtr.shw.phbar";
-	public static final String XTRA_FOCUS = "pa.xtr.shw.focus";
-	public static final String XTRA_OBJECTID = "nsu.pa.xtr.objid";
-	
-	public static final boolean DEFAULT_SHOW_PHOTOBAR = true;
-	public static final boolean DEFAULT_SHOW_COMMENTBAR = true;	
+	static class PostActivityInvocationData implements Parcelable{
+		public String hintEditText = null;
+		public String headerText = null;
+		public boolean showCommentBar = false;
+		public boolean showPhotoBar = false;
+		public String objId = null;
+		public int focusedView = 0;
+		
+		public static final String XTRA_PARCELABLE_OBJECT = PostActivityInvocationData.class.getCanonicalName();
+			
+		static class Creator implements Parcelable.Creator<PostActivityInvocationData>{
+
+			@Override
+			public PostActivityInvocationData createFromParcel(Parcel source) {
+				PostActivityInvocationData d = new PostActivityInvocationData();
+				d.hintEditText = source.readString();
+				d.headerText = source.readString();
+				d.showCommentBar = source.readByte() == 1;
+				d.showPhotoBar = source.readByte() == 1;
+				d.focusedView = source.readInt();
+				d.objId = source.readString();
+				return d;
+			}
+
+			@Override
+			public PostActivityInvocationData[] newArray(int size) {
+				return null;
+			}
+			
+		}
+		
+		public static Creator CREATOR = new PostActivityInvocationData.Creator();
+		
+		@Override
+		public int describeContents() {
+			return 0;
+		}
+		
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			dest.writeString(hintEditText);
+			dest.writeString(headerText);
+			dest.writeByte(showCommentBar?(byte)1:(byte)0);
+			dest.writeByte(showPhotoBar?(byte)1:(byte)0);
+			dest.writeInt(focusedView);
+			dest.writeString(objId);
+		}
+	}
 
 	public static final byte DIALOG_POSTINGCOMMENT = 2;
 	public static final int REQUESTCODE_POSTCOMMENT = 1;	
 	public static final byte COMPONENT_COMMENTBAR = 1;
 	
-	//to hold extra values
-	String mCommentBarEditTextHint;
-	String mCommentBarHeaderText;
 	
-	//
+	//to hold extra values
+	public static final boolean DEFAULT_SHOW_PHOTOBAR = false;
+	public static final boolean DEFAULT_SHOW_COMMENTBAR = false;
 	boolean mShowCommentBar = DEFAULT_SHOW_COMMENTBAR;
 	boolean mShowPhotoBar = DEFAULT_SHOW_PHOTOBAR;
-	byte mWhichFocus;	
-	long uid;
+	String mHintEditText;
+	String mHeaderText;
+	String mObjId;
+	int mFocusedView;
+	
 	Uri mPhotoUploadUri;
 	
 	ImageView mPhotoPreviewImage;
@@ -107,7 +147,6 @@ public class PostActivity extends BaseActivity{
 	Button mPostPhotoFromCamera;
 	Button mUpload;
 	Button mGetAlbums;
-	String mObjectId;
 	Facebook mFacebook;
 	ManagerThread mWorkerThread;
 	Handler mUIHandler;
@@ -122,7 +161,7 @@ public class PostActivity extends BaseActivity{
 	View.OnClickListener mUploadOnClick;
 	
 	FBPhotoUploadTask mAsyncPhotoUploader;
-	
+	 
 	private void resetWaitLatch(){
 		mWaitAnimationLatch = new CountDownLatch(1);
 	}
@@ -181,17 +220,15 @@ public class PostActivity extends BaseActivity{
 		
 	};
 	
-
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.post_activity);
 		bindViews();
-		initObjects();
-		initViews();
 		getIntentExtras();
+		initObjects();		
+		initViews();		
 	}
 	
 	@Override
@@ -231,7 +268,7 @@ public class PostActivity extends BaseActivity{
 	@Override
 	protected void onResume() {
 		super.onResume();		
-		if(mWhichFocus == COMPONENT_COMMENTBAR){
+		if(mFocusedView == COMPONENT_COMMENTBAR){
 			//mEditComment.requestFocus();
 			
 		}
@@ -265,9 +302,11 @@ public class PostActivity extends BaseActivity{
 		mDHT = new DecoupledHandlerThread();
 		mDHT.start();
 				
-		//set default values
-		mCommentBarEditTextHint = mResources.getString(R.string.commentbar_edittext_hint);
-		mCommentBarHeaderText = mResources.getString(R.string.commentbar_header_text);
+		
+		
+		//set default values			
+		mHintEditText = mResources.getString(R.string.commentbar_edittext_hint);
+		mHeaderText = mResources.getString(R.string.commentbar_header_text);
 
 		mUploadBarAnimationListener = new ViewAnimationListener(ViewAnimationListener.SHOW, mUploadBarWrapper);
 		
@@ -372,8 +411,22 @@ public class PostActivity extends BaseActivity{
 			
 		 mUpload.setOnClickListener(mUploadOnClick);
 		 
-		 mEditComment.setHint(mCommentBarEditTextHint);
-		 mCommentBarHeader.setText(mCommentBarHeaderText);
+		 mEditComment.setOnKeyListener(new View.OnKeyListener() {
+			
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				if(keyCode == KeyEvent.KEYCODE_ENTER){
+					if(event.getAction() == KeyEvent.ACTION_UP){					
+						postComment();						
+					}
+					return true;
+				}
+				return false;
+			}
+		 });
+		 
+		 mEditComment.setHint(mHintEditText);
+		 mCommentBarHeader.setText(mHeaderText);
 		 mPostPhotoFromGallery.setOnClickListener(mPostPhotoFromGalleryOnClick);
 		 mPostPhotoFromCamera.setOnClickListener(mPostPhotoFromCameraOnClick);
 	}
@@ -423,6 +476,11 @@ public class PostActivity extends BaseActivity{
 		}
 		
 		Logger.l(Logger.DEBUG,LOG_TAG,"onActivityResult() done");
+	}
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {	
+		super.onConfigurationChanged(newConfig);
 	}
 	
 	public void uploadPhoto(InputStream photoStream){        
@@ -485,13 +543,20 @@ public class PostActivity extends BaseActivity{
 	private void getIntentExtras(){
 		Intent i = getIntent();
 		Bundle b = i.getExtras();		
-		if(b!=null){
-			mObjectId = b.getString(XTRA_OBJECTID);
-			mShowCommentBar = b.getBoolean(XTRA_SHOW_COMMENTBAR,DEFAULT_SHOW_COMMENTBAR);
-			mShowPhotoBar = b.getBoolean(XTRA_SHOW_COMMENTBAR,DEFAULT_SHOW_PHOTOBAR);
-			mWhichFocus = b.getByte(XTRA_FOCUS);
-			mCommentBarEditTextHint = b.getString(XTRA_COMMENTBAR_EDITTEXT_HINT);
-			mCommentBarHeaderText = b.getString(XTRA_COMMENTBAR_HEADER_TEXT);
+		if(b != null){
+			if(b.containsKey(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT)){
+				PostActivityInvocationData mInvocationData = b.getParcelable(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT);
+				if(mInvocationData.headerText != null){
+					mHeaderText = mInvocationData.headerText;
+				}
+				if(mInvocationData.hintEditText != null){
+					mHintEditText = mInvocationData.hintEditText;
+				}
+				mShowCommentBar = mInvocationData.showCommentBar;
+				mShowPhotoBar = mInvocationData.showPhotoBar;
+				mObjId = mInvocationData.objId;
+				mFocusedView = mInvocationData.focusedView;
+			}						
 		}
 	}
 	
@@ -560,6 +625,8 @@ public class PostActivity extends BaseActivity{
 	}
 	
 	private void postComment(){
+		Log.d("PostActivity", "postComment()");
+		
 		showDialog(DIALOG_POSTINGCOMMENT);		
 		String comment = mEditComment.getText().toString();		
 	
@@ -569,7 +636,7 @@ public class PostActivity extends BaseActivity{
 		
 		Bundle callbackDescriptor = new Bundle();
 		callbackDescriptor.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_POSTCOMMENT);
-		mFacebook.postComment(R.id.outhandler_activity_post, callbackDescriptor, comment, mObjectId, ManagerThread.CALLBACK_POSTCOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
+		mFacebook.postComment(R.id.outhandler_activity_post, callbackDescriptor, comment, mObjId, ManagerThread.CALLBACK_POSTCOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
 		mProgressDialog.setTitle("Posting comment");
 		mProgressDialog.setMessage("Sending..");
 		mProgressDialog.show();		

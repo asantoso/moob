@@ -53,12 +53,14 @@ import com.neusou.moobook.FBSession;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
+import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.moobook.view.JSONArrayListAdapter;
+import com.neusou.moobook.view.TitleBar;
 
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends BaseActivity implements CommonActivityReceiver.IBaseReceiver {
 
 	static final String LOG_TAG = "LoginActivity";
 	boolean fb_login_success = false;
@@ -94,7 +96,7 @@ public class LoginActivity extends BaseActivity {
 	String mLblFacebookLoginLoading = "Loading Facebook Login Page";
 	String mLblFacebookLoginPage = "Please login to Facebook";
 	String mLblFacebookSigningIn = "Connecting to Facebook...";
-	String mLblFacebookPerms = "Loading authorization page...";
+	String mLblFacebookPerms = "Moob\n -You're now logged in to Facebook-";
 
 	//public static final int CALLBACK_CHECKSESSION = 0;
 	public static final int CALLBACK_ERROR = 6;
@@ -108,7 +110,6 @@ public class LoginActivity extends BaseActivity {
 	boolean flag_forwardToFacebookSignin = false;
 
 	static final int DIALOG_QUITTING = 0;
-
 	static final long HANDLER_SEND_MESSAGE_DELAY = 50l;
 	static final int CALLER_CHECKUSERSESSION = 808001;
 	public final int TOAST_ERROR_DURATION = 3000; // in milliseconds
@@ -116,17 +117,15 @@ public class LoginActivity extends BaseActivity {
 	Handler mThreadUIHandler = new WebLoginHandler();
 	Handler mCallbackHandler = new CallbackHandler();
 
-	//Messenger mMessengerUI;
-
 	JSONArrayListAdapter mAdapter;
-
-
 	Facebook mFacebook;
 
+	/*
 	public static final String template = "method=${method}" + "&v=${v}"
 	+ "&call_id=${call_id}" + "&api_key=${api_key}"
 	+ "&session_key=${session_key}" + "&sig=${sig}"
 	+ "&format=${format}";
+	*/
 	
 	private boolean[] perms;
 
@@ -282,6 +281,7 @@ public class LoginActivity extends BaseActivity {
 		mWebView.destroy();
 		mWebView = null;
 	*/	
+		mCommonReceiver.selfUnregister(this);
 		super.onDestroy();
 	}
 
@@ -358,10 +358,13 @@ public class LoginActivity extends BaseActivity {
 		mPermissions = (TextView) findViewById(R.id.permissions);
 	}
 
+	TitleBar mTitleBar;
 	
 	protected void initViews() {
 		getWindow().setBackgroundDrawable(null);
-
+		
+		mTitleBar = new TitleBar(this);
+		
 		mWebView = new WebView(this);
 		mWebView.setBackgroundColor(Color.WHITE);
 		mWebView.setHorizontalScrollBarEnabled(false);
@@ -402,7 +405,18 @@ public class LoginActivity extends BaseActivity {
 		mNext.setOnClickListener(mNextOnClick);
 	}
 
+	CommonActivityReceiver mCommonReceiver;
+	
+	
+	
+	
+		
+		
 	protected void initObjects() {
+		
+		mCommonReceiver = new CommonActivityReceiver(this);
+		mCommonReceiver.selfRegister(this);
+		
 		mFacebook = Facebook.getInstance();
 		mFacebook.setOutHandler(mCallbackHandler);
 		
@@ -425,6 +439,11 @@ public class LoginActivity extends BaseActivity {
 					// still have
 					// permissions
 					// to ask
+					
+					
+					
+					
+					/*
 					mTopHeaderText.setText("List of permissions granted to Moobook");
 					boolean perms[] = extractPermissionsFromURL(url);
 					if(perms!=null){
@@ -441,6 +460,7 @@ public class LoginActivity extends BaseActivity {
 					mPermissions.setText(out);
 					mPermissions.setVisibility(View.VISIBLE);
 						
+					*/
 					
 					mNext.setVisibility(View.VISIBLE);
 				}
@@ -614,7 +634,11 @@ public class LoginActivity extends BaseActivity {
 			
 			@Override
 			public void onClick(View v) {
-				Intent i = new Intent(LoginActivity.this, HomeActivity.class);				
+				Intent i = new Intent(LoginActivity.this, StreamActivity.class);
+				ContextProfileData cpd;
+				cpd = App.createSessionUserContextProfileData();
+				i.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
+				i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 				startActivity(i);
 				finish();
 			}
@@ -627,6 +651,7 @@ public class LoginActivity extends BaseActivity {
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		Log.d(LOG_TAG, "onSaveInstanceState");
+		mWebView.saveState(outState);
 		outState.putBoolean(XTRAKEY_FORWARD_TO_FACEBOOK_SIGN_IN,
 				flag_forwardToFacebookSignin);
 	
@@ -636,12 +661,23 @@ public class LoginActivity extends BaseActivity {
 	protected void onRestoreInstanceState(Bundle outState) {
 		super.onRestoreInstanceState(outState);
 		Log.d(LOG_TAG, "onRestoreInstanceState");
+		mWebView.restoreState(outState);
 		flag_forwardToFacebookSignin = outState.getBoolean(
 				XTRAKEY_FORWARD_TO_FACEBOOK_SIGN_IN,
 				flag_forwardToFacebookSignin);
-	
+		
 	}
 
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		return super.onRetainNonConfigurationInstance();
+	}
+	
+	@Override
+	public Object getLastNonConfigurationInstance() {
+		return super.getLastNonConfigurationInstance();
+	}
+	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
@@ -894,6 +930,13 @@ public class LoginActivity extends BaseActivity {
 		// Log.d(LOG_TAG, "permissions csv: " + perms_csv);
 		// Log.d("agus", "load permissions done");
 		return perms_csv;
+	}
+
+
+	
+	@Override
+	public void showSessionUserData() {
+		
 	}
 
 }

@@ -10,11 +10,10 @@
 <RelativeLayout android:id="@+id/stub"
 	android:layout_width="fill_parent" 
     android:layout_height="fill_parent"
-    android:layout_below="@+id/topheader"
+    android:layout_below="@+id/topheader_container"
 	android:layout_centerHorizontal="true"
 	android:layout_marginBottom="0dp"
-	android:background="#FFaaaaaa"
-
+	
 />
 
 <TextView

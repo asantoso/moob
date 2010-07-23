@@ -67,7 +67,7 @@ import com.neusou.web.PagingInfo;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
-public class HomeActivity extends BaseActivity {
+public class HomeActivity extends BaseActivity implements CommonActivityReceiver.IBaseReceiver {
 	
 	public static final String LOG_TAG = "HomeActivity";
 
@@ -218,6 +218,7 @@ public class HomeActivity extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		mCommonReceiver.selfUnregister(this);		
 		if(!onResume){ //strange activity lifecycle. onDestroy is called immediately after onResume() when the previous starting activity started this activity inside the onResume code.
 			return;
 		}				
@@ -257,8 +258,12 @@ public class HomeActivity extends BaseActivity {
 		//setOnClick(mViewNotificationsBtn, mViewNotificationsOnClick);
 	}
 
+	CommonActivityReceiver mCommonReceiver;
 	
 	protected void initObjects() {
+	
+		mCommonReceiver = new CommonActivityReceiver(this);
+		mCommonReceiver.selfRegister(this);
 		
 		mUIHandler = new StandardUiHandler(this, mProgressDialog, findViewById(R.id.adview_wrapper), findViewById(R.id.bottomheader)){	
 		};
@@ -274,7 +279,7 @@ public class HomeActivity extends BaseActivity {
 		
 		mIntentFilter = new IntentFilter();
 		mIntentFilter.addAction(App.INTENT_STREAMCOMMENTS_UPDATED);
-		mIntentFilter.addAction(App.INTENT_PROFILE_UPDATED);
+		mIntentFilter.addAction(App.INTENT_SESSIONUSER_PROFILE_UPDATED);
 		mIntentFilter.addAction(App.INTENT_WALLPOSTS_UPDATED);
 		
 		mThreadsInitCountdown = new CountDownLatch(mNumThreadsInitializations);
@@ -295,16 +300,13 @@ public class HomeActivity extends BaseActivity {
 				String action = intent.getAction();
 				Bundle data = intent.getExtras();
 				
-				if(action.equals(App.INTENT_PROFILE_UPDATED)){
-					FBWSResponse response = (FBWSResponse) intent.getExtras().getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);
-					Util.writeToLocalCache(App.INSTANCE,response.data,App.LOCALCACHEFILE_SESSIONUSERDATA);
+				if(action.equals(App.INTENT_SESSIONUSER_PROFILE_UPDATED)){
 					runOnUiThread(new Runnable(){
 						public void run() {							
 							showSessionUserData();
 						};
 						;	
-					});
-					
+					});					
 				}
 				
 				else if(action.equals(App.INTENT_STREAMCOMMENTS_UPDATED)){					
@@ -339,7 +341,8 @@ public class HomeActivity extends BaseActivity {
 				
 			}
 		};
-				
+		mIntentReceiver.setOrderedHint(true);
+					
 		mFacebook = Facebook.getInstance(); 
 		
 		///
@@ -642,7 +645,7 @@ public class HomeActivity extends BaseActivity {
 	};
 	
 	User mUserInSession;
-	private void showSessionUserData(){
+	public void showSessionUserData(){
 		try{
 		mUserInSession = App.getUserSessionData();
 		

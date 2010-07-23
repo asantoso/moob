@@ -876,11 +876,11 @@ public class Facebook {
 	}
 	
 	public void getSessionUserInfo(short[] selectedFields){		
-		Bundle data = new Bundle();
-		data.putString(ManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_PROFILE_UPDATED);
+		Bundle data = new Bundle();		
+		data.putShortArray(App.XTRA_SESSION_USER_SELECTED_FIELDS, selectedFields);
+		data.putString(ManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_SESSIONUSER_PROFILE_RECEIVED);
 		getOneUserData(R.id.outhandler_app, data, String.valueOf(getSession().uid), selectedFields, ManagerThread.CALLBACK_GET_USERDATA, ManagerThread.CALLBACK_SERVERCALL_ERROR, ManagerThread.CALLBACK_TIMEOUT_ERROR);
 	}
-
 	
 	public void onSessionValidated(boolean isValid, int errCode, String errMessage){
 		Log.d(LOG_TAG,"onSessionValidated isValid: "+isValid+" , errCode: "+errCode+" ,"+errMessage);
@@ -1150,18 +1150,26 @@ public class Facebook {
 		 */
 		protected void onSuccess(Bundle data){			
 			Handler outHandler = mListenerHandler;
-			int handlerKey = -1;
+			
+			int handlerKey = R.id.outhandler_ignore;
+			
 			if(data.containsKey(XTRA_INTERNAL_OUTHANDLER_KEY)){
 				handlerKey = data.getInt(XTRA_INTERNAL_OUTHANDLER_KEY);
-				if(mOutRegistry.containsKey(handlerKey)){
-					outHandler = mOutRegistry.get(handlerKey);					
-				}	
+				if(handlerKey != R.id.outhandler_ignore){
+					if(mOutRegistry.containsKey(handlerKey)){
+						outHandler = mOutRegistry.get(handlerKey);					
+					}
+				}
+				else{
+					return;
+				}
 			}
 			
 			if(outHandler == null){
 				Logger.l(Logger.ERROR, LOG_TAG, "[onSuccess()] listener handler is null");
 				return;
 			}
+			
 			int messageCode = data.getInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE);
 			Logger.l(Logger.DEBUG,LOG_TAG,"[RestMethod] [onSuccess()] sending success message to listener handler. Handler key:"+handlerKey+" Code:"+messageCode+", CodeName:"+XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE);
 			Message msg = outHandler.obtainMessage(messageCode);

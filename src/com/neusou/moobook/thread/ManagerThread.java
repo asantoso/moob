@@ -233,13 +233,14 @@ public class ManagerThread extends BaseManagerThread {
 	 */
 
 	private void broadcastResult(Bundle data) {
-		String callbackAction = data
-				.getString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION);
-		Logger.l(Logger.DEBUG, LOG_TAG, "[broadcastResult()] action: "
+		if(data.containsKey(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION)){
+			String callbackAction = data.getString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION);
+			Logger.l(Logger.DEBUG, LOG_TAG, "[broadcastResult()] action: "
 				+ callbackAction);
-		Intent i = new Intent(callbackAction);
-		i.putExtras(data);
-		App.INSTANCE.sendBroadcast(i);
+			Intent i = new Intent(callbackAction);
+			i.putExtras(data);
+			App.INSTANCE.sendOrderedBroadcast(i,null);
+		}
 	}
 
 	static short[][] mSelectedUserColumns = new short[][] {
@@ -563,10 +564,8 @@ public class ManagerThread extends BaseManagerThread {
 			String parsed;
 			try {
 				parsed = fbresponse.jsonArray.toString(2);
-				Logger.l(Logger.DEBUG, LOG_TAG, "[callback_get_userdata]: "
-						+ parsed);
-				data.putParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT,
-						fbresponse);
+				Logger.l(Logger.DEBUG, LOG_TAG, "[callback_get_userdata]: "	+ parsed);
+				data.putParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT,	fbresponse);
 				broadcastResult(data);
 			} catch (JSONException e) {
 			}

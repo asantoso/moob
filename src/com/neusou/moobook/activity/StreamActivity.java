@@ -21,6 +21,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -49,6 +50,7 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
+import com.neusou.Utility;
 import com.neusou.async.UserTask.Status;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBSession;
@@ -73,7 +75,7 @@ import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.moobook.view.ActionBar;
 import com.neusou.moobook.view.TitleBar;
 
-public class StreamActivity extends BaseActivity {
+public class StreamActivity extends BaseActivity implements CommonActivityReceiver.IBaseReceiver {
 
 	static final String LOG_TAG = Logger.registerLog(StreamActivity.class);
 
@@ -193,6 +195,7 @@ public class StreamActivity extends BaseActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		try {
+			mCommonReceiver.selfUnregister(this);			
 			mStreamsCursor.close();
 			mFacebook.purgeInactiveOutHandlers(false);
 			mFacebook = null;
@@ -208,7 +211,7 @@ public class StreamActivity extends BaseActivity {
 	protected void onStart() {
 		super.onStart();
 
-		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		//this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		mFacebook.registerOutHandler(R.id.outhandler_activity_streams,
 				mWorkerThread.getInHandler());
@@ -372,8 +375,14 @@ public class StreamActivity extends BaseActivity {
 		mListView = (ExpandableListView) findViewById(R.id.list);
 	}
 
+	CommonActivityReceiver mCommonReceiver;
+	
 	protected void initObjects() {
 
+		mCommonReceiver = new CommonActivityReceiver(this);
+		
+		mCommonReceiver.selfRegister(this);
+		
 		mProgressDialog = createProgressDialog();
 		
 		// initialize threads
@@ -562,12 +571,9 @@ public class StreamActivity extends BaseActivity {
 	protected void initViews() {
 		mTitleBar = new TitleBar(this);
 		
-		mActionBar = App.INSTANCE.mActionBar;		
+		mActionBar = new ActionBar();	
+		mActionBar.setProfileData(mContextProfileData);
 		mActionBar.bindViews(this);
-		mActionBar.initViews();
-		mActionBar.setUserId(mContextProfileData.actorId);
-		mActionBar.setUserName(mContextProfileData.name);
-		
 		mActionBar.setOnAddClick(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -582,6 +588,7 @@ public class StreamActivity extends BaseActivity {
 				mActionBar.animateReload();
 			}
 		});
+		
 
 		mTopHeaderText.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -857,6 +864,11 @@ public class StreamActivity extends BaseActivity {
 	}
 
 	@Override
+	public void onConfigurationChanged(Configuration newConfig) {	
+		super.onConfigurationChanged(newConfig);
+	}
+	
+	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		boolean isHandled = App.onContextItemSelected(this, item, mProgressDialog);
 		if(!isHandled){
@@ -901,8 +913,7 @@ public class StreamActivity extends BaseActivity {
 						try {
 							startActivity(item.getIntent());
 						} catch (ActivityNotFoundException e) {
-							Toast.makeText(StreamActivity.this, "Invalid link",
-									2000).show();
+							Toast.makeText(StreamActivity.this, "Invalid link",	2000).show();
 						}
 						return true;
 					}
@@ -1074,11 +1085,11 @@ public class StreamActivity extends BaseActivity {
 	private int getProcessFlag(){
 		
 		if(mContextProfileData.actorId == Facebook.getInstance().getSession().uid){
-			Toast.makeText(this, "SessionUser", 2000).show();
+			
 			return App.PROCESS_FLAG_SESSIONUSER;
 		}		
 		else {
-			Toast.makeText(this, "NotSessionUser", 2000).show();
+			
 			return App.PROCESS_FLAG_OTHER;		
 		}
 	}
@@ -1364,6 +1375,12 @@ public class StreamActivity extends BaseActivity {
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	}
+
+	@Override
+	public void showSessionUserData() {
+
+		
 	}
 
 }
