@@ -2,15 +2,12 @@ package com.neusou.moobook.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
 
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBSession;
 import com.neusou.moobook.Facebook;
-import com.neusou.moobook.thread.BaseManagerThread;
 
 public class LandingActivity extends BaseActivity {
 	
@@ -66,11 +63,13 @@ public class LandingActivity extends BaseActivity {
 		FBSession session = App.INSTANCE.getSessionInfo();
 		mFacebook.setSession(session);
 		
+		
 		boolean isSessionValid = mFacebook.quickCheckSession(false);
 		if(!isSessionValid){
 			gotoLogin();
 		}else{
-			gotoHome();
+			App.INSTANCE.gotoFirstPage();
+			this.finish();			
 		}			
 		
 	}

@@ -34,6 +34,7 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 	int mProgressCode;
 	int mStartCode;
 	int mTimeoutCode;
+	int mProcessFlag;
 	
 	
 	ProcessProgressInfo mProgressInfo;
@@ -48,10 +49,11 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 			int updateCode,
 			int finishCode,
 			int progressCode,
-			int timeoutCode
+			int timeoutCode,
+			int processFlag
 			
 	) {
-		init(uiHandler,startCode,updateCode,finishCode,progressCode,timeoutCode);
+		init(uiHandler,startCode,updateCode,finishCode,progressCode,timeoutCode,processFlag);
 	}
 	
 	public void init(
@@ -60,7 +62,8 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 			int updateCode,
 			int finishCode,
 			int progressCode,
-			int timeoutCode
+			int timeoutCode,
+			int processFlag
 			
 	) {
 		
@@ -68,6 +71,7 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 			throw new NullArgumentException("uihandler can't be null");
 		}
 		
+		mProcessFlag = processFlag;
 		//mContext = ctx;
 		mOutHandler = uiHandler;
 		mProgressInfo = new ProcessProgressInfo();
@@ -88,9 +92,9 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 	@Override
 	protected void onPostExecute(Integer result) {	
 		super.onPostExecute(result);
-		Logger.l(Logger.DEBUG, LOG_TAG, "[onPostExecute()]");
-		
+		Logger.l(Logger.DEBUG, LOG_TAG, "[onPostExecute()]");		
 		mOutHandler.sendEmptyMessage(mFinishCode);
+		ProcessTaskFactory.finish(ProcessUsersTask.class);
 	}
 		
 	@Override
@@ -134,19 +138,22 @@ public class ProcessUsersTask extends UserTask<Bundle,ProcessProgressInfo,Intege
 				
 		App.INSTANCE.mDB.beginTransaction();
 		
+		//determine if we want to save the processFlag field.
+		//don't save flag if it is not session user
+		int processFlag = App.PROCESS_FLAG_IGNORE;
+		if(mProcessFlag == App.PROCESS_FLAG_USER_CONNECTED){
+			processFlag = mProcessFlag;			
+		}
+		
 		for(int i=0;i<num && mStatus == Status.RUNNING;i++){
 			try {								
 				currentItem = users.getJSONObject(i);
-				//Logger.l(Logger.DEBUG, LOG_TAG,""+currentItem.toString());
+				//Logger.l(Logger.DEBUG, LOG_TAG,"processUsersTasl:  flag:"+mProcessFlag);
 				user.parse(currentItem, selection);
+				user._process_flag = processFlag;
 				
-				long rowId = App.INSTANCE.mDBHelper.insertUser(user,selection,App.INSTANCE.mDB);
-				//Logger.l(Logger.DEBUG, LOG_TAG, "user new row id: "+rowId);
-				
-				
-				//mProgressInfo.current = i+1;
-				//mProgressInfo.total = num;				
-				//publishProgress(mProgressInfo);
+				long rowId = App.INSTANCE.mDBHelper.insertUser(user, selection,App.INSTANCE.mDB);
+				Logger.l(Logger.DEBUG, LOG_TAG, "user new row id: "+rowId);				
 				
 			} 
 			catch (JSONException e) {

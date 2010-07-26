@@ -34,7 +34,6 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
-import com.neusou.async.UserTask;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBPhoto;
 import com.neusou.moobook.FBPhotoTag;

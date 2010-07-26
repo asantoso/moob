@@ -69,7 +69,7 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class HomeActivity extends BaseActivity implements CommonActivityReceiver.IBaseReceiver {
 	
-	public static final String LOG_TAG = "HomeActivity";
+	public static final String LOG_TAG = Logger.registerLog(HomeActivity.class);
 
 	public static final int REQUEST_PICKPHOTO = 4;
 
@@ -155,6 +155,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);		
+
 		getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setBackgroundDrawableResource(R.drawable.metal);
 		setContentView(R.layout.home_activity);
@@ -210,7 +211,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 	@Override
 	protected void onResume() {
 		super.onResume();	
-		App.INSTANCE.getSessionUserInfo();
+		
 		registerReceiver(mIntentReceiver, mIntentFilter);
 		showSessionUserData();
 	}
@@ -333,7 +334,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 				
 				else if(action.equals(App.INTENT_WALLPOSTS_UPDATED)){
 					FBSession session = mFacebook.getSession();
-					mStreamsCursor = App.INSTANCE.mDBHelper.getWallPosts(App.INSTANCE.mDB, App.PROCESS_FLAG_SESSIONUSER, session.uid, 1, 0);					
+					mStreamsCursor = App.INSTANCE.mDBHelper.getWallPosts(App.INSTANCE.mDB, App.PROCESS_FLAG_STREAM_SESSIONUSER, session.uid, 1, 0);					
 					int numPosts = mStreamsCursor.getCount();				
 					Logger.l(Logger.DEBUG,LOG_TAG,"numPosts:"+numPosts);					
 					

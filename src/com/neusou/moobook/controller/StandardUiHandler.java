@@ -96,7 +96,8 @@ public class StandardUiHandler extends BaseUiHandler {
 		}
 
 		case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE: {
-			Animation anim = AnimationUtils.loadAnimation(mContext,
+			Activity ctx = mActivityWeakRef.get();
+			Animation anim = AnimationUtils.loadAnimation(ctx,
 					R.anim.slide_to_bottom_from_current);
 			
 			if(mAdViewWrapper.getVisibility() == View.VISIBLE){
@@ -110,7 +111,8 @@ public class StandardUiHandler extends BaseUiHandler {
 		}
 
 		case ManagerThread.CALLBACK_ADMOB_ONRECEIVE: {
-			Animation anim = AnimationUtils.loadAnimation(mContext,
+			Activity ctx = mActivityWeakRef.get();
+			Animation anim = AnimationUtils.loadAnimation(ctx,
 					R.anim.slide_to_current_from_bottom);
 			if(mAdViewWrapper.getVisibility() != View.VISIBLE){
 				mAdViewWrapper.setVisibility(View.VISIBLE);

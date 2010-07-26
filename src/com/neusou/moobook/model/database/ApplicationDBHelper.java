@@ -11,7 +11,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
+//import android.util.Log;
 
 import com.neusou.Logger;
 import com.neusou.moobook.App;
@@ -97,7 +97,7 @@ public class ApplicationDBHelper extends DBHelper{
 	}
 	
 	synchronized public long updateStreamCommentsInfo(Stream stream, SQLiteDatabase db) throws NullArgumentException{
-		Log.d(LOG_TAG, "comments count: "+stream.comments_count);
+		Logger.l(Logger.DEBUG,LOG_TAG, "comments count: "+stream.comments_count);
 		//Log.d(LOG_TAG, "comments count: "+stream.comments_can_post);
 		
 		if(stream == null || stream.post_id == null){
@@ -152,7 +152,7 @@ public class ApplicationDBHelper extends DBHelper{
 	*/
 
 	public long insertEvent(Event data, SQLiteDatabase db){
-		Log.d(LOG_TAG,"inserting event: "+data.name);
+		Logger.l(Logger.DEBUG,LOG_TAG,"inserting event: "+data.name);
     	try{    		
     		long rowId = db.insertOrThrow(EVENTS_TABLE, null, data.toContentValues(null));
     		return rowId;
@@ -182,18 +182,25 @@ public class ApplicationDBHelper extends DBHelper{
 	
 	public static final short[] mDisplayUsers = new short[]{};
 	
-	synchronized public Cursor getAllUsers(SQLiteDatabase db, short[] selection, int ordering, String nameConstraint){
-		String orderClause = null;
-		String whereClause = null;
-		String filter[] = generateUserFilter(nameConstraint, ordering);
-	
+	synchronized public Cursor getAllUsers(SQLiteDatabase db,  short[] selection, int ordering, String nameConstraint, int processFlag){
+		String filter[] = generateUserFilter(nameConstraint, ordering);	
 		String columnNames = User.createColumnNames(selection);
 		
+		String []rColumns = columnNames.split(",");
+		String rSelection = "_process_flag = ? ";
+		String rSelectionArgs[] = new String[]{String.valueOf(0)};
+		String rGroupBy = null;
+		String rHaving = null;
+		String rOrderBy = "name ASC";
 		
-		
-    	try{
-    		String query = "select "+columnNames+" from "+USERS_TABLE+filter[0]+filter[1];
+		String whereClause = " where _process_flag = "+processFlag;
+		String orderClause = " order by name ASC";
+    	
+		try{
+    		String query = "select "+columnNames+" from "+USERS_TABLE+whereClause+orderClause;
     		Logger.l(Logger.DEBUG, LOG_TAG, "[getAllUsers()] sql: "+query);
+    		 
+    		//Cursor c = db.query(USERS_TABLE, null, rSelection, rSelectionArgs, rGroupBy, rHaving, rOrderBy);
       		Cursor c = db.rawQuery(query,null);
     		return c;
     	}
@@ -208,21 +215,17 @@ public class ApplicationDBHelper extends DBHelper{
 		if(user == null){
 			return -1;
 		}		
-		Logger.l(Logger.DEBUG,LOG_TAG,"[insertUser()] uid:"+user.uid+" name: "+user.name+" pic_square:"+user.pic_square);
+		//Logger.l(Logger.DEBUG,LOG_TAG,"[insertUser()] uid:"+user.uid+" name: "+user.name+" pic_square:"+user.pic_square+", flag:"+user._process_flag);
 		
     	try{
       		long rowId = db.insertOrThrow(USERS_TABLE, null, user.toContentValues(null, selection));
-      		//Log.d(LOG_TAG,"inserting user success "+ rowId);
-      		if(rowId == -1){
-      			Logger.l(Logger.DEBUG, LOG_TAG,"[inserUser()] updating user in db");
-      			db.update(USERS_TABLE, user.toContentValues(null, selection),"uid=?",new String[]{Long.toString(user.uid)});
-      			return -1;
-      		}
-    		return rowId;
-    	}
-    	catch (SQLException e) {
-    		e.printStackTrace();
-        }
+      		//Logger.l(Logger.DEBUG, LOG_TAG,"inserting user success "+ rowId);
+    	}catch (SQLException e) {    		
+      		//Logger.l(Logger.DEBUG, LOG_TAG,"[inserUser()] updating user in db");
+      		long numRowsAffected = db.update(USERS_TABLE, user.toContentValues(null, selection),"uid=?",new String[]{Long.toString(user.uid)});
+      		return numRowsAffected;
+        } 
+      		
     	return -1;		
 	}
 	
@@ -271,9 +274,9 @@ public class ApplicationDBHelper extends DBHelper{
 		Logger.l(Logger.DEBUG, LOG_TAG,"[insertNotification()] "+data.title_text);
 		try{    	
     		long rowId = db.insertOrThrow(NOTIFICATIONS_TABLE, null, data.toContentValues(null));
-    		Log.d(LOG_TAG,"insertNotification row affected:"+rowId);
+    		//Logger.l(Logger.DEBUG,  LOG_TAG, "insertNotification row affected:"+rowId);
     		if(rowId == -1){
-    			Log.d(LOG_TAG,"updating notification..");
+    			//Logger.l(Logger.DEBUG,LOG_TAG,"updating notification..");
     			int numRows = db.update(NOTIFICATIONS_TABLE, data.toContentValues(null), "notification_id=?",new String[]{Long.toString(data.notification_id)});    		
     			return numRows;
     		}	
@@ -286,12 +289,12 @@ public class ApplicationDBHelper extends DBHelper{
 	
 
 	public long insertApplication(FBApplication data, SQLiteDatabase db){
-		Logger.l(Logger.DEBUG, LOG_TAG,"[insertApplication()] "+data.app_id+", "+data.display_name);
+		//Logger.l(Logger.DEBUG, LOG_TAG,"[insertApplication()] "+data.app_id+", "+data.display_name);
 		try{    	
     		long rowId = db.insertOrThrow(APPLICATIONS_TABLE, null, data.toContentValues(null));
-    		Logger.l(Logger.DEBUG, LOG_TAG,"insert application # rows affected:"+rowId);
+    		//Logger.l(Logger.DEBUG, LOG_TAG,"insert application # rows affected:"+rowId);
     		if(rowId == -1){    	
-    			Log.d(LOG_TAG,"updating application..");
+    			//Log.d(LOG_TAG,"updating application..");
     			int numRows = db.update(APPLICATIONS_TABLE, data.toContentValues(null), FBApplication.cn_app_id+"=?",new String[]{Long.toString(data.app_id)});    		
     			return numRows;
     		}	
@@ -365,7 +368,7 @@ public class ApplicationDBHelper extends DBHelper{
     				"start_time DESC");
     		
     		int numCount = c.getCount();
-    		Log.d(LOG_TAG, "num events: "+numCount);    		
+    		Logger.l(Logger.DEBUG, LOG_TAG, "num events: "+numCount);    		
     		if(numCount == 0){
     			c.close();
     			return null;
@@ -417,6 +420,7 @@ public class ApplicationDBHelper extends DBHelper{
     		
     		int numCount = c.getCount();
     		if(numCount == 0){
+    			c.close();
     			return null;
     		}
     		   		
@@ -461,7 +465,7 @@ public class ApplicationDBHelper extends DBHelper{
     		Cursor c = db.rawQuery(sql, null);    		
     		
     		int numCount = c.getCount();
-    		Log.d(LOG_TAG,"count notifications: "+numCount); 
+    		Logger.l(Logger.DEBUG,LOG_TAG,"count notifications: "+numCount); 
     		
     		return c;
     		
@@ -499,7 +503,7 @@ public class ApplicationDBHelper extends DBHelper{
     		return count;
     	}
     	catch (SQLException e) {
-    		Log.d(LOG_TAG, "getPostCommentsCount error: "+e.getMessage());
+    		Logger.l(Logger.DEBUG, LOG_TAG, "getPostCommentsCount error: "+e.getMessage());
         }
     	return 0;
 	}
@@ -663,7 +667,7 @@ public class ApplicationDBHelper extends DBHelper{
 		String orderClause1 = "";
 		String uidsFilter = null;
 		
-		if(processFlag == App.PROCESS_FLAG_SESSIONUSER){
+		if(processFlag == App.PROCESS_FLAG_STREAM_SESSIONUSER){
 			whereClause0 += " and p._process_flag = "+processFlag+" ";
 		}else{
 			//whereClause0 += "and p._process_flag = "+processFlag;PROCESS_FLAG_OTHER IS SAME AS IGNORING THE FLAG.
@@ -724,6 +728,13 @@ public class ApplicationDBHelper extends DBHelper{
 		String whereArgs[] = new String[]{Long.toString(cutoff)};
 		int numRowsAffected = db.delete(STREAMS_TABLE,cutoff==0?null:whereClause, whereArgs);
 		return numRowsAffected;
+	}
+	
+	public void clearAllTables(SQLiteDatabase db){
+		db.delete(STREAMS_TABLE, null, null);
+		db.delete(USERS_TABLE, null, null);
+		db.delete(NOTIFICATIONS_TABLE, null, null);
+		db.delete(EVENTS_TABLE, null, null);
 	}
 	
 	public int truncateNotifications(SQLiteDatabase db, long cutoff){

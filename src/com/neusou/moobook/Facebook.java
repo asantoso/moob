@@ -43,7 +43,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.util.Log;
+//import android.util.Log;
 
 import com.neusou.BasicClientHelper;
 import com.neusou.Logger;
@@ -67,9 +67,9 @@ public class Facebook {
 	public static final String wsmethod_fql_multiquery = "fql.multiquery";
 	
 	public static final String wsmethod_comments_add = "comments.add";
-	public static final String wsmethod_comments_get = "comments.get";
-	
+	public static final String wsmethod_comments_get = "comments.get";	
 	public static final String wsmethod_friends_get = "friends.get";
+	public static final String wsmethod_stream_publish = "stream.publish";
 	public static final String wsmethod_stream_get = "stream.get";
 	public static final String wsmethod_stream_getComments = "stream.getComments";
 	public static final String wsmethod_stream_addComment = "stream.addComment";
@@ -85,6 +85,8 @@ public class Facebook {
 	public static final String param_call_id = "call_id";	
 	public static final String param_app_id = "app_id";
 	public static final String param_api_key = "api_key";
+	public static final String param_target_id = "target_id";
+	public static final String param_message = "message";
 	public static final String param_session_key = "session_key";
 	public static final String param_sig = "sig";
 	public static final String param_format = "format";
@@ -292,9 +294,7 @@ public class Facebook {
     TreeMap<String,String> fqlmap;
     Context mContext;    
 	long mReExecuteWaitTime = 2000;
-	
-	
-    
+	    
     public boolean registerOutHandler(int key, Handler outHandler){
     	if(!mOutRegistry.containsKey(key)){
     		mOutRegistry.put(key, outHandler);
@@ -373,7 +373,7 @@ public class Facebook {
 		fqlmap.put(param_uid, uid);
 				
 		String fql_query = StrSubstitutor.replace(FQL_GET_STREAM_FILTER, fqlmap);		
-		Log.d(LOG_TAG, "get stream filters fql: "+fql_query);
+		//Log.d(LOG_TAG, "get stream filters fql: "+fql_query);
 				
 		data.putString(XTRA_FQL_QUERIES, fql_query);
 		data.putString(XTRA_FQL_QUERY_TYPE, wsmethod_fql_multiquery);
@@ -424,6 +424,31 @@ public class Facebook {
 		executeFQL(data, 0);				
     }
     
+    
+    public void publishStream(int outHandlerKey, Bundle extraData, String uid, String target_id, String message, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){
+
+    	Bundle data = new Bundle(extraData);
+
+    	//
+    	TreeMap<String,String> map = new TreeMap<String,String>(); 
+		map.put(param_api_key, FBApp.api_key);
+		map.put(param_format, RESPONSE_FORMAT_JSON);
+		map.put(param_session_key, mSession.key);
+		map.put(param_method, wsmethod_stream_publish);
+		map.put(param_uid, uid);
+		map.put(param_target_id, target_id);
+		map.put(param_message, message);
+    	
+		data.putSerializable(XTRA_METHODPARAMETERSMAP, map);		
+    	//    	
+		
+		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
+		executeRest(data, 0);
+    }
     
     public void getCommentsRest(int outHandlerKey, String post_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
 		
@@ -587,7 +612,7 @@ public class Facebook {
 		fqlmap.put(subkey_offset, Long.toString(offset));
 		
 		String fql_query = StrSubstitutor.replace(FQL_GET_LATEST_FRIENDS_PHOTOS, fqlmap);		
-		Log.d(LOG_TAG, "getFriendsLatestPhotos fql: "+fql_query);
+		//Log.d(LOG_TAG, "getFriendsLatestPhotos fql: "+fql_query);
 				
 		data.putString(XTRA_FQL_QUERIES, fql_query);
 		data.putString(XTRA_FQL_QUERY_TYPE, wsmethod_fql_multiquery);
@@ -631,7 +656,7 @@ public class Facebook {
 		fqlmap.put("columns", selectedColumns);
 		
 		String fql_query = StrSubstitutor.replace(FQL_GET_USER_FRIENDS, fqlmap);		
-		Log.d(LOG_TAG, "getFriends fql: "+fql_query);
+		//Log.d(LOG_TAG, "getFriends fql: "+fql_query);
 				
 		data.putString(XTRA_FQL_QUERY, fql_query);
 		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
@@ -883,7 +908,7 @@ public class Facebook {
 	}
 	
 	public void onSessionValidated(boolean isValid, int errCode, String errMessage){
-		Log.d(LOG_TAG,"onSessionValidated isValid: "+isValid+" , errCode: "+errCode+" ,"+errMessage);
+		//Log.d(LOG_TAG,"onSessionValidated isValid: "+isValid+" , errCode: "+errCode+" ,"+errMessage);
 	}
 	
 	public void postComment(int outHandlerKey, Bundle inData, String comment, String post_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
@@ -997,10 +1022,10 @@ public class Facebook {
 		executeFQL(data, 0);
 	}
 	
-	public void getContacts (int outHandlerId, long uid, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMilli, long limit, long offset){
+	public void getContacts (int outHandlerId, Bundle extraData, long uid, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMilli, long limit, long offset){
 		TreeMap<String,String> fqlmap = new TreeMap<String,String>(); 
 		
-		Bundle data = new Bundle();
+		Bundle data = new Bundle(extraData);
 		
 		fqlmap.clear();
 		fqlmap.put(param_uid, Long.toString(uid));
@@ -1058,8 +1083,7 @@ public class Facebook {
 		Bundle inData = null;
 		Exception mInvocationException; 
 		boolean mAutoBroadcastLogin;
-		
-		
+				
 		public RestMethod(boolean autoBroadCastLogin) {
 			mAutoBroadcastLogin = autoBroadCastLogin;
 		}
@@ -1467,21 +1491,14 @@ public class Facebook {
 		}
 	}
 	
-	Object mWaitLock = new Object();
+	//Object mWaitLock = new Object();
 	AtomicBoolean mIsInOperation = new AtomicBoolean(false);
-	public void releaseExecuteLock(){
-		synchronized (mWaitLock) {
-			Logger.l(Logger.DEBUG, "crucial", "released lock.");
-			mIsInOperation.set(false);
-			mWaitLock.notify();
-		}	
-	}
+	
 	
 	IUserTaskListener<Void,Bundle> mExecuteListener = new IUserTaskListener<Void, Bundle>() {
 		
 		@Override
 		public void onTimeout() {
-			 releaseExecuteLock();
 		}
 		
 		@Override
@@ -1498,13 +1515,12 @@ public class Facebook {
 		
 		@Override
 		public void onPostExecute(Bundle result) {
-			releaseExecuteLock();
 		}
 		
 		@Override
 		public void onCancelled() {
-			releaseExecuteLock();	
 		}
+		
 	};
 	private void executeFQL(final Bundle executionDescriptors, long delayMillis){
 		Runnable r = new Runnable(){
@@ -1514,37 +1530,13 @@ public class Facebook {
 			long mWaitLength = 500l;
 			
 				public void run() {
-					/*
-					while(true){
-						synchronized (mWaitLock) {
-							try{
-								if(mIsInOperation.get()){	
-									mTotalWaitTimesThusFar+=mWaitLength;
-									if(mTotalWaitTimesThusFar > mMaxWaitTimes){
-										Logger.l(Logger.WARN, "crucial","could not get lock. exiting.");
-										return;
-									}
-									Logger.l(Logger.VERBOSE, "crucial","waiting for lock.");
-									mWaitLock.wait(mWaitLength);
-								}else{								
-									break;
-								}
-							}catch(InterruptedException e){
-							}
-						}						
-					}
-					*/
-					
-					//Logger.l(Logger.VERBOSE, "crucial","acquiring lock.");
-					//mIsInOperation.set(true);
 					
 					final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
 					final FQLTask task = new FQLTask(broadcastLogin);
 													
 					task.setListener(mExecuteListener);
 					task.execute(executionDescriptors);
-					//mInterceptorHandler.postDelayed(r, delayMillis);
-					//return task;
+					
 				};
 			};
 			
@@ -1562,24 +1554,7 @@ public class Facebook {
 
 	private boolean executeRest(final Bundle executionDescriptors, long delayMillis){
 		Runnable r = new Runnable(){
-			public void run() {
-				/*
-				while(true){
-					synchronized (mWaitLock) {
-						try{
-						if(mIsInOperation.get()){							
-								mWaitLock.wait(500l);
-							
-						}else{					
-							break;
-						}
-						}catch(InterruptedException e){
-						}
-					}
-				}
-				 */
-				
-				//mIsInOperation.set(true);
+			public void run() {			
 				
 				final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
 				RestMethod rm = new RestMethod(broadcastLogin);
@@ -1645,7 +1620,9 @@ public class Facebook {
 		}
 		
 		ckvp += session_secret;  //concatenated key value pair k=v without a space between pairs
-		Log.d(LOG_TAG,"string to be hashed: "+ckvp);
+		
+		//Important log 
+		//Log.d(LOG_TAG,"string to be hashed: "+ckvp);
 		
 		String computedSig = "";
 		try {
@@ -1654,14 +1631,14 @@ public class Facebook {
 			m = MessageDigest.getInstance(digestAlgorithm);			
 			m.update(ckvp.trim().getBytes("UTF-8"),0,ckvp.length());			
 			computedSig = new BigInteger(1,m.digest()).toString(16).trim();
-			Log.d(LOG_TAG,"MD5: "+ computedSig);
+			//Log.d(LOG_TAG,"MD5: "+ computedSig);
 			return computedSig;
 		} catch (NoSuchAlgorithmException e) {
-			Log.e(LOG_TAG,"NoSuchAlgorithm "+e.getMessage());
+			//Log.e(LOG_TAG,"NoSuchAlgorithm "+e.getMessage());
 			e.printStackTrace();
 			return null;
 		} catch (UnsupportedEncodingException e) {
-			Log.e(LOG_TAG,"UnsupportedEncodingException "+e.getMessage());
+			//Log.e(LOG_TAG,"UnsupportedEncodingException "+e.getMessage());
 			e.printStackTrace();
 			return null;
 		}
@@ -1706,7 +1683,8 @@ public class Facebook {
 				}
 				linecount++;
 				response += line;
-				Log.d(LOG_TAG,"[line#:"+linecount+"] "+line);
+				//Important log
+				//Log.d(LOG_TAG,"[line#:"+linecount+"] "+line);
 			}
 										
 		} catch (MalformedURLException e) {			
@@ -1753,7 +1731,8 @@ public class Facebook {
 			String key = it.next();			
 			content += key+"="+params.get(key);
 		}
-		Log.d(LOG_TAG,"req content: "+content);
+		//Important log
+		//Log.d(LOG_TAG,"req content: "+content);
 		return content.trim();
 		
 	}

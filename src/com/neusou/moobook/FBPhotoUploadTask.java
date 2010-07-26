@@ -21,7 +21,10 @@ import com.neusou.moobook.activity.HomeActivity;
 
 public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 	
-	public FBPhotoUploadTask(Context ctx, InputStream is, long length, Bitmap preview) {
+	public FBPhotoUploadTask(Context ctx, InputStream is, long length, Bitmap preview) throws IllegalArgumentException{
+		if(preview == null){
+			throw new IllegalArgumentException();
+		}
 		
 		this.is = is;
 		this.length = length;
@@ -91,8 +94,7 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
 			int code = msg.what;
-			Logger.l(Logger.DEBUG, LOG_TAG,
-					"[UploadPhotoListener] [handlerMessage()] " + code);
+			//Logger.l(Logger.DEBUG, LOG_TAG,	"[UploadPhotoListener] [handlerMessage()] " + code);
 			switch (code) {
 			case Facebook.MESSAGE_UPDATE_UPLOAD_COMMENCING: {				
 				Notification noti = createNotification(
@@ -105,15 +107,14 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 				status = STATUS_INPROGRESS;
 				break;
 			}
-			case Facebook.MESSAGE_UPDATE_UPLOAD_PROGRESS: {
-				
+			case Facebook.MESSAGE_UPDATE_UPLOAD_PROGRESS: {				
 				Notification noti = createNotification(
-						"Uploading photo to Facebook " + msg.arg1 + "/100",
+						"Uploading photo to Facebook " + msg.arg1 + "%",
 						NOTIFICON_PROGRESS, 100, msg.arg1,false);
-				
-				mNotificationManager.notify(notitag, notiid, noti);
-				currentProgress = msg.arg1;
-				
+				if(msg.arg1%10 == 0){
+					mNotificationManager.notify(notitag, notiid, noti);					
+				}
+				currentProgress = msg.arg1;				
 				break;
 			}
 			case Facebook.MESSAGE_UPDATE_UPLOAD_FINISHED: {

@@ -156,7 +156,7 @@
 		<activity
 				android:name=".activity.PostActivity"		  		  
 				android:label="@string/app_name"
-                android:theme="@style/Theme.PostAction"
+                android:theme="@style/Theme.PostActivity"
                 android:configChanges="orientation"
 		>
 		

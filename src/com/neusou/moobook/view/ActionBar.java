@@ -1,5 +1,7 @@
 package com.neusou.moobook.view;
 
+import java.lang.ref.WeakReference;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -17,7 +19,8 @@ import com.neusou.moobook.data.User;
 public class ActionBar{
 	
 	public static final String NAMESPACE = "neusou"; 
-	Activity mContext;
+//	Activity mContext;
+	WeakReference<Activity> mActivityWeakRef;
 	int mDefStyle;
 	long mUserId;
 	String mUserName;
@@ -41,6 +44,21 @@ public class ActionBar{
 		
 	public ActionBar() {
 		initObjects();
+	}
+	
+	public void hideButton(int which){
+		switch(which){
+			case BUTTON_POST:{
+				mAbPostButton.setVisibility(View.GONE);
+				break;
+			}
+			case BUTTON_RELOAD:{
+				mAbReloadButton.setVisibility(View.GONE);
+				break;
+			}
+		
+		}
+		
 	}
 	
 	public void setUserId(long userId){
@@ -101,7 +119,8 @@ public class ActionBar{
 	}
 	
 	public void bindViews(Activity act){
-		mContext = act;
+		//mContext = act;
+		mActivityWeakRef = new WeakReference<Activity>(act);
 		mAbReloadButton = (ImageButton) act.findViewById(R.id.ab_refresh);
 		mAbPostButton = (ImageButton) act.findViewById(R.id.ab_post);
 	}
@@ -142,7 +161,8 @@ public class ActionBar{
 			
 			@Override
 			public void onClick(View v) {
-				App.showUserWall(mContext, mUserId, mUserName);
+				Activity ctx = mActivityWeakRef.get();
+				App.showUserWall(ctx, mUserId, mUserName);
 			}
 			
 		};

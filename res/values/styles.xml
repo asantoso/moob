@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+
+    <!-- Base application theme is the default theme. -->
+    <style name="LargeFontTheme" parent="android:Theme">
+  		<item name="android:textScaleX">1.07</item>      
+      	<item name="android:textSize">22dp</item>
+      	<item name="android:textStyle">bold</item>
+    </style>
+
+
     <!-- Base application theme is the default theme. -->
     <style name="Theme" parent="android:Theme">
     </style>
@@ -42,7 +51,7 @@
         <item name="android:colorForeground">#fff</item>
     </style>
     
-    <style name="Theme.PostAction" parent="android:style/Theme.Translucent">
+    <style name="Theme.PostActivity" parent="android:style/Theme.Translucent">
         <item name="android:windowBackground">@drawable/translucent_background</item>
         <item name="android:colorForeground">#00000000</item>
     </style>

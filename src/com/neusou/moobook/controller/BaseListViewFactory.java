@@ -27,7 +27,7 @@ implements android.widget.AbsListView.RecyclerListener, IStatefulListView
 		public void onMovedToForeground();
 	}
 	
-	protected Activity mActivity;	
+	//protected Activity mActivity;	
 	protected volatile List<Long> mAsyncLoadingState = Collections.synchronizedList(new ArrayList<Long>(10));
 	protected volatile Object mCreateViewLock = new Object();
 	protected DataSetObserver mDataSetObserver;
@@ -37,7 +37,7 @@ implements android.widget.AbsListView.RecyclerListener, IStatefulListView
 	protected int mTagViewId;	
 	
 	public BaseListViewFactory(Activity ctx, int tagDataId, int tagViewId){
-		mActivity = ctx;
+		//mActivity = ctx;
 		mResources = ctx.getResources();
 		mLayoutInflater = ctx.getLayoutInflater();		
 		mTagDataId = tagDataId;

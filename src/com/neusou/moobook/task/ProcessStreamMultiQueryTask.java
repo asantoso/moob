@@ -22,9 +22,8 @@ import com.neusou.moobook.model.database.ApplicationDBHelper;
 
 public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgressInfo, Integer> {
 
-	static final String LOG_TAG = "ProcessStreamMultiQueryTask";
+	static final String LOG_TAG = Logger.registerLog(ProcessStreamMultiQueryTask.class);
 
-	Context mContext;
 	Handler mUIHandler;	
 	int mFinishCode;
 	int mProcessFlag;
@@ -56,7 +55,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 			throw new NullArgumentException("context can't be null");
 		}
 
-		mContext = ctx;
+		
 		mUIHandler = uiHandler;
 		mFinishCode = finishCode;
 		mProcessFlag = processFlag;
@@ -166,6 +165,13 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 		Stream stream = new Stream();
 		mUpdatedPostsIds = new String[num];
 		
+		//Determine the process flag to use
+		//don't save flag if it is not session user
+		int processFlag = App.PROCESS_FLAG_IGNORE;
+		if(mProcessFlag == App.PROCESS_FLAG_STREAM_SESSIONUSER){
+			processFlag = mProcessFlag;						
+		}
+		
 		db.beginTransaction();
 		for (int i = 0; i < num	&& getStatus() == Status.RUNNING; i++) {
 			JSONObject itemJson;			
@@ -173,7 +179,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				itemJson = data.getJSONObject(i);				
 				
 				String strJson = itemJson.toString(2);
-				Logger.l(Logger.DEBUG, LOG_TAG, "[processPosts()] ["+i+"] json: "+strJson);
+				//Logger.l(Logger.DEBUG, LOG_TAG, "[processPosts()] ["+i+"] json: "+strJson);
 				
 				stream.post_id = itemJson.getString(Stream.cn_post_id);
 				stream.attribution = itemJson.getString(Stream.cn_attribution);
@@ -183,17 +189,12 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				stream.source_id = itemJson.getLong(Stream.cn_source_id);
 				stream.target_id = itemJson.getString(Stream.cn_target_id);
 				stream.actor_id = itemJson.getLong(Stream.cn_actor_id);
-								
-				//don't save flag if it is not session user
-				if(mProcessFlag == App.PROCESS_FLAG_SESSIONUSER){
-					stream._process_flag = mProcessFlag;						
-				}else{
-					stream._process_flag = App.PROCESS_FLAG_IGNORE;
-				}
+				stream._process_flag = processFlag;
+			
 				
 				try{
 					stream.app_id = itemJson.getInt(Stream.fields_appid);
-					Logger.l(Logger.DEBUG,"crucial2",""+stream.app_id);
+					//Logger.l(Logger.DEBUG,"crucial2",""+stream.app_id);
 				}catch(Exception e){
 					stream.app_id = -1;
 				}
@@ -201,9 +202,10 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				// process attachment
 				JSONObject att = itemJson.getJSONObject(Stream.cn_attachment);
 				attachmentJSON = att.toString();
-				Logger.l(Logger.DEBUG, LOG_TAG, "[processPosts()] ["+i+"] attribution:" + stream.attribution +", attachment json:" + attachmentJSON);
+				//Logger.l(Logger.DEBUG, LOG_TAG, "[processPosts()] ["+i+"] attribution:" + stream.attribution +", attachment json:" + attachmentJSON);
 				stream.attachment = attachmentJSON;
-				// process comments
+				
+				// process "comments" JSON object
 
 				JSONObject commentsObj;
 
@@ -231,7 +233,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 					}
 				}
 
-				// process likes
+				// process "likes" JSON object
 				JSONObject likesObj;
 				try {
 					likesObj = itemJson.getJSONObject("likes");
@@ -268,7 +270,8 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				if (mStatus == Status.RUNNING && db != null && db.isOpen()) {	
 					
 					long rowId = dbHelper.insertStream(stream, db);		
-					Logger.l(Logger.DEBUG,LOG_TAG,"[processPosts()] ["+i+"] inserting stream. pid:"+stream.post_id+", table rowid:"+rowId);
+					
+					// Logger.l(Logger.DEBUG,LOG_TAG,"[processPosts()] ["+i+"] inserting stream. pid:"+stream.post_id+", table rowid:"+rowId);
 					
 					mUpdatedPostsIds[i] = stream.post_id;
 				} else {				
@@ -281,7 +284,7 @@ public class ProcessStreamMultiQueryTask extends UserTask<Bundle, ProcessProgres
 				} else {
 					mProgressInfo.current = i + 1;
 					mProgressInfo.total = num;
-					publishProgress(mProgressInfo);
+					//publishProgress(mProgressInfo);
 				}
 
 			} catch (JSONException e) {

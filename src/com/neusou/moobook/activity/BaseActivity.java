@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 
 import com.neusou.Logger;
+import static com.neusou.moobook.activity.LifecycleFlags.*;
 
 public abstract class BaseActivity extends Activity {
 	protected static String lcloctag;
@@ -20,6 +21,8 @@ public abstract class BaseActivity extends Activity {
 	protected boolean onResume;
 	protected boolean onStart;
 	protected boolean onPause;
+	
+	protected LifecycleFlags mLifecycleFlags = new LifecycleFlags();
 	
 	@Override
 	public Object onRetainNonConfigurationInstance() {
@@ -45,6 +48,7 @@ public abstract class BaseActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {	
 		super.onActivityResult(requestCode, resultCode, data);
+		mLifecycleFlags.set(ACTIVITYRESULT);
 		lcloctag = this.getClass().getSimpleName();
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onActivityResult");
 	}
@@ -52,6 +56,7 @@ public abstract class BaseActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mLifecycleFlags.set(LC_CREATE);
 		onCreate = true;
 		lcloctag = this.getClass().getSimpleName();
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onCreate");
@@ -74,30 +79,35 @@ public abstract class BaseActivity extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
+		mLifecycleFlags.set(START);
 		onStart = true;
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onStart");
 	}
 	@Override
 	protected void onRestart() {
 		super.onRestart();
-		onRestart = true;
+		mLifecycleFlags.set(RESTART);
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onRestart");
+		onRestart = true;		
 	}
 	@Override
 	protected void onResume() {
-		super.onResume();
+		super.onResume();		
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onResume");
+		mLifecycleFlags.set(LC_RESUME);
 	}
 	@Override
 	protected void onPostResume() {
 		super.onPostResume();
-		onResume = true;
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onPostResume");
+		mLifecycleFlags.clearAndSet(POSTRESUME);
+		onResume = true;		
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		mLifecycleFlags.clearAndSet(DESTROY);
 		onDestroy = true;
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onDestroy, isFinishing?"+isFinishing());		
 	}
@@ -105,6 +115,7 @@ public abstract class BaseActivity extends Activity {
 	@Override
 	protected void onPause() {	
 		super.onPause();
+		mLifecycleFlags.set(PAUSE);
 		onPause = true;		
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onPause, isFinishing?"+isFinishing());
 	}

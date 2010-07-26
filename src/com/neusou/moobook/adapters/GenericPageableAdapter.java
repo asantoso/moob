@@ -1,5 +1,6 @@
 package com.neusou.moobook.adapters;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import android.app.Activity;
 import android.content.res.Resources;
@@ -29,8 +30,8 @@ public abstract class GenericPageableAdapter<K,V extends PageableDataStore<K>> e
 	
 	
 	V datastores;
-		
-		Activity ctx;
+	WeakReference<Activity> mActivityWeakRef;	
+		//Activity ctx;
 		Resources mResources;
 		LayoutInflater mLayoutInflater; 	
 		Object mDeletedCommentsLock = new Object();		
@@ -131,7 +132,8 @@ public abstract class GenericPageableAdapter<K,V extends PageableDataStore<K>> e
 		}
 		
 		public GenericPageableAdapter(Activity ctx) {
-			this.ctx = ctx;
+			//this.ctx = ctx;
+			mActivityWeakRef = new WeakReference<Activity>(ctx);
 			mResources = ctx.getResources();
 			mLayoutInflater = ctx.getLayoutInflater();			
 			nextRowView = mLayoutInflater.inflate(NEXT_LAYOUTRESID, null, false);

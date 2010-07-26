@@ -20,18 +20,14 @@ import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -53,16 +49,14 @@ import com.neusou.moobook.FBSession;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
-import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
-import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.moobook.view.JSONArrayListAdapter;
 import com.neusou.moobook.view.TitleBar;
 
 public class LoginActivity extends BaseActivity implements CommonActivityReceiver.IBaseReceiver {
 
-	static final String LOG_TAG = "LoginActivity";
+	static final String LOG_TAG = Logger.registerLog(LoginActivity.class);
 	boolean fb_login_success = false;
 
 	long FBSessionLastCheck = 0;
@@ -136,14 +130,14 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 		final private String name = "CallbackHandler";
 
 		public void handleMessage(Message msg) {
-			Log.d(LOG_TAG, name + " handleMessage msg.what:" + msg.what);
+			Logger.l(Logger.DEBUG,LOG_TAG, name + " handleMessage msg.what:" + msg.what);
 
 			Bundle data = msg.getData();
 			String response = data.getString(Facebook.XTRA_RESPONSE);
 			int bytelength = data.getInt(Facebook.XTRA_RESPONSE_BYTELENGTH);
 
-			Log.d(LOG_TAG, "response: " + response);
-			Log.d(LOG_TAG, "bytelength: " + bytelength);
+			Logger.l(Logger.DEBUG,LOG_TAG, "response: " + response);
+			Logger.l(Logger.DEBUG,LOG_TAG, "bytelength: " + bytelength);
 
 			FBWSResponse fbresponse = FBWSResponse.parse(response);
 
@@ -172,7 +166,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 		final private String name = "WebLoginHandler";
 
 		public void handleMessage(Message msg) {
-			Log.d(LOG_TAG, name + " handleMessage msg.what:" + msg.what);
+			Logger.l(Logger.DEBUG, LOG_TAG, name + " handleMessage msg.what:" + msg.what);
 
 			switch (msg.what) {
 
@@ -226,7 +220,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 			}
 
 			}
-			Log.d(LOG_TAG, name + " finished handling message msg.what:"	+ msg.what);
+			Logger.l(Logger.DEBUG,LOG_TAG, name + " finished handling message msg.what:"	+ msg.what);
 		}
 
 	};
@@ -300,13 +294,13 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 			ad.setOnCancelListener(new OnCancelListener() {
 				@Override
 				public void onCancel(DialogInterface dialog) {
-					Log.d(LOG_TAG, " dialog cancelled");
+					Logger.l(Logger.DEBUG,LOG_TAG, " dialog cancelled");
 				}
 			});
 			ad.setOnDismissListener(new OnDismissListener() {
 				@Override
 				public void onDismiss(DialogInterface dialog) {
-					Log.d(LOG_TAG, " dialog dismissed");
+					Logger.l(Logger.DEBUG,LOG_TAG, " dialog dismissed");
 				}
 			});
 			ad.setTitle("Go back ?");
@@ -316,7 +310,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							Log.d(LOG_TAG, " dialog pressed " + which);
+							Logger.l(Logger.DEBUG,LOG_TAG, " dialog pressed " + which);
 							dismissDialog(DIALOG_QUITTING);
 							finish();
 						}
@@ -326,7 +320,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							Log.d(LOG_TAG, " dialog pressed " + which);
+							Logger.l(Logger.DEBUG,LOG_TAG, " dialog pressed " + which);
 						}
 
 					}
@@ -469,7 +463,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 			@Override
 			public void onPageStarted(WebView view, String url, Bitmap favicon) {
 				super.onPageStarted(view, url, favicon);
-				Log.d(LOG_TAG, "PageStarted: " + url);
+				Logger.l(Logger.DEBUG, LOG_TAG, "PageStarted: " + url);
 				mLoadingIndicator.setVisibility(View.VISIBLE);
 				if (count == FLAG_LOADING_PERMISSIONS) {
 					mTopHeaderText.setText(mLblFacebookPerms);
@@ -559,7 +553,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 
 			@Override
 			public void onPageStarted(WebView view, String url, Bitmap favicon) {
-				Log.d(LOG_TAG, "[WebViewClient] [PageStarted()] url: " + url);
+				Logger.l(Logger.DEBUG, LOG_TAG, "[WebViewClient] [PageStarted()] url: " + url);
 				super.onPageStarted(view, url, favicon);
 				
 				// Block webview from going to Facebook reset page
@@ -603,7 +597,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 				mLoadingIndicator.setVisibility(View.VISIBLE);
 
 				if (flag_permissionfinish_onnextpageload) {
-					Log.d(LOG_TAG, "finish permissions asking");
+					Logger.l(Logger.DEBUG, LOG_TAG, "finish permissions asking");
 					mTopHeaderText.setText("moobook permissions for Facebook");
 					return;
 				}
@@ -630,17 +624,11 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 
 		};
 		
-		mNextOnClick = new View.OnClickListener() {
-			
+		mNextOnClick = new View.OnClickListener() {			
 			@Override
 			public void onClick(View v) {
-				Intent i = new Intent(LoginActivity.this, StreamActivity.class);
-				ContextProfileData cpd;
-				cpd = App.createSessionUserContextProfileData();
-				i.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
-				i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
-				startActivity(i);
-				finish();
+				App.INSTANCE.gotoFirstPage();
+				LoginActivity.this.finish();
 			}
 			
 		};
@@ -650,7 +638,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		Log.d(LOG_TAG, "onSaveInstanceState");
+		Logger.l(Logger.DEBUG, LOG_TAG, "onSaveInstanceState");
 		mWebView.saveState(outState);
 		outState.putBoolean(XTRAKEY_FORWARD_TO_FACEBOOK_SIGN_IN,
 				flag_forwardToFacebookSignin);
@@ -660,7 +648,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 	@Override
 	protected void onRestoreInstanceState(Bundle outState) {
 		super.onRestoreInstanceState(outState);
-		Log.d(LOG_TAG, "onRestoreInstanceState");
+		Logger.l(Logger.DEBUG, LOG_TAG, "onRestoreInstanceState");
 		mWebView.restoreState(outState);
 		flag_forwardToFacebookSignin = outState.getBoolean(
 				XTRAKEY_FORWARD_TO_FACEBOOK_SIGN_IN,
@@ -681,7 +669,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		Log.d(LOG_TAG, "onConfigurationChanged");
+		Logger.l(Logger.DEBUG, LOG_TAG, "onConfigurationChanged");
 	}
 
 	private boolean isFBLoginSuccess(String url) {
@@ -717,7 +705,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 		try {
 			// remove parameter key name
 			fb_session_json = args_arr[0].substring(8, args_arr[0].length());
-			Log.d(LOG_TAG, "raw json:" + fb_session_json);
+			Logger.l(Logger.DEBUG, LOG_TAG, "raw json:" + fb_session_json);
 			JSONObject session = new JSONObject(fb_session_json);
 			fb_session_key = session.getString("session_key");
 			fb_session_uid = session.getLong("uid");
@@ -730,15 +718,17 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 			fb_session_secret = session.getString("secret");
 			fb_session_sig = session.getString("sig");
 	
+			/*
 			Log.d(LOG_TAG, "fb session key: " + fb_session_key);
 			Log.d(LOG_TAG, "fb session uid: " + fb_session_uid);
 			Log.d(LOG_TAG, "fb session expires: " + fb_session_expires);
 			Log.d(LOG_TAG, "fb session secret: " + fb_session_secret);
 			Log.d(LOG_TAG, "fb session sig: " + fb_session_sig);
 			Log.d(LOG_TAG, "fb session json: " + fb_session_json);
+			*/
 	
 		} catch (JSONException e) {
-			Log.d(LOG_TAG, "JSONObject constructor error");
+			//Log.d(LOG_TAG, "JSONObject constructor error");
 			e.printStackTrace();
 			return null;
 		}
@@ -780,6 +770,8 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 		App.INSTANCE.saveSessionInfo(session);
 		mFacebook.setSession(session);
 		requestPermissions(session.json);
+		
+		App.INSTANCE.getSessionUserInfo();
 	}
 
 	private void onSuccessfulPermissionsRequest(boolean[] permissions) {
@@ -807,7 +799,7 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 
 		String url = createFBPermissionRequestURL(sessionJson, perms_csv);
 		if (url == null) {
-			Log.e(LOG_TAG, "can not create permissions request url");
+			//Log.e(LOG_TAG, "can not create permissions request url");
 		}
 		mWebView.setWebViewClient(mWVCPermissions);
 		mWebView.loadUrl(url);

@@ -1,4 +1,4 @@
-package com.neusou.moobook.thread;
+/*package com.neusou.moobook.thread;
 
 import com.neusou.Logger;
 import com.neusou.moobook.Facebook;
@@ -11,7 +11,9 @@ import android.widget.Toast;
 
 public class BaseUIHandler extends Handler {
 	static final String LOG_TAG = "BaseUIHandler";
+	
 	Activity mActivity;
+	
 	public BaseUIHandler(Activity act){
 		mActivity = act;
 	}
@@ -36,3 +38,4 @@ public class BaseUIHandler extends Handler {
 		}
 	}
 }
+*/

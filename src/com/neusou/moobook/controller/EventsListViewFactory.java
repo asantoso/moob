@@ -29,7 +29,7 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 	LayoutInflater mLayoutInflater;
 	Resources mResources;
 	Context mContext;
-	Util mUtil;
+	
 	BaseAdapter mAdapter;
 	Date mDate;	
 	StandardImageAsyncLoadListener mAsyncLoaderListener;
@@ -39,10 +39,7 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 		mContext = act.getApplicationContext();
 		mLayoutInflater = act.getLayoutInflater();
 		mResources = act.getResources();
-		mUtil = new Util();
-
-		mDate = new Date();
-		
+		mDate = new Date();		
 		mAsyncLoaderListener = new StandardImageAsyncLoadListener(
 				act, 
 				mCreateViewLock, 

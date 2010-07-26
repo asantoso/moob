@@ -1,7 +1,5 @@
 package com.neusou.moobook.activity;
 
-import android.app.AlarmManager;
-import android.app.Service;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
@@ -12,12 +10,10 @@ import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
-import android.widget.Toast;
 
 import com.neusou.Logger;
 import com.neusou.moobook.App;

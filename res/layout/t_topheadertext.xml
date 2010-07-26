@@ -6,6 +6,7 @@
     android:layout_height="24dp"
     android:id="@+id/topheader" 
     android:text=""
+    
     android:textSize="13.3dip"    
     android:textColor="#FFffffff"
     android:textScaleX="1.05"

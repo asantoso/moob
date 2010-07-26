@@ -1,10 +1,13 @@
 package com.neusou.moobook.activity;
 
+import java.security.Permission;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
 import org.json.JSONArray;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
@@ -19,6 +22,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -31,6 +35,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.SlidingDrawer;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,6 +72,8 @@ public class ViewCommentsActivity extends BaseActivity{
 	public static final String XTRA_OBJECTID = "xtra.oid";
 	public static final String XTRA_POSTID = "xtra.pid";
 	public static final String XTRA_CLEARDATA = "xtra.cleardata";
+	
+	static final int REQUESTCODE_POST_COMMENT = 1;
 	
 	static final int UIMETHOD_RELOADCOMMENTS = 2;
 	
@@ -159,14 +166,19 @@ public class ViewCommentsActivity extends BaseActivity{
 		public void onReceive(Context context, Intent intent) {
 			
 			String action = intent.getAction();
-			if(action.equals(App.INTENT_DELETECOMMENT)){
+			if(action.equals(App.INTENT_DELETE_COMMENT)){
 				Bundle b = intent.getExtras();
 				RemoteCallResult remoteCallResult = (RemoteCallResult) b.getParcelable(RemoteCallResult.XTRA_PARCELABLE_OBJECT);
 				if(remoteCallResult.status){
 					getCommentsFromCloud(0);
 					Toast.makeText(ViewCommentsActivity.this, "Comment deleted", 2000).show();
 				}
-				dismissDialog(DIALOG_DELETINGCOMMENT);
+				
+				try{
+					dismissDialog(DIALOG_DELETINGCOMMENT);
+				}catch(IllegalArgumentException e){					
+				}
+				
 				hideLoadingIndicator();
 				resetHeaderText();				
 			}			
@@ -268,7 +280,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if(!onActivityResult){
+		if(! mLifecycleFlags.is(LifecycleFlags.ACTIVITYRESULT)){
 			mDB.close();
 			mDBHelper.close();		
 			mFacebook.purgeInactiveOutHandlers(false);
@@ -277,9 +289,43 @@ public class ViewCommentsActivity extends BaseActivity{
 		}
 	}
 
+	class PermissionA extends Permission{
+		public PermissionA() {
+			super("PermissionA");
+			// 	TODO Auto-generated constructor stub
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public String getActions() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public int hashCode() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public boolean implies(Permission permission) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+	}
+	
 	@Override
 	protected void onStart() {
 		super.onStart();		
+		
+		
 		//this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		registerReceivers();
 		mFacebook.registerOutHandler(R.id.outhandler_activity_viewcomments, mWorkerThread.getInHandler());
@@ -348,7 +394,7 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	private void registerReceivers(){
 		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction(App.INTENT_DELETECOMMENT);		
+		intentFilter.addAction(App.INTENT_DELETE_COMMENT);		
 		//intentFilter.addAction(App.INTENT_POSTCOMMENT);
 		intentFilter.addAction(App.INTENT_GET_TAGGED_PHOTOS);
 		registerReceiver(mBroadcastReceiver, intentFilter);			
@@ -582,12 +628,15 @@ public class ViewCommentsActivity extends BaseActivity{
 				invocationData.focusedView = PostActivity.COMPONENT_COMMENTBAR;
 				invocationData.showCommentBar = true;
 				invocationData.objId = mPostId;
+				invocationData.bg = R.drawable.postactivity_comment_bg;
+				invocationData.postMode = PostActivity.MODE_POST_COMMENT;
+				
 				intent.putExtra(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT, invocationData);
 				
 				//String msg = "objectId:"+mPostId;
 				//Log.d("DEBUG","############################ message: "+msg);
 				//Toast.makeText(ViewCommentsActivity.this,msg,2000).show();
-				startActivityForResult(intent, PostActivity.REQUESTCODE_POSTCOMMENT);
+				startActivityForResult(intent, REQUESTCODE_POST_COMMENT);
 			
 				
 			}
@@ -612,21 +661,24 @@ public class ViewCommentsActivity extends BaseActivity{
 	Handler h = new Handler();
 	CountDownLatch mWaitCreation = new CountDownLatch(1);
 	
-	boolean onActivityResult = false;
+	
+	
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {	
 		super.onActivityResult(requestCode, resultCode, data);
 		
-		
 		registerReceivers();	
-		onActivityResult = true;
+	
 		
-		h.postDelayed(new Runnable() {
-			
+		if(requestCode == REQUESTCODE_POST_COMMENT && resultCode == Activity.RESULT_OK){
+		
+		h.postDelayed(new Runnable() {			
 			@Override
 			public void run() {
 				try{
-					mWaitCreation.await();
+					mWaitCreation.await(2000l,TimeUnit.SECONDS);
+					SystemClock.sleep(200l);
 					//Toast.makeText(ViewCommentsActivity.this, "onStart()", 2000).show();
 					//Logger.l(Logger.DEBUG, ViewCommentsActivity.LOG_TAG, "calling onStart()");
 					onStart();
@@ -638,6 +690,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		1000l
 		);
 		
+		}
 
 	}
 		
@@ -860,15 +913,12 @@ public class ViewCommentsActivity extends BaseActivity{
 		
 		mFacebook.getPostComments(R.id.outhandler_activity_viewcomments, mHasPostId?Facebook.COMMENT_TYPE_STREAMPOSTS:Facebook.COMMENT_TYPE_OTHERS, mObjectId, mPostId, ManagerThread.CALLBACK_GET_COMMENTS_MULTIQUERY, BaseManagerThread.CALLBACK_SERVERCALL_ERROR,  BaseManagerThread.CALLBACK_TIMEOUT_ERROR, mPagingInfo.windowSize,mPagingInfo.getNextStart());
 	}
-	
-
-
 		
 	private void deleteComment(String comment_id){
 		showDialog(DIALOG_DELETINGCOMMENT);
 		Bundle callbackData = new Bundle();
-		callbackData.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_DELETECOMMENT);
-		mFacebook.deleteComment(R.id.outhandler_activity_viewcomments, callbackData, comment_id, ManagerThread.CALLBACK_DELETECOMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
+		callbackData.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_DELETE_COMMENT);
+		mFacebook.deleteComment(R.id.outhandler_activity_viewcomments, callbackData, comment_id, ManagerThread.CALLBACK_DELETE_COMMENT, BaseManagerThread.CALLBACK_SERVERCALL_ERROR, BaseManagerThread.CALLBACK_TIMEOUT_ERROR);
 	}
 
 	/*

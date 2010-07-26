@@ -18,6 +18,8 @@ import com.neusou.moobook.data.FBNotification;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ActionBar;
+import com.neusou.web.PagingInfo;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -42,7 +44,7 @@ import android.widget.Toast;
 import android.widget.ViewSwitcher.ViewFactory;
 
 public class NotificationsActivity extends BaseActivity{
-	public static final String LOG_TAG = "NotificationsActivity";
+	public static final String LOG_TAG = Logger.registerLog(NotificationsActivity.class);
 
 	DecoupledHandlerThread mHT = new DecoupledHandlerThread();
 	Handler mUIHandler;
@@ -97,8 +99,8 @@ public class NotificationsActivity extends BaseActivity{
 	@Override
 	protected void onResume() {
 		super.onResume();
-		App.INSTANCE.stopNotificationRingtone();
 		resolveCursor();
+		App.INSTANCE.stopNotificationRingtone();		
 		updateNotifications();		
 	}
 	
@@ -143,9 +145,25 @@ public class NotificationsActivity extends BaseActivity{
 		unregisterReceiver(mBroadcastReceiver);
 	}	
 	
+	ActionBar mActionBar; 
+	
 	protected void initObjects(){
-		mHT.start();
+		
+		mActionBar = new ActionBar();
+		mActionBar.bindViews(this);
+		mActionBar.hideButton(ActionBar.BUTTON_POST);
+		mActionBar.setOnReloadClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {				
 				
+				
+			}
+			
+		});
+		
+		mHT.start();
+		
 		mWorkerThread = App.INSTANCE.mManagerThread;
 		mWorkerThread.setOutHandler(mUIHandler);
 		
@@ -184,10 +202,11 @@ public class NotificationsActivity extends BaseActivity{
 	}
 	
 	private void resolveCursor(){
-		if(c == null){
-			c = App.INSTANCE.mDBHelper.getAllNotifications(App.INSTANCE.mDB, null);
-		}else{
+		
+		if(c != null && !c.isClosed()){
 			c.requery();
+		}else{
+			c = App.INSTANCE.mDBHelper.getAllNotifications(App.INSTANCE.mDB, null);			
 		}
 	}
 	

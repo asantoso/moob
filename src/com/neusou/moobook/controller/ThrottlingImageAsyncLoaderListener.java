@@ -10,7 +10,8 @@ import com.neusou.web.ImageUrlLoader2;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public abstract class ThrottlingImageAsyncLoaderListener implements ImageUrlLoader2.AsyncListener {
-		long mLastUiUpdateRequest = 0;
+	
+	long mLastUiUpdateRequest = 0;
 		long mFreezeUiRequestWindowSizeMillis; 
 		long mExtraDelayMillis;
 		boolean mIsNotifyObserver = false;

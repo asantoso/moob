@@ -1,15 +1,14 @@
 package com.neusou.moobook.activity;
 
-import com.neusou.Logger;
-import com.neusou.moobook.App;
-import com.neusou.moobook.receiver.SessionUserInfoReceiver;
-
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+
+import com.neusou.Logger;
+import com.neusou.moobook.App;
 
 public class CommonActivityReceiver extends BroadcastReceiver {
 	

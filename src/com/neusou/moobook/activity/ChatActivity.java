@@ -1,7 +1,6 @@
 package com.neusou.moobook.activity;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,17 +8,11 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Random;
 
 import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpConnection;
-
-import com.neusou.moobook.FBConnectionException;
-import com.neusou.moobook.R;
 
 import android.content.Context;
 import android.content.Intent;
@@ -27,11 +20,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
-import android.webkit.WebChromeClient;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.neusou.moobook.R;
 
 public class ChatActivity extends BaseActivity{
 	public static final String LOG_TAG = "ChatActivity";

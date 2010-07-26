@@ -50,6 +50,7 @@ import android.widget.ViewSwitcher.ViewFactory;
 
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
+import com.neusou.Utility;
 import com.neusou.moobook.App;
 import com.neusou.moobook.AppMenu;
 import com.neusou.moobook.FBComment;
@@ -77,12 +78,13 @@ import com.neusou.moobook.task.ProcessTaskFactory;
 import com.neusou.moobook.task.ProcessUsersTask;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
+import com.neusou.moobook.view.ActionBar;
 import com.neusou.web.IntelligentPagingInfo;
 import com.neusou.web.PagingInfo;
 
 public class ViewContactsActivity extends BaseActivity{
 	
-	static final String LOG_TAG = "ViewContactsActivity";
+	static final String LOG_TAG = Logger.registerLog(ViewContactsActivity.class);
 
 	static int numThreadInitializations = 1; 
 	static CountDownLatch threadsInitCountDown;
@@ -244,6 +246,7 @@ public class ViewContactsActivity extends BaseActivity{
 		bindViews();
 		initObjects();
 		initBroadcastReceiver();
+		getIntentExtras();
 		initViews();
 		//getIntentExtras();		
 	}
@@ -252,7 +255,7 @@ public class ViewContactsActivity extends BaseActivity{
 	protected void onDestroy() {
 		super.onDestroy();	
 		mFacebook.purgeInactiveOutHandlers(false);
-		mFacebook = null;	
+		mFacebook = null;
 		c.close();
 		System.gc();	
 	}
@@ -273,6 +276,7 @@ public class ViewContactsActivity extends BaseActivity{
 	
 	protected void onPause(){
 		super.onPause();
+		
 		if(c!=null){
 			c.deactivate();	
 		}
@@ -286,7 +290,7 @@ public class ViewContactsActivity extends BaseActivity{
 
 	@Override
 	protected void onResume() {
-		super.onResume();		
+		super.onResume();
 		resolveCursor();
 		updateList();
 		getContactsFromCloud(PagingInfo.CURRENT);
@@ -308,6 +312,12 @@ public class ViewContactsActivity extends BaseActivity{
 		super.onRestoreInstanceState(savedInstanceState);
 	}
 	
+	public void getIntentExtras(){
+		Intent i = getIntent();
+		Bundle b = i.getExtras();
+		mContextProfileData = b.getParcelable(ContextProfileData.XTRA_PARCELABLE_OBJECT);	
+	}
+	
 	protected void bindViews(){
 		mAdView = (AdView) findViewById(R.id.ad);
 		mLoadingIndicator = findViewById(R.id.loadingindicator);
@@ -316,8 +326,23 @@ public class ViewContactsActivity extends BaseActivity{
 		mTopHeaderText = (TextSwitcher) findViewById(R.id.topheader);
 	}
 	
+	ActionBar mActionBar;
 	protected void initObjects(){
 		super.initObjects();
+		
+		mActionBar = new ActionBar();
+		mActionBar.bindViews(this);
+		mActionBar.hideButton(ActionBar.BUTTON_POST);
+		mActionBar.setOnReloadClick(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {				
+				getContactsFromCloud(PagingInfo.CURRENT);
+				
+			}
+			
+		});
+		
 		
 		mProgressDialog = new ProgressDialog(this);
 		
@@ -358,7 +383,7 @@ public class ViewContactsActivity extends BaseActivity{
 		mFilterQueryProvider = new FilterQueryProvider() {			
 			@Override
 			public Cursor runQuery(CharSequence constraint) {				
-				return App.INSTANCE.mDBHelper.getAllUsers(App.INSTANCE.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY], 1, "name like "+constraint.toString()+"%");
+				return App.INSTANCE.mDBHelper.getAllUsers(App.INSTANCE.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY], 1, "name like "+constraint.toString()+"%", getProcessFlag());
 			}
 		};
 		
@@ -512,10 +537,10 @@ public class ViewContactsActivity extends BaseActivity{
 	}
 
 	public void resolveCursor(){
-		if(c != null){
+		if(c != null && !c.isClosed()){
 			c.requery();
 		}else{
-			c = App.INSTANCE.mDBHelper.getAllUsers(App.INSTANCE.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY],1,null);
+			c = App.INSTANCE.mDBHelper.getAllUsers(App.INSTANCE.mDB, mSelectedUserColumns[SELECTEDCOLUMNS_USER_DISPLAY],1, null,getProcessFlag());
 		}
 	}
 	
@@ -598,6 +623,7 @@ public class ViewContactsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = false;
 		showLoadingIndicator();
 		setTitle("moobook");
+		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, false);
 		mTopHeaderText.setText("Loading contacts from cloud..");	 
 	}
 
@@ -605,6 +631,9 @@ public class ViewContactsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = true;
 		hideLoadingIndicator();
 		resetHeaderText();
+		resolveCursor();
+		updateList();
+		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, true);
 	}
 
 	private void setHeaderText(String text){
@@ -644,9 +673,15 @@ public class ViewContactsActivity extends BaseActivity{
 			
 		Logger.l(Logger.DEBUG,LOG_TAG,"getCommentsFromCloud() paging window size: "+ mPagingInfo.windowSize+", start:"+mPagingInfo.getNextStart());
 		
+		//don't forget to pass in the processing information to process the returned api call.
+		Bundle extraData = new Bundle();
+		int processingFlag = getProcessFlag();
+		extraData.putInt(App.FLAG_USER_PROCESS_FLAG, processingFlag);
 		
+		//now call the api
 		mFacebook.getContacts(
 				R.id.outhandler_activity_viewcontacts,
+				extraData,
 				uid,
 				ManagerThread.CALLBACK_GET_CONTACTS, 
 				ManagerThread.CALLBACK_SERVERCALL_ERROR,  
@@ -676,16 +711,30 @@ public class ViewContactsActivity extends BaseActivity{
         return true;
     }
 	
+	ContextProfileData mContextProfileData;
+	
+	public int getProcessFlag(){
+		
+		if(mContextProfileData.actorId == Facebook.getInstance().getSession().uid){			
+			return App.PROCESS_FLAG_USER_CONNECTED;
+		}		
+		else {			
+			return App.PROCESS_FLAG_USER_OTHER;		
+		}
+		
+	}
 	
 	public static class WorkerManagerThread extends BaseManagerThread {		
 		
 		CountDownLatch mProcessCommentsWaitCountdown;
 		ProcessUsersTask mProcessUsersTask;
 		Context ctx;
+		int mProcessFlag;
 		
-		public WorkerManagerThread(CountDownLatch cdl, Context ctx) {
+		public WorkerManagerThread(CountDownLatch cdl, Context ctx, int processFlag) {
 			super(cdl);
 			this.ctx = ctx;
+			mProcessFlag = processFlag;
 		}
 		
 		public void finalize(){
@@ -710,14 +759,14 @@ public class ViewContactsActivity extends BaseActivity{
 							
 							ProcessUsersTask procUsersTask;
 							try{
-								 procUsersTask = ProcessTaskFactory.create(ProcessUsersTask.class);
-									Toast.makeText(ctx, "Success Task Creation", 2000).show();
+								procUsersTask = ProcessTaskFactory.create(ProcessUsersTask.class);
+								//Toast.makeText(ctx, "Success Task Creation", 2000).show();
+								mProcessUsersTask.init(mOutHandler,MESSAGE_START,MESSAGE_UPDATE, ManagerThread.MESSAGE_UPDATELIST, MESSAGE_PROGRESS, MESSAGE_TIMEOUT, App.PROCESS_FLAG_USER_CONNECTED);
+								mProcessUsersTask.execute(data);
 							}catch(DeniedTaskCreationException e){	
-								Toast.makeText(ctx, "Denied Task Creation", 2000).show();
+								//Toast.makeText(ctx, "Denied Task Creation", 2000).show();
 							}
 							
-							mProcessUsersTask.init(mOutHandler,MESSAGE_START,MESSAGE_UPDATE, ManagerThread.MESSAGE_UPDATELIST, MESSAGE_PROGRESS, MESSAGE_TIMEOUT);
-							mProcessUsersTask.execute(data);
 						}
 					}				
 					break;

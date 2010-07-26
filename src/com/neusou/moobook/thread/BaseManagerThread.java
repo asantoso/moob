@@ -7,7 +7,6 @@ import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.Message;
 
-
 import com.neusou.ProactiveThread;
 import com.neusou.Logger;
 import com.neusou.moobook.FBWSResponse;

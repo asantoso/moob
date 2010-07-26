@@ -5,10 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
 import com.neusou.moobook.data.MediaImageTag;
@@ -19,8 +19,10 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class DisplayImageActivity extends BaseActivity{
 	
-	public static final String XTRA_MEDIAIMAGETAGS = "xtra.mediaimagetags";
+	public static final String LOG_TAG = Logger.registerLog(DisplayImageActivity.class);
 	
+	public static final String XTRA_MEDIAIMAGETAGS = "xtra.mediaimagetags";
+		
 	DisplayImageActivityInvocationData mInvocationData;
 	
 	int mCurrentIndex;

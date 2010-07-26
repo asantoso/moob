@@ -1,6 +1,6 @@
 package com.neusou.moobook.controller;
 
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -86,7 +86,9 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	static byte MAX_ATTACHMENTS = 5;
 	//SoftHashMap<String, ProcessedAttachmentData> mProcessedDataCache = new SoftHashMap<String, ProcessedAttachmentData>(100, 1.5f);
 	//Drawable mEmptyDrawable;
-	Activity ctx;
+	
+	WeakReference<Activity> mActivityWeakRef;
+	//Activity ctx;
 	//byte loadCount = 0;
 			
 	HashMap<Long, ArrayList<GroupImageKey>> mImagesCache = new HashMap<Long, ArrayList<GroupImageKey>>(mSolidCacheSize,1.7f);
@@ -147,6 +149,8 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 
 		@Override
 		public void onClick(View v) {			
+			Activity ctx = mActivityWeakRef.get();
+			 
 			Intent i = new Intent(ctx, DisplayImageActivity.class);
 			
 			MediaImageTag[] tags = (MediaImageTag[]) v.getTag(R.id.tag_streamsadapter_item_media_array);
@@ -168,7 +172,8 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	View.OnClickListener mProfileImageOnClickListener = new View.OnClickListener() {
 
 		@Override
-		public void onClick(View v) {			
+		public void onClick(View v) {
+			Activity ctx = mActivityWeakRef.get();
 			ContactsContract.QuickContact.showQuickContact(ctx, v, null,1,null);; 
 		}
 
@@ -226,7 +231,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 	}
 	
 	private Bitmap getBitmapFromCache(long id, String uri){
-		Logger.l(Logger.DEBUG,"prefetch", "[getBitmapFromCache()] id:"+id+", uri:"+uri);
+		//Logger.l(Logger.DEBUG,"prefetch", "[getBitmapFromCache()] id:"+id+", uri:"+uri);
 		ArrayList<GroupImageKey> images = mImagesCache.get(Long.valueOf(id));
 		if(images == null){
 			return null;
@@ -236,7 +241,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		key.uri = uri;
 		int indexFound = java.util.Collections.binarySearch(images,key,GroupImageKey.COMPARATOR);
 		if(indexFound >= 0){
-			Logger.l(Logger.DEBUG, "prefetch", "found.");	
+		//	Logger.l(Logger.DEBUG, "prefetch", "found.");	
 			return images.get(indexFound).bitmap;
 		}else{
 			return null;
@@ -333,8 +338,9 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 
 	public StreamListViewFactory(Activity app) {
 		super(app,R.id.tag_streamsadapter_item_data, R.id.tag_streamsadapter_item_view);
-		this.ctx = app;
-		Resources res = ctx.getResources();
+		//this.ctx = app;
+		this.mActivityWeakRef = new WeakReference<Activity>(app);
+		Resources res = app.getResources();
 		WindowManager wm = (WindowManager) app.getSystemService(Context.WINDOW_SERVICE);
 		
 		mAttachmentDefaultBitmap = BitmapFactory.decodeResource(res, R.drawable.empty);
@@ -1098,7 +1104,7 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		
 		@Override
 		protected Void doInBackground(Void... params) {
-			Logger.l(Logger.DEBUG, "prefetch", "doInBackground()");
+			//Logger.l(Logger.DEBUG, "prefetch", "doInBackground()");
 			doPreemptiveFetch(1);
 			doPreemptiveFetch(-1);
 			return null;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<FrameLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android" 
 	android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -11,8 +11,9 @@
 	android:layout_width="wrap_content"
     android:layout_height="wrap_content"    
     
+    android:layout_marginTop="48dip"
     android:paddingTop="2dip"	
-    android:background="#FFaaaaaa"
+    android:background="@drawable/postactivity_bg"
     android:id="@+id/mainwrapper"
     android:orientation="vertical"
 >
@@ -29,18 +30,25 @@
 		android:layout_width="fill_parent" android:layout_height="wrap_content"
 		android:id="@+id/commentbar_title"
 		android:text="Post/Reply Comment"
-		android:textColor="#FF000000"
+	
+		android:textColor="#FFffffff"
 		android:textScaleX="1.08"
+		android:textSize="13dip"
+		android:textStyle="bold"
+		
+		android:shadowColor="#DD000000"
+		android:shadowRadius="3"
+		android:shadowDx="1"
+		android:shadowDy="1"
+				
 		android:paddingTop="2dip"
 		android:paddingBottom="2dip"
 		android:paddingLeft="3dip"
 		android:paddingRight="3dip"
 		android:layout_marginBottom="3dip"
-		android:shadowRadius="2"
-		android:shadowColor="#AAdddddd"
-		android:shadowDx="2"
-		android:shadowDy="1"
-		android:background="@drawable/post_activity_section_bg"
+		
+		android:maxLines="2"
+		
 		/>
 		
 		<EditText android:layout_width="fill_parent" android:layout_height="wrap_content"
@@ -49,6 +57,9 @@
 		android:hint="enter comment"
 		android:layout_marginLeft="2dip"
 		android:layout_below="@+id/commentbar_title"
+		android:minLines="2"
+		android:textSize="15dip"
+		android:gravity="top"
 		/>
 		
 		<Button 
@@ -72,21 +83,31 @@
 		
 	>
 		<TextView
-		android:layout_width="fill_parent" android:layout_height="wrap_content"
 		android:id="@+id/photobar_title"
-		android:text="Upload Media"
-		android:textColor="#FF000000"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="3dip"		
+		
+		android:text="Upload media"
+		
+		android:textColor="#FFffffff"
 		android:textScaleX="1.08"
+		android:textSize="13dip"
+		android:textStyle="bold"
+		
+		android:shadowColor="#DD000000"
+		android:shadowRadius="3"
+		android:shadowDx="1"
+		android:shadowDy="1"
+				
+		
 		android:paddingTop="2dip"
 		android:paddingBottom="2dip"
 		android:paddingLeft="3dip"
 		android:paddingRight="3dip"
-		android:layout_marginBottom="3dip"
-		android:shadowRadius="2"
-		android:shadowColor="#AAdddddd"
-		android:shadowDx="2"
-		android:shadowDy="1"
-		android:background="@drawable/post_activity_section_bg"
+		
+		
+		
 		/>
 
 		<Button 
@@ -120,7 +141,7 @@
 	>
 		<ImageView
 		android:id="@+id/photopreview"
-		android:layout_width="64dip" android:layout_height="64dip"
+		android:layout_width="96dip" android:layout_height="84dip"
 		android:layout_alignParentTop="true"
 		android:layout_alignParentLeft="true"
 		android:padding="2dip"
@@ -138,6 +159,7 @@
 		android:text="upload"
 		/>		
 			
+			
 		<TextView
 		android:id="@+id/photoinfo"
 		android:layout_width="fill_parent" android:layout_height="14dip"
@@ -146,6 +168,7 @@
 		android:text="file byte length"
 		android:textColor="#FF000000"
 		android:textSize="12dip"
+		android:visibility="invisible"
 		/>
 		
 		
@@ -172,4 +195,4 @@
 </LinearLayout>
 
 
-</FrameLayout>
+</RelativeLayout>

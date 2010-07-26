@@ -1,5 +1,7 @@
 package com.neusou.moobook.controller;
 
+import java.lang.ref.WeakReference;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.view.View;
@@ -12,8 +14,8 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
 
 public class StandardImageAsyncLoadListener extends
 		ThrottlingImageAsyncLoaderListener {
-
-	Activity mActivity;
+	
+	WeakReference<Activity> mActivityWeakRef;
 	volatile Object mCreateViewLock;
 	IStatefulListView mListView;
 	Bitmap mProfileLoadingBitmap;
@@ -23,14 +25,15 @@ public class StandardImageAsyncLoadListener extends
 			IStatefulListView listView, long extraDelayMillis,
 			int windowSizeMillis, boolean isNotifyObserver) {
 		super(extraDelayMillis, windowSizeMillis, isNotifyObserver);
-		mActivity = ctx;
+		mActivityWeakRef = new WeakReference<Activity>(ctx);
 		mCreateViewLock = createViewLock;
 		mListView = listView;
 	}
 
 	@Override
 	public void onPublishProgress(final AsyncLoaderProgress progress) {		
-		mActivity.runOnUiThread(new Runnable() {
+		Activity act = mActivityWeakRef.get();
+		act.runOnUiThread(new Runnable() {
 
 			@Override
 			public void run() {

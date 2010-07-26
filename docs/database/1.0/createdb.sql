@@ -102,7 +102,7 @@ CREATE TABLE events(
 DROP TABLE IF EXISTS users;
 CREATE TABLE users(
 	user_rowid INTEGER PRIMARY KEY AUTOINCREMENT,	
-	uid INTEGER UNIQUE ON CONFLICT REPLACE,
+	uid INTEGER UNIQUE ON CONFLICT ABORT,
 	about_me TEXT, 
 	activites TEXT,
 	affiliations TEXT, 
@@ -154,7 +154,8 @@ CREATE TABLE users(
 	website TEXT,
 	type INTEGER,
 	
-	_sessionUserId INTEGER
+	_sessionUserId INTEGER,
+	_process_flag INTEGER
 );
 
 DROP TABLE IF EXISTS friendlists;

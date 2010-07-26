@@ -64,7 +64,6 @@ import com.admob.android.ads.AdView;
 import com.neusou.Logger;
 import com.neusou.async.UserTaskExecutionScope;
 import com.neusou.moobook.activity.EventsActivity;
-import com.neusou.moobook.activity.HomeActivity;
 import com.neusou.moobook.activity.LoginActivity;
 import com.neusou.moobook.activity.NotificationsActivity;
 import com.neusou.moobook.activity.StreamActivity;
@@ -87,7 +86,7 @@ import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class App extends Application {
-	static final String LOG_TAG = "App";
+	static final String LOG_TAG = Logger.registerLog(App.class);
 	
 	public static App INSTANCE;
 	public Resources mResources;
@@ -117,8 +116,12 @@ public class App extends Application {
 	public static final String INTENT_AUTOUPDATE_STREAMS = packageprefix+".intent.AUTOUPDATE_STREAMS";
 	public static final String INTENT_PLAY_NOTIFICATIONS_SOUND = packageprefix+".intent.PLAY_NOTIFICATIONS_SOUND";
 	public static final String INTENT_STOP_NOTIFICATIONS_SOUND = packageprefix+".intent.STOP_NOTIFICATIONS_SOUND";
-	public static final String INTENT_DELETECOMMENT = packageprefix+".intent.DELETE_COMMENT";
-	public static final String INTENT_POSTCOMMENT = packageprefix+".intent.POST_COMMENT";
+	public static final String INTENT_DELETE_COMMENT = packageprefix+".intent.DELETE_COMMENT";
+	
+	//intent result (post processing)
+	public static final String INTENT_POST_COMMENT = packageprefix+".intent.POST_COMMENT";
+	public static final String INTENT_POST_STREAM = packageprefix+".intent.POST_STREAM";
+	
 	public static final String INTENT_GET_ALBUMS =  packageprefix+".intent.GET_ALBUMS";
 	
 	public static final String INTENT_ACTION_VIEW_FEED = "view.feed";
@@ -159,10 +162,13 @@ public class App extends Application {
 	public static final int CONTEXT_MENU_OTHERS  = 2;
 	
 
-		
-	public static final int PROCESS_FLAG_SESSIONUSER = 1;
-	public static final int PROCESS_FLAG_OTHER = 2;
+	// process flags, a marker in the database rows to indicate if a user is a friend or not, or if a streampost is part of the session user livefeed or not.
+	public static final int PROCESS_FLAG_STREAM_SESSIONUSER = 1;
+	public static final int PROCESS_FLAG_STREAM_OTHER = 2;
 	public static final int PROCESS_FLAG_IGNORE = 0;
+	public static final int PROCESS_FLAG_USER_CONNECTED = 1;
+	public static final int PROCESS_FLAG_USER_OTHER = 2;
+	
 	
 	public static final int USERACTION_VIEWWALL = 1;
 	public static final int USERACTION_VIEWSTREAM = 2;	
@@ -185,7 +191,11 @@ public class App extends Application {
 	public static final int ACTIVITY_VIEW_OTHER_TAGGED_PHOTOS = 13;
 	public static final int ACTIVITY_VIEW_OTHER_PROFILE = 14;
 	
-	public static final String FLAG_STREAM_PROCESS_FLAG = "process.stream.flag";
+	// process flag for streams
+	public static final String FLAG_STREAM_PROCESS_FLAG = "prsflg.stream";
+	// process flag for user
+	public static final String FLAG_USER_PROCESS_FLAG = "prsflag.user";
+	
 	public static ColorMatrix mWhitishColorMatrix;
 	public static ColorMatrixColorFilter mColorFilterWhitish;
 	public static ColorMatrix mBlueishColorMatrix;
@@ -512,7 +522,7 @@ public class App extends Application {
 	 * Deletes Facebook session data in SharedPreferences
 	 */
 	public void deleteSessionInfo() {
-		Log.d(LOG_TAG, "Deleting session info");
+		Logger.l(Logger.DEBUG, LOG_TAG, "Deleting session info");
 		SharedPreferences settings = getSharedPreferences(Prefs.session_preffile, Context.MODE_PRIVATE);
 		Editor editor = settings.edit();
 		editor.remove(Prefs.session_expires);
@@ -592,7 +602,7 @@ public class App extends Application {
 		 * @throws FileNotFoundException
 		 */
 	public static void saveUserSessionData(String data) {
-		Util.writeToLocalCache(App.INSTANCE,data,App.LOCALCACHEFILE_SESSIONUSERDATA);
+		Util.writeStringToLocalCache(App.INSTANCE,data,App.LOCALCACHEFILE_SESSIONUSERDATA);
 	}
 	
 	public static User getUserSessionData() throws FileNotFoundException{
@@ -664,7 +674,7 @@ public class App extends Application {
 		FBSession session = mFacebook.getSession();
 		//get the first post entry
 		
-		Cursor c = mDBHelper.getStreams(mDB, Facebook.STREAMMODE_NEWSFEED, PROCESS_FLAG_SESSIONUSER, session.uid, null, 1, 0);
+		Cursor c = mDBHelper.getStreams(mDB, Facebook.STREAMMODE_NEWSFEED, PROCESS_FLAG_STREAM_SESSIONUSER, session.uid, null, 1, 0);
 		int numComments = 0;
 		if(c != null){
 			numComments = c.getCount();
@@ -904,6 +914,27 @@ public class App extends Application {
 		}		
     }
         
+    public void gotoFirstPage(){
+    	Intent i = new Intent(this, StreamActivity.class);
+		ContextProfileData cpd;
+		cpd = App.createSessionUserContextProfileData();
+		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		i.putExtra(StreamActivity.XTRA_STREAMMODE, Facebook.STREAMMODE_LIVEFEED);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		startActivity(i);
+    }
+    
+    public void logOff(){
+		App.INSTANCE.deleteSessionInfo();
+		Intent i = new Intent(INTENT_LOGIN);
+		i.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY|
+				Intent.FLAG_ACTIVITY_NEW_TASK|
+				Intent.FLAG_ACTIVITY_CLEAR_TOP
+		);
+		App.INSTANCE.mDBHelper.clearAllTables(App.INSTANCE.mDB);
+		sendBroadcast(i);
+    }
+    
     public void addAppToIgnoreList(String name, int id){
     	JSONArray ignoreList = getAppIgnoreList();
     	if(ignoreList == null){
@@ -912,7 +943,7 @@ public class App extends Application {
     		try{
     			obj.put(name, id);
     			ignoreList.put(obj);
-    			Util.writeToLocalCache(this, ignoreList.toString(), App.LOCALCACHEFILE_APPIGNORELIST);
+    			Util.writeStringToLocalCache(this, ignoreList.toString(), App.LOCALCACHEFILE_APPIGNORELIST);
     		}catch(JSONException e){    			
     		} 
     	}    	    	
@@ -1218,7 +1249,8 @@ public class App extends Application {
 				
 				case App.MENUITEM_NETWORKS:{				
 					Intent i = ViewContactsActivity.getIntent(ctx);
-					i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+					i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);					
+					i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 					ctx.startActivity(i); 
 					return true;
 				}
@@ -1231,7 +1263,8 @@ public class App extends Application {
 				
 				case App.MENUITEM_LOGOFF:{
 	//				Toast.makeText(ctx, "LOGOFF", 3000).show();
-					App.INSTANCE.deleteSessionInfo();
+					App.INSTANCE.logOff();
+					ctx.finish();
 					return true;
 				}
 				

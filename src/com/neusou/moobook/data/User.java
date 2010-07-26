@@ -68,8 +68,9 @@ public class User {
 	public static final short col_type = 47 ;
 	
 	public static final short col__sessionUserId = 48;
+	public static final short col__process_flag = 49;
 	
-	public static final short TOTAL_COLUMNS = 49; 
+	public static final short TOTAL_COLUMNS = 50; 
 	
 	//
 	public static final byte TYPE_USER = 0;
@@ -128,6 +129,8 @@ public class User {
 	public byte type;
 	
 	public long _sessionUserId;
+	public int _process_flag = 0;
+	 
 	
 	public void clear(){
 		uid = 0;
@@ -178,6 +181,7 @@ public class User {
 		wall_count = null ;
 		website = null ;
 		_sessionUserId = -1;
+		_process_flag = 0;
 	}
 		
 	public static final String columnNames[] = new String[]{
@@ -235,7 +239,9 @@ public class User {
 	 "website",
 	 "type",
 	 
-	 "_sessionUserId"
+	 "_sessionUserId",
+	 
+	 "_process_flag"
 	 } ;
 	
 	
@@ -322,6 +328,7 @@ public class User {
 		u.type = (byte) c.getInt(col_type);		
 	
 		u._sessionUserId = c.getLong(col__sessionUserId);
+		u._process_flag = c.getInt(col__process_flag);
 		return u;
 	}
 	
@@ -340,6 +347,9 @@ public class User {
 		for(int i=0,num=selection.length;i<num;i++){
 			doInsertValuesToCV(cache, selection[i]);
 		}
+		
+		//always include process flag
+		doInsertValuesToCV(cache, col__process_flag);
 		
 		return cache;
 	}
@@ -395,6 +405,12 @@ public class User {
 			case col_website:{cv.put(columnNames[var],website);break;}
 			case col_type:{cv.put(columnNames[var],type);break;}			
 			case col__sessionUserId:{cv.put(columnNames[var],_sessionUserId);break;}
+			case col__process_flag:{
+				if(_process_flag != 0){
+					cv.put(columnNames[var], _process_flag);
+				}
+				break;
+			}
 		}
 		
 	}
@@ -456,6 +472,7 @@ public class User {
 			case col_website:{website=c.getString(i);break;}
 			case col_type:{type=(byte)c.getShort(i);break;}
 			case col__sessionUserId:{_sessionUserId=c.getLong(i);break;}
+			case col__process_flag:{_process_flag=c.getInt(i);break;}
 		}
 	}
 	

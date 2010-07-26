@@ -16,7 +16,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,7 +37,6 @@ import com.neusou.moobook.FBConnectionException;
 import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
-import com.neusou.moobook.Util;
 import com.neusou.moobook.controller.CursorListAdapter;
 import com.neusou.moobook.controller.EventsListViewFactory;
 import com.neusou.moobook.data.Event;
@@ -75,18 +74,12 @@ public class EventsActivity extends BaseActivity {
 	View.OnClickListener mPostOnClickLst;
 	View mLoadingIndicator;
 
-	EventsListViewFactory mListViewFactory;
-	
+	EventsListViewFactory mListViewFactory;	
 	ProgressDialog mProgressDialog;
 
-	static final int mToastLength = 4000;
 	static String mLblCommentPosted;
 	static String mLblCommentDeleted;
 
-
-	Util util = new Util();
-	//ApplicationDBHelper mDBHelper;
-	//SQLiteDatabase mDB;
 	Cursor c;
 	Facebook mFacebook;
 
@@ -98,7 +91,7 @@ public class EventsActivity extends BaseActivity {
 	CursorListAdapter mListAdapter;
 	TextSwitcher mTopHeaderText;
 
-	Cursor eventsCursor;
+	
 	long numMaxEvents;
 	EventsListViewFactory.Holder mLongItemClickData;
 	FBWSResponse commentsData;
@@ -156,7 +149,7 @@ public class EventsActivity extends BaseActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		updateListView();
+		
 	}
 
 	@Override
@@ -167,7 +160,9 @@ public class EventsActivity extends BaseActivity {
 	
 	@Override
 	protected void onResume() {
-		super.onResume();
+		super.onResume();		
+		resolveCursor();
+		updateListView();
 		getEventsFromCloud();
 	}
 
@@ -179,10 +174,19 @@ public class EventsActivity extends BaseActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
+		if(c!=null){
+			c.deactivate();
+		}
 		if(mGetEventsTask!=null){
 			mGetEventsTask.cancel(true);
 		}
 	};
+	
+	@Override
+	protected void onPause() {	
+		super.onPause();
+	
+	}
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
@@ -271,9 +275,9 @@ public class EventsActivity extends BaseActivity {
 					@Override
 					public boolean onItemLongClick(AdapterView<?> arg0, View v,
 							int position, long arg3) {
-						Log.d("debug", "onItemLongClick " + position);
-						Log.d("debug", "onItemLongClick "
-								+ v.getClass().getCanonicalName());
+					//	Log.d("debug", "onItemLongClick " + position);
+					//	Log.d("debug", "onItemLongClick "
+						//		+ v.getClass().getCanonicalName());
 						mLongItemClickData = (EventsListViewFactory.Holder) v.getTag(R.id.tag_eventsadapter_item_view);
 						return false;// return false to pass on the event, so
 										// that context menu gets displayed
@@ -293,7 +297,13 @@ public class EventsActivity extends BaseActivity {
 
 	}
 
-	
+	public void resolveCursor(){
+		if(c!=null && !c.isClosed()){
+			c.requery();
+		}else{			
+			c = App.INSTANCE.mDBHelper.getEvents(App.INSTANCE.mDB);
+		}
+	}
 
 	private void onFinishUpdatingEvents() {
 		mIsCommentsUpdateFinished = true;
@@ -341,6 +351,7 @@ public class EventsActivity extends BaseActivity {
 				
 				@Override
 				public void run() {
+					resolveCursor();
 					updateListView();
 					onFinishUpdatingEvents();		
 				}
@@ -351,15 +362,8 @@ public class EventsActivity extends BaseActivity {
 	}
 	
 	private void updateListView(){	
-		Cursor c = App.INSTANCE.mDBHelper.getEvents(App.INSTANCE.mDB);
-		if(c!=null){
-			int numEvents = c.getCount();
-			Log.d(LOG_TAG,"num events: "+numEvents);
-			mListAdapter.setData(c);
-			mListAdapter.notifyDataSetChanged();
-		}else{
-			Log.d(LOG_TAG,"events is null");
-		}
+		mListAdapter.setData(c);
+		mListAdapter.notifyDataSetChanged();	
 	}
 	
 	private void getEventsFromCloud() {
@@ -479,7 +483,7 @@ public class EventsActivity extends BaseActivity {
 					
 					try{
 						fbresponse = mFacebook.events_rsvp(eid,rsvp_status);
-						Log.d("debug",fbresponse.data);
+						//Log.d("debug",fbresponse.data);
 						if(fbresponse.hasErrorCode){
 							return false;
 						}
@@ -493,7 +497,7 @@ public class EventsActivity extends BaseActivity {
 					if(result){
 						Toast.makeText(EventsActivity.this, "RSVP Changed.", 3000).show();
 						long rows_updated = App.INSTANCE.mDBHelper.updateEventRSVP(App.INSTANCE.mDB, eid, rsvp_status);
-						Log.d("debug","rows updated: "+rows_updated);
+						//Log.d("debug","rows updated: "+rows_updated);
 						updateListView();
 					}else{
 						Toast.makeText(EventsActivity.this, "Unable to change RSVP status. " +

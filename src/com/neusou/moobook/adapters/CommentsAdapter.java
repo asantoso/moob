@@ -289,6 +289,8 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 
 		@Override
 		public void onPublishProgress(final AsyncLoaderProgress progress) {
+			Activity ctx = mActivityWeakRef.get();
+			
 			ctx.runOnUiThread(new Runnable() {				
 				@Override
 				public void run() {

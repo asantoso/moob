@@ -1,5 +1,7 @@
 package com.neusou.moobook.activity;
 
+import java.lang.ref.WeakReference;
+
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -13,12 +15,14 @@ import com.neusou.moobook.thread.BaseManagerThread;
 
 public abstract class BaseUiHandler extends Handler {
 	
-	protected Activity mContext;
+	//protected Activity mContext;
+	protected WeakReference<Activity> mActivityWeakRef;
 	
 	public static final int mMessageDuration = 2000;
 	
 	public BaseUiHandler(Activity ctx) {
-		this.mContext = ctx;
+		mActivityWeakRef = new WeakReference<Activity>(ctx);
+		//this.mContext = ctx;
 	}
 	
 	public abstract void onTimeoutError();
@@ -36,12 +40,14 @@ public abstract class BaseUiHandler extends Handler {
 		switch(code){
 			case BaseManagerThread.CALLBACK_PROCESS_WSRESPONSE_ERROR:{				
 				FBWSResponse fbresponse = (FBWSResponse) msg.getData().getParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT);
-				Toast.makeText(mContext,fbresponse.errorMessage , mMessageDuration).show();
+				Activity ctx = mActivityWeakRef.get();
+				Toast.makeText(ctx,fbresponse.errorMessage , mMessageDuration).show();
 				onWsResponseError();	
 				break;
 			}			
 			case BaseManagerThread.CALLBACK_TIMEOUT_ERROR:{
-				Toast.makeText(mContext, "Request to Facebook timed out", mMessageDuration).show();				
+				Activity ctx = mActivityWeakRef.get();
+				Toast.makeText(ctx, "Request to Facebook timed out", mMessageDuration).show();				
 				onTimeoutError();
 				break;
 			}			
@@ -52,7 +58,8 @@ public abstract class BaseUiHandler extends Handler {
 					errorCode = Integer.toString(data.getInt(Facebook.XTRA_SERVERCALL_ERROR_CODE));
 					errorCode+=":";
 				}
-				Toast.makeText(this.mContext, errorCode+reason,  mMessageDuration).show();			
+				Activity ctx = mActivityWeakRef.get();
+				Toast.makeText(ctx, errorCode+reason,  mMessageDuration).show();			
 				onServerCallError();
 				break;
 			}

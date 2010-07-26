@@ -57,6 +57,7 @@ import com.neusou.moobook.FBSession;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.Prefs;
 import com.neusou.moobook.R;
+import com.neusou.moobook.activity.PostActivity.PostActivityInvocationData;
 import com.neusou.moobook.controller.GetTaggedPhotosReceiver;
 import com.neusou.moobook.controller.MyExpandableListCursorAdapter;
 import com.neusou.moobook.controller.StandardUiHandler;
@@ -159,6 +160,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 	ProgressDialog mProgressDialog;
 	Handler mUIHandler;
 
+	public static final int REQUESTCODE_POST_STREAM = 1;
 	static boolean mIsStreamsUpdateFinished = true;
 	static final String INTENT_ACTION_SET_DIRTY_POSTS = "intent.action.set.dirty.posts";
 	static final IntentFilter mUpdateDirtyRowsIF = new IntentFilter(
@@ -577,7 +579,37 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 		mActionBar.setOnAddClick(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-
+				PostActivityInvocationData invdata = new PostActivityInvocationData();
+				invdata.postMode = PostActivity.MODE_POST_STREAM;
+				Intent intent = PostActivity.getIntent(StreamActivity.this);
+				int actMode = getActivityMode();
+			
+				if(actMode == App.ACTIVITY_VIEW_MY_FEED ||
+					actMode == App.ACTIVITY_VIEW_MY_WALL 						
+				){
+					invdata.focusedView = PostActivity.COMPONENT_COMMENTBAR;
+					invdata.showCommentBar = true;
+					invdata.showPhotoBar = true;
+					invdata.hintEditText = "enter your new status";
+					invdata.headerText = "Update your status";
+					invdata.target_id = Long.toString(mContextProfileData.actorId);					
+					invdata.uid = String.valueOf(mContextProfileData.actorId);
+					
+					//invocationData.bg = R.drawable.postactivity_feed_bg;
+					
+				}else{
+					invdata.focusedView = PostActivity.COMPONENT_COMMENTBAR;
+					invdata.target_id = Long.toString(mContextProfileData.actorId);					
+					invdata.uid = String.valueOf(Facebook.getInstance().getSession().uid);					
+					invdata.showCommentBar = true;
+					invdata.hintEditText = "enter message to ";
+					invdata.headerText = "Write a message on "
+						+mContextProfileData.name
+						+"'s wall";
+				}
+				
+				intent.putExtra(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT, invdata);
+				startActivityForResult(intent, REQUESTCODE_POST_STREAM);
 			}
 		});
 		
@@ -1086,11 +1118,11 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 		
 		if(mContextProfileData.actorId == Facebook.getInstance().getSession().uid){
 			
-			return App.PROCESS_FLAG_SESSIONUSER;
+			return App.PROCESS_FLAG_STREAM_SESSIONUSER;
 		}		
 		else {
 			
-			return App.PROCESS_FLAG_OTHER;		
+			return App.PROCESS_FLAG_STREAM_OTHER;		
 		}
 	}
 	
@@ -1375,6 +1407,9 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(requestCode == REQUESTCODE_POST_STREAM){
+			
+		}
 	}
 
 	@Override

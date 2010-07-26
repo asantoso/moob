@@ -21,6 +21,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -33,6 +34,7 @@ import android.os.Debug.MemoryInfo;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.neusou.Logger;
 import com.neusou.SoftHashMap;
@@ -502,11 +504,13 @@ public class Util {
 		return BitmapFactory.decodeStream(fis);		
 	}
 	
-	public static void writeToLocalCache(Context ctx, String data, String filename) {
+	public static void writeStringToLocalCache(Context ctx, String data, String filename) {
 		Logger.l(Logger.DEBUG, LOG_TAG,"[saveToLocalCache()] filename: "+ filename.toString());
 		
-		File cacheDir = ctx.getCacheDir();
+		//File cacheDir = ctx.getCacheDir();
+		File cacheDir = ctx.getFilesDir();
 		Logger.l(Logger.DEBUG, LOG_TAG, cacheDir.toString());
+		
 		File cacheFile = new File(cacheDir.getPath() + "/" + filename);
 		try {
 			cacheFile.createNewFile();
@@ -530,7 +534,9 @@ public class Util {
 	}
 	
 	public static String readStringFromLocalCache(Context ctx, String filename) throws FileNotFoundException {
-		File cacheDir = ctx.getCacheDir();
+		//File cacheDir = ctx.getCacheDir();
+		File cacheDir = ctx.getFilesDir();
+		
 		Logger.l(Logger.DEBUG, LOG_TAG, cacheDir.toString());
 		File cacheFile = new File(cacheDir.getPath() + "/" + filename);
 		if(!cacheFile.canRead()){
@@ -674,6 +680,20 @@ public class Util {
 		}
 		return true;
 	}
+	
+	public static void uiMakeToast(final Activity ctx, final String message, final int length){
+		ctx.runOnUiThread(
+			new Runnable() {						
+				@Override
+				public void run() {
+					Toast.makeText((Context)ctx, message, length).show();								
+				}
+			}	
+		);	
+	}
+	
+	
+	
 
 
 }

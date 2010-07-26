@@ -43,23 +43,24 @@ public class ManagerThread extends BaseManagerThread {
 	public static final int CALLBACK_GET_TAGGED_PHOTOS = 4;
 	public static final int CALLBACK_GET_PHOTO_TAGS = 5;
 	public static final int CALLBACK_GET_COMMENTS_MULTIQUERY = 6;
-	public static final int CALLBACK_GET_COMMENTS = 9;
+	public static final int CALLBACK_GET_COMMENTS = 7;
 
-	public static final int CALLBACK_POSTCOMMENT = 7;
-	public static final int CALLBACK_DELETECOMMENT = 8;
+	public static final int CALLBACK_POST_COMMENT = 8;
+	public static final int CALLBACK_POST_STREAM = 9;
+	public static final int CALLBACK_DELETE_COMMENT = 10;
 
-	public static final int CALLBACK_GET_COMMENTS_USERS = 10;
-	public static final int CALLBACK_GET_USERDATA = 11;
-	public static final int CALLBACK_GET_ALBUMS = 12;
-	public static final int CALLBACK_POSTPHOTO = 13;
-	public static final int CALLBACK_LOGIN_TO_FACEBOOK = 14;
-	public static final int CALLBACK_GET_CONTACTS = 15;
-	public static final int CALLBACK_GET_SESSION_STREAM = 16;
-	public static final int CALLBACK_GET_WALLPOSTS = 17;
-	public static final int CALLBACK_GET_PHOTO_ATTR = 18;
-
-	public static final int CALLBACK_GET_COMMENTS_FINISHED = 19;
-	public static final int CALLBACK_PROCESS_STREAMS_FINISH = 20;
+	public static final int CALLBACK_GET_COMMENTS_USERS = 11;
+	public static final int CALLBACK_GET_USERDATA = 12;
+	public static final int CALLBACK_GET_ALBUMS = 13;
+	public static final int CALLBACK_POST_PHOTO = 14;
+	public static final int CALLBACK_LOGIN_TO_FACEBOOK = 15;
+	public static final int CALLBACK_GET_CONTACTS = 16;
+	public static final int CALLBACK_GET_SESSION_STREAM = 17;
+	public static final int CALLBACK_GET_WALLPOSTS = 18;
+	public static final int CALLBACK_GET_PHOTO_ATTR = 19;
+	
+	public static final int CALLBACK_GET_COMMENTS_FINISHED = 20;
+	public static final int CALLBACK_PROCESS_STREAMS_FINISH = 21;
 
 	public static final int MESSAGE_UPDATE_TAGS = 30;
 	public static final int MESSAGE_DISMISS_DIALOG = 31;
@@ -69,10 +70,11 @@ public class ManagerThread extends BaseManagerThread {
 	public static final int MESSAGE_UPDATELIST = 35;
 	public static final int MESSAGE_COMMENTS_DELETED = 36;
 	public static final int MESSAGE_COMMENTS_POSTED = 37;
+	public static final int MESSAGE_STREAM_POSTED = 38;
 
-	public static final int CALLBACK_SESSION_EXPIRED = 20;
-	public static final int CALLBACK_SESSION_VALID = 21;
-	public static final int CALLBACK_SESSION_VALIDATED = 22;
+	public static final int CALLBACK_SESSION_EXPIRED = 22;
+	public static final int CALLBACK_SESSION_VALID = 23;
+	public static final int CALLBACK_SESSION_VALIDATED = 24;
 	
 	public static final int CALLBACK_ADMOB_ONFAILRECEIVE = 50;					
 	public static final int CALLBACK_ADMOB_ONRECEIVE = 51;
@@ -456,7 +458,7 @@ public class ManagerThread extends BaseManagerThread {
 						data_comments_info = rs;
 					}
 				} catch (JSONException e) {
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
 			}
 
@@ -503,17 +505,17 @@ public class ManagerThread extends BaseManagerThread {
 			break;
 		}
 
-		case CALLBACK_POSTCOMMENT: {
-
-			/*
-			 * mOutHandler.sendEmptyMessage(MESSAGE_DISMISS_DIALOG);
-			 * mOutHandler.sendEmptyMessage(MESSAGE_COMMENTS_POSTED);
-			 * 
-			 * String comment_id = fbresponse.data;
-			 * Log.d(LOG_TAG,"comment_id : "+comment_id); Message msgError =
-			 * mOutHandler.obtainMessage(MESSAGE_UPDATELIST);
-			 * msgError.setData(data); msgError.sendToTarget();
-			 */
+		case CALLBACK_POST_STREAM: {
+			Logger.l(Logger.DEBUG, LOG_TAG, "[callback_post_stream]: "+ fbresponse.data);
+			RemoteCallResult rcr = new RemoteCallResult();
+			rcr.status = true; // assume every new stream is successfully posted.
+			data.putParcelable(FBWSResponse.XTRA_PARCELABLE_OBJECT, fbresponse);
+			data.putParcelable(RemoteCallResult.XTRA_PARCELABLE_OBJECT, rcr);
+			broadcastResult(data);
+			break;
+		}
+		
+		case CALLBACK_POST_COMMENT: {
 
 			Logger.l(Logger.DEBUG, LOG_TAG, "[callback_postcomment]: "
 					+ fbresponse.data);
@@ -527,23 +529,8 @@ public class ManagerThread extends BaseManagerThread {
 			break;
 		}
 
-		case CALLBACK_DELETECOMMENT: {
-			/*
-			 * mOutHandler.sendEmptyMessage(MESSAGE_DISMISS_DIALOG);
-			 * mOutHandler.sendEmptyMessage(MESSAGE_COMMENTS_DELETED);
-			 */
-
-			// //mListAdapter.markDataAsDeleted(mLongItemClickData.comment_id,
-			// mLongItemClickData.internalPosition);
-			// //sendStreamModifiedPendingIntent();
-
-			/*
-			 * String rsp = fbresponse.data; boolean success =
-			 * Boolean.parseBoolean(rsp); if(success){ Message msgError =
-			 * mOutHandler.obtainMessage(MESSAGE_UPDATELIST);
-			 * msgError.setData(data); msgError.sendToTarget(); }
-			 */
-
+		case CALLBACK_DELETE_COMMENT: {
+		
 			// TODO Object pool: RemoteCallResult
 
 			// parsed = fbresponse.jsonArray.toString(2);
@@ -587,15 +574,18 @@ public class ManagerThread extends BaseManagerThread {
 							mSelectedUserColumns[SELECTEDCOLUMNS_USER_FETCH]);
 					//ProcessUsersTask mProcessUsersTask = new
 					//ProcessUsersTask(mOutHandler,0,0,ManagerThread.MESSAGE_UPDATELIST,0,0);
-					ProcessUsersTask mProcessUsersTask;
+					
 					
 					try{
-						 mProcessUsersTask = ProcessTaskFactory.create(ProcessUsersTask.class);
-						 mProcessUsersTask.init(mOutHandler,0,0, ManagerThread.MESSAGE_UPDATELIST,0,0);
-						 mProcessUsersTask.execute(data);							
-						Toast.makeText(App.INSTANCE, "Success Task Creation", 2000).show();
+						ProcessUsersTask mProcessUsersTask;
+						//by using the default flag value below, we assume that every user is a not a friend of this session user
+						int processFlag = data.getInt(App.FLAG_USER_PROCESS_FLAG, App.PROCESS_FLAG_USER_OTHER);						
+						mProcessUsersTask = ProcessTaskFactory.create(ProcessUsersTask.class);
+						mProcessUsersTask.init(mOutHandler,0,0, ManagerThread.MESSAGE_UPDATELIST,0,0,processFlag);
+						mProcessUsersTask.execute(data);							
+						//Toast.makeText(App.INSTANCE, "Success Task Creation", 2000).show();
 					}catch(DeniedTaskCreationException e){	
-						Toast.makeText(App.INSTANCE, "Denied Task Creation", 2000).show();
+						//Toast.makeText(App.INSTANCE, "Denied Task Creation", 2000).show();
 					}
 									
 				}

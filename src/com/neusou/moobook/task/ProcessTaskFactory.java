@@ -45,7 +45,7 @@ public class ProcessTaskFactory {
 	public static <T> T create(Class<T> type) throws DeniedTaskCreationException{
 		String cname = type.getCanonicalName();
 		if(cname.equals(ProcessUsersTask.class.getCanonicalName())){
-			if(mNumUsers > 0){
+			if(mNumUsers == 0){
 				mNumUsers++;
 				try{
 					return type.newInstance();
