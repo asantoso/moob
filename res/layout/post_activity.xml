@@ -4,7 +4,6 @@
 	xmlns:android="http://schemas.android.com/apk/res/android" 
 	android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#00000000"
  >
 
 <LinearLayout
@@ -12,7 +11,11 @@
     android:layout_height="wrap_content"    
     
     android:layout_marginTop="48dip"
+    android:layout_marginLeft="5dp"
+   	android:layout_marginRight="5dp"
+   	
     android:paddingTop="2dip"	
+   	
     android:background="@drawable/postactivity_bg"
     android:id="@+id/mainwrapper"
     android:orientation="vertical"
@@ -60,6 +63,9 @@
 		android:minLines="2"
 		android:textSize="15dip"
 		android:gravity="top"
+		
+		android:inputType="textLongMessage"
+		android:ellipsize="end"
 		/>
 		
 		<Button 
@@ -180,6 +186,7 @@
 		android:layout_alignLeft="@+id/upload"
 		android:padding="3dip"
 		android:textColor="#FF000000"
+		android:visibility="invisible"
 		/>
 		
 		<Button
@@ -187,7 +194,8 @@
 		android:layout_width="wrap_content" android:layout_height="wrap_content"
 		android:text="Choose album"
 		android:layout_below="@+id/targetalbumname"
-		android:layout_alignLeft="@+id/upload"		
+		android:layout_alignLeft="@+id/upload"
+		android:visibility="invisible"		
 		/>
 		
 		

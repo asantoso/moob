@@ -69,8 +69,19 @@ public class ViewCommentsActivity extends BaseActivity{
 	}
 	
 	static final String LOG_TAG = Logger.registerLog(ViewCommentsActivity.class);
+	/**
+	 * String
+	 */
 	public static final String XTRA_OBJECTID = "xtra.oid";
+	
+	/**
+	 * String 
+	 */
 	public static final String XTRA_POSTID = "xtra.pid";
+	
+	/**
+	 * Boolean
+	 */
 	public static final String XTRA_CLEARDATA = "xtra.cleardata";
 	
 	static final int REQUESTCODE_POST_COMMENT = 1;
@@ -270,7 +281,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		getWindow().setBackgroundDrawable(mResources.getDrawable(R.drawable.metal));
 		setContentView(R.layout.comments_activity);		
 		bindViews();
-		getExtras();
+		getIntentExtras();
 		initObjects();
 		initViews();
 		mWaitCreation.countDown();
@@ -373,7 +384,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		
 	
 	
-	protected void getExtras(){		
+	protected void getIntentExtras(){		
 		//get intent extra parameters
 		Intent i = getIntent();
 		mHasObjectId = i.hasExtra(XTRA_OBJECTID);
@@ -754,7 +765,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		}
 				
 		
-		if(mLongItemClickData.fromid > 0 && mLongItemClickData.fromid == mFacebook.getSession().uid){
+		if(mLongItemClickData.fromid > 0 && mLongItemClickData.fromid == mFacebook.getCurrentSession().uid){
 			MenuItem deleteComment = menu.add(0,MENUITEM_DELETE,0,mLblDelete);
 			deleteComment.setOnMenuItemClickListener(mMenuItemClickListener);	
 		}
@@ -855,10 +866,8 @@ public class ViewCommentsActivity extends BaseActivity{
 	
 	private void onStartFetchingCommentsFromCloud(){
 		mIsAsyncLoadingFinished = false;
-		showLoadingIndicator();
-		setTitle("moobook");
-//		mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, false);
-	//	mActionBar.setEnabledButton(ActionBar.BUTTON_POST, false);
+		showLoadingIndicator();		
+		mActionBar.disableAllButtons();
 		mTopHeaderText.setText("Loading comments from cloud..");	 
 	}
 
@@ -866,6 +875,7 @@ public class ViewCommentsActivity extends BaseActivity{
 		mIsAsyncLoadingFinished = true;
 		hideLoadingIndicator();
 		resetHeaderText();
+		mActionBar.enableAllButtons();
 	//	mActionBar.setEnabledButton(ActionBar.BUTTON_RELOAD, true);
 		//mActionBar.setEnabledButton(ActionBar.BUTTON_POST, true);
 	}

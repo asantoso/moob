@@ -34,10 +34,7 @@
          translucent theme. -->
     <style name="Theme.Transparent">
         <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowAnimationStyle">@anim/bottom_to_middle</item>
-        <!-- 
-        <item name="android:windowBackground">@drawable/transparent_background</item>
-         -->
+        <item name="android:windowAnimationStyle">@anim/bottom_to_middle</item>     
         <item name="android:windowNoTitle">true</item>
         <item name="android:colorForeground">#fff</item>
     </style>
@@ -46,14 +43,23 @@
          that this theme is to inherit from the system's translucent theme,
          which sets up various attributes correctly.. -->
     <style name="Theme.Translucent" parent="android:style/Theme.Translucent">
+        <!-- 
         <item name="android:windowBackground">@drawable/translucent_background</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:colorForeground">#fff</item>
+ -->        
+        <item name="android:windowNoTitle">true</item>        
     </style>
     
     <style name="Theme.PostActivity" parent="android:style/Theme.Translucent">
+    <!-- 
         <item name="android:windowBackground">@drawable/translucent_background</item>
         <item name="android:colorForeground">#00000000</item>
+         -->
+    </style>
+    
+    <style name="Theme.StreamPostQuickAction" parent="android:style/Theme.Dialog">
+    	<item name="android:windowIsFloating">false</item>
+    	<item name="android:windowIsTranslucent">true</item>
+    	<item name="android:windowBackground">@drawable/transparent_background</item>
     </style>
     
     <style name="TextAppearance.Theme.PlainText" parent="android:TextAppearance.Theme">
@@ -102,6 +108,25 @@
     	<item name="android:textSize">10.5dp</item>  		  
     	<item name="android:textColor">#FF404060</item>    	
     </style>
+    
+    <style name="eventd.text" parent="android:TextAppearance.Theme">
+    	<item name="android:textScaleX">1.06</item>   
+    	<item name="android:textStyle">bold</item>
+    	<item name="android:textSize">13dp</item>  		  
+    	<item name="android:textColor">#FF333333</item>  
+    </style>
+    
+    <style name="eventd.text.name" parent="eventd.text">
+    	<item name="android:textScaleX">1.06</item>   
+    	<item name="android:textStyle">bold</item>
+    	<item name="android:textSize">15dp</item>  		  
+    	<item name="android:textColor">#FF333333</item>  
+    </style>
+    
+    <style name="eventd.text.tagline" parent="eventd.text">
+    
+    </style>
+    
     
     
 </resources>

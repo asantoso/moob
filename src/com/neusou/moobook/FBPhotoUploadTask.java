@@ -8,7 +8,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.Message;
@@ -18,8 +17,18 @@ import android.widget.RemoteViews;
 import com.neusou.Logger;
 import com.neusou.async.UserTask;
 import com.neusou.moobook.activity.HomeActivity;
+import com.neusou.moobook.activity.StreamActivity;
 
 public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
+	
+	static final String LOG_TAG = Logger.registerLog(FBPhotoUploadTask.class);
+	
+	static final String NOTIFICATION_MESSAGE_UPLOADING = "Uploading photo to Facebook";
+	static final String NOTIFICATION_TICKER_UPLOADING = "Uploading photo to Facebook..";
+	static final String NOTIFICATION_MESSAGE_SUCCESSFUL_UPLOAD = "Successfully uploaded to Facebook";
+	static final String NOTIFICATION_MESSAGE_FAILURE_UPLOAD = "Error uploading to Facebook";
+	static final String NOTIFICATION_TICKER_SUCCESSFUL_UPLOAD = "Photo uploaded successfully to Facebook..";
+	static final String NOTIFICATION_TICKER_FAILURE_UPLOAD = "Error when uploading photo to facebook";
 	
 	public FBPhotoUploadTask(Context ctx, InputStream is, long length, Bitmap preview) throws IllegalArgumentException{
 		if(preview == null){
@@ -32,8 +41,6 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 		mNotificationManager = (NotificationManager) App.INSTANCE.getSystemService(ctx.NOTIFICATION_SERVICE);
 		this.preview = preview;
 	}
-
-	static final String LOG_TAG = "FBPhotoUploadTask";
 		
 	int notiid = (int) SystemClock.elapsedRealtime();
 	Bitmap preview;
@@ -82,7 +89,9 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 		mUploadPhotoNotification.contentView.setProgressBar(R.id.progress, max,	progress, false);
 		mUploadPhotoNotification.contentView.setImageViewBitmap(R.id.thumbnail, this.preview);
 		mUploadPhotoNotification.contentView.setTextViewText(R.id.status, label);
-		Intent i = new Intent(App.INSTANCE, HomeActivity.class);
+		
+		Intent i = new Intent(App.INSTANCE, StreamActivity.class);
+		
 		i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
 		PendingIntent pi = PendingIntent.getActivity(App.INSTANCE, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
 		mUploadPhotoNotification.contentIntent = pi;
@@ -98,10 +107,10 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 			switch (code) {
 			case Facebook.MESSAGE_UPDATE_UPLOAD_COMMENCING: {				
 				Notification noti = createNotification(
-						"Uploading photo to Facebook",
+						NOTIFICATION_MESSAGE_UPLOADING,
 						NOTIFICON_PROGRESS, 100, 0, false);
 				
-				noti.tickerText = "Uploading photo to Facebook..";
+				noti.tickerText = NOTIFICATION_TICKER_UPLOADING;
 				mNotificationManager.notify(notitag, notiid, noti);
 				
 				status = STATUS_INPROGRESS;
@@ -129,9 +138,9 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 			case Facebook.MESSAGE_UPDATE_UPLOAD_ERROR: {
 				
 				Notification noti = createNotification(
-						"Error uploading to Facebook",
+						NOTIFICATION_MESSAGE_FAILURE_UPLOAD,
 						NOTIFICON_ERROR, 100, currentProgress, true);
-				noti.tickerText = "Error when uploading photo to facebook";
+				noti.tickerText = NOTIFICATION_TICKER_FAILURE_UPLOAD;
 				mNotificationManager.notify(notitag, notiid, noti);
 				
 				status = STATUS_ERROR;
@@ -141,9 +150,9 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 			case Facebook.MESSAGE_UPDATE_UPLOAD_SUCCESS: {
 				
 				Notification noti = createNotification(
-						"Successful upload.",
+						NOTIFICATION_MESSAGE_SUCCESSFUL_UPLOAD,
 						NOTIFICON_SUCCESS, 100, 100, true);
-				noti.tickerText = "Photo uploaded successfully to Facebook..";
+				noti.tickerText = NOTIFICATION_TICKER_SUCCESSFUL_UPLOAD;
 				mNotificationManager.notify(notitag, notiid, noti);
 				
 				status = STATUS_SUCCESS;
@@ -182,9 +191,9 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 	protected void onPostExecute(Void result) {
 		super.onPostExecute(result);
 		
-		int delayPost = 5000;
-		int delayPostSuccess = 5000;
-		int delayPostError = 30000;
+		int delayPost = 10000;
+		int delayPostSuccess = 30000;
+		int delayPostError = 60000;
 		
 		if(status == STATUS_SUCCESS){
 			delayPost = delayPostSuccess;
@@ -192,6 +201,7 @@ public class FBPhotoUploadTask extends UserTask<Void, Void, Void> {
 			delayPost = delayPostError;
 		}
 		
+		//automatically closes the notification
 		h.postDelayed(new Runnable() {			
 			@Override
 			public void run() {

@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.URLEncoder;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,30 +17,26 @@ import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory.Options;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.Interpolator;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,7 +46,6 @@ import android.widget.Toast;
 
 import com.neusou.DecoupledHandlerThread;
 import com.neusou.Logger;
-import com.neusou.Utility;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBPhotoUploadTask;
 import com.neusou.moobook.Facebook;
@@ -62,66 +56,46 @@ import com.neusou.moobook.model.RemoteCallResult;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
 
-public class PostActivity extends BaseActivity {
-	public static final String LOG_TAG = Logger.registerLog(PostActivity.class);
-
-	public static final int MODE_POST_STREAM = 1;
-	public static final int MODE_POST_COMMENT = 2;
+public class StreamPostQuickAction extends BaseActivity {
+	public static final String LOG_TAG = Logger.registerLog(StreamPostQuickAction.class);
 	
-	static final int WAIT_ANIM_MAX_MILLISECONDS = 2000;
+	static final int WAIT_ANIM_MAX_MILLISECONDS = 5000;
 	AtomicBoolean mIsExit = new AtomicBoolean(false);
 
-	static class PostActivityInvocationData implements Parcelable {
-		public String hintEditText = null;
-		public String headerText = null;
-		public boolean showCommentBar = false;
-		public boolean showPhotoBar = false;
-		public String objId = null;
-		public int focusedView = 0;
-		public int bg = R.drawable.postactivity_bg; // drawable resource id
-		
-		/**
-		 * The id of the originating user.
-		 */
-		public String uid; // user id
-		
-		/**
-		 * the target id that receives the post. can be either user id, page id, event id
-		 */
-		public String target_id;  
-				
-		public int postMode = 0; // posting mode
-
-		public static final String XTRA_PARCELABLE_OBJECT = PostActivityInvocationData.class
+	static class StreamPostQuickActionInvocationData implements Parcelable {
+		public int top = 0;
+		public int right = 0;
+		public int bottom = 0;
+		public int left = 0;
+		public int width = 0;
+		public int height = 0;
+	
+		public static final String XTRA_PARCELABLE_OBJECT = StreamPostQuickActionInvocationData.class
 				.getCanonicalName();
 
 		static class Creator implements
-				Parcelable.Creator<PostActivityInvocationData> {
+				Parcelable.Creator<StreamPostQuickActionInvocationData> {
 
 			@Override
-			public PostActivityInvocationData createFromParcel(Parcel source) {
-				PostActivityInvocationData d = new PostActivityInvocationData();
-				d.hintEditText = source.readString();
-				d.headerText = source.readString();
-				d.showCommentBar = source.readByte() == 1;
-				d.showPhotoBar = source.readByte() == 1;
-				d.focusedView = source.readInt();
-				d.objId = source.readString();
-				d.uid = source.readString();
-				d.target_id = source.readString();
-				d.bg = source.readInt();
-				d.postMode = source.readInt();
+			public StreamPostQuickActionInvocationData createFromParcel(Parcel source) {
+				StreamPostQuickActionInvocationData d = new StreamPostQuickActionInvocationData();
+				d.left = source.readInt();
+				d.top = source.readInt();
+				d.bottom = source.readInt();
+				d.right = source.readInt();
+				d.width = source.readInt();
+				d.height = source.readInt();
 				return d;
 			}
 
 			@Override
-			public PostActivityInvocationData[] newArray(int size) {
+			public StreamPostQuickActionInvocationData[] newArray(int size) {
 				return null;
 			}
 
 		}
 
-		public static Creator CREATOR = new PostActivityInvocationData.Creator();
+		public static Creator CREATOR = new StreamPostQuickActionInvocationData.Creator();
 
 		@Override
 		public int describeContents() {
@@ -130,16 +104,12 @@ public class PostActivity extends BaseActivity {
 
 		@Override
 		public void writeToParcel(Parcel dest, int flags) {
-			dest.writeString(hintEditText);
-			dest.writeString(headerText);
-			dest.writeByte(showCommentBar ? (byte) 1 : (byte) 0);
-			dest.writeByte(showPhotoBar ? (byte) 1 : (byte) 0);
-			dest.writeInt(focusedView);
-			dest.writeString(objId);
-			dest.writeString(uid);
-			dest.writeString(target_id);
-			dest.writeInt(bg);
-			dest.writeInt(postMode);
+			dest.writeInt(left);
+			dest.writeInt(top);
+			dest.writeInt(bottom);
+			dest.writeInt(right);
+			dest.writeInt(width);
+			dest.writeInt(height);
 		}
 	}
 
@@ -247,9 +217,9 @@ public class PostActivity extends BaseActivity {
 				if (remoteCallResult.status) {
 					Toast.makeText(App.INSTANCE, "Comment posted.", 2000)
 							.show();
-					PostActivity.this.setResult(Activity.RESULT_OK);
+					StreamPostQuickAction.this.setResult(Activity.RESULT_OK);
 				}else{
-					PostActivity.this.setResult(Activity.RESULT_CANCELED);
+					StreamPostQuickAction.this.setResult(Activity.RESULT_CANCELED);
 				}
 				exit();
 			}
@@ -260,9 +230,9 @@ public class PostActivity extends BaseActivity {
 				if (remoteCallResult.status) {
 					Toast.makeText(App.INSTANCE, "Message published.", 2000)
 							.show();
-					PostActivity.this.setResult(Activity.RESULT_OK);
+					StreamPostQuickAction.this.setResult(Activity.RESULT_OK);
 				}else{
-					PostActivity.this.setResult(Activity.RESULT_CANCELED);
+					StreamPostQuickAction.this.setResult(Activity.RESULT_CANCELED);
 				}
 				exit();
 			}
@@ -275,27 +245,51 @@ public class PostActivity extends BaseActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+			
+		getIntentExtras();
 		
 		Window mainWindow = getWindow();
+		
 		mainWindow.setBackgroundDrawable(null);
 		
-		//Set Blur
-		//mainWindow.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
-		//Set Dim
-		int dimAmt = 70; //In my application this is actually a setting stored in preferences...
-		mainWindow.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-		WindowManager.LayoutParams params = mainWindow.getAttributes();
-		params.dimAmount = dimAmt / 100f;
-		params.windowAnimations = android.R.anim.overshoot_interpolator;
-		//params.width=300;
-		//params.height=300;
-		//params.gravity = Gravity.RIGHT | Gravity.TOP;
-		mainWindow.setAttributes(params);
 		
-		setContentView(R.layout.post_activity);
+		int dimAmt = 70; //In my application this is actually a setting stored in preferences...
+	//	mainWindow.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		WindowManager.LayoutParams params = mainWindow.getAttributes();
+		
+		double containerHeight = mainWindow.getWindowManager().getDefaultDisplay().getHeight() - 48;
+		
+		mainWindow.addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
+		mainWindow.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+		//mainWindow.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		
+		params.dimAmount = 0;
+		
+		params.width = 200;//WindowManager.LayoutParams.WRAP_CONTENT;
+		params.height =WindowManager.LayoutParams.WRAP_CONTENT;
+		params.horizontalMargin = mInvocationData.left;
+		float verticalMargin = (float) ((mInvocationData.top+48+mInvocationData.height) / containerHeight);
+		
+		
+		params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+		
+		Log.d(LOG_TAG,"cHeight:"+containerHeight+
+				" verticalMargin: "+verticalMargin+
+				" top:"+mInvocationData.top+
+				" right:"+mInvocationData.right+
+				" bottom:"+mInvocationData.bottom+
+				" left:"+mInvocationData.left				
+		);
+		
+		params.verticalMargin = verticalMargin; 		
+		
+		
+		
+		mainWindow.setAttributes(params);		
+		setContentView(R.layout.streampostquickaction);
 		bindViews();
 		initObjects();
-		getIntentExtras();
+		
 		initViews();
 	}
 
@@ -317,10 +311,10 @@ public class PostActivity extends BaseActivity {
 		mFacebook.registerOutHandler(R.id.outhandler_activity_post,
 				mWorkerThread.getInHandler());
 		mWorkerThread.setOutHandler(mUIHandler);
-		registerReceivers();
+		//registerReceivers();
 		
 		if(! mLifecycleFlags.is(LifecycleFlags.ACTIVITYRESULT)){
-			showHideViews();
+		//	showHideViews();
 		}
 		
 	}
@@ -345,10 +339,11 @@ public class PostActivity extends BaseActivity {
 
 		}
 				
-		
+		/*
 		if(! mLifecycleFlags.is(LifecycleFlags.ACTIVITYRESULT)){
 			showSoftKey();	
-		}		
+		}
+		*/		
 	}
 
 	@Override
@@ -358,6 +353,7 @@ public class PostActivity extends BaseActivity {
 	}
 
 	protected void bindViews() {
+		/*
 		mMainWrapper = findViewById(R.id.mainwrapper);
 		mPhotoBarWrapper = findViewById(R.id.photobar_wrapper);
 		mCommentBarWrapper = findViewById(R.id.commentbar_wrapper);
@@ -371,16 +367,13 @@ public class PostActivity extends BaseActivity {
 		mPhotoInfoText = (TextView) findViewById(R.id.photoinfo);
 		mUpload = (Button) findViewById(R.id.upload);
 		mGetAlbums = (Button) findViewById(R.id.getalbums);
+		*/
 	}
 
 	protected void initObjects() {
 		mDHT = new DecoupledHandlerThread();
 		mDHT.start();
-
-		// set default values
-		mHintEditText = mResources.getString(R.string.commentbar_edittext_hint);
-		mHeaderText = mResources.getString(R.string.commentbar_header_text);
-
+	
 		mUploadBarAnimationListener = new ViewAnimationListener(
 				ViewAnimationListener.SHOW, mUploadBarWrapper);
 
@@ -414,48 +407,9 @@ public class PostActivity extends BaseActivity {
 			@Override
 			public void onWsResponseError() {
 				super.onWsResponseError();
-				PostActivity.this.setResult(Activity.RESULT_CANCELED);
+				StreamPostQuickAction.this.setResult(Activity.RESULT_CANCELED);
 				exit();
 			};
-		};
-
-		mPostPhotoOnClick = new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Logger.l(Logger.DEBUG, LOG_TAG, "onPostPhoto");
-				Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-				i.setType("image/*");
-				App.INSTANCE.hideVirtualKeyboard(mPostMovie);
-				startActivityForResult(i, REQUEST_PICKPHOTO);
-			}
-		};
-
-		mPostMovieOnClick = new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Logger.l(Logger.DEBUG, LOG_TAG, "onPostVideo");
-				Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-				i.addCategory(Intent.CATEGORY_OPENABLE);
-				i.setType("video/*");
-				App.INSTANCE.hideVirtualKeyboard(mPostMovie);
-				startActivityForResult(i, REQUEST_PICKPHOTO);
-			}
-		};
-
-		mUploadOnClick = new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Logger.l(Logger.DEBUG, LOG_TAG, "onUpload");
-				if (mPhotoUploadUri != null) {
-					try {
-						hideUploadBar();
-						uploadPhoto(mPhotoUploadUri);
-					} catch (FileNotFoundException e) {
-					} catch (IOException e) {
-					}
-					App.INSTANCE.hideVirtualKeyboard(mUpload);
-				}
-			}
 		};
 
 		mFacebook = Facebook.getInstance();
@@ -464,93 +418,36 @@ public class PostActivity extends BaseActivity {
 
 	protected void initViews() {
 		
-		
-		mPostMovie.setVisibility(View.INVISIBLE);
-
-		Drawable d = mResources.getDrawable(android.R.drawable.ic_menu_upload);
-		Utility.getScaledDrawable(d, 32, 32);
-		mUpload.setCompoundDrawables(d, null, null, null);
-		
-		mMainWrapper.setBackgroundResource(mInvocationData.bg);
-
-		mUploadBarWrapper.setVisibility(View.GONE);
-		mPostComment.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				postMessage();				
-			}
-		});
-
-		
-		mUpload.setOnClickListener(mUploadOnClick);
-
-		mEditComment.setOnKeyListener(new View.OnKeyListener() {
-
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				if (keyCode == KeyEvent.KEYCODE_ENTER) {
-					if (event.getAction() == KeyEvent.ACTION_UP) {
-						postMessage();
-					}
-					return true;
-				}
-				return false;
-			}
-		});
-
-		mEditComment.setHint(mHintEditText);
-		mCommentBarHeader.setText(mHeaderText);
-		mPostPhoto.setOnClickListener(mPostPhotoOnClick);
-		mPostMovie.setOnClickListener(mPostMovieOnClick);
 	}
 
 	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		int action = event.getAction();
+		switch(action){
+			case MotionEvent.ACTION_OUTSIDE:{
+				setResult(RESULT_CANCELED);
+				finish();
+				return true;
+			}
+		}
+		
+		return super.onTouchEvent(event);
+	}
+	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		
+		/*
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			PostActivity.this.setResult(Activity.RESULT_CANCELED);
+			StreamPostQuickAction.this.setResult(Activity.RESULT_CANCELED);
 			exit();
 			return true;
-		}
+		}*/
 		return super.onKeyDown(keyCode, event);
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		
-		switch (requestCode) {
-		case REQUEST_PICKPHOTO: {
-			if (resultCode == RESULT_OK) {
-				try {
-					ContentResolver cr = getContentResolver();
-					mPhotoUploadUri = data.getData();
-					String path = mPhotoUploadUri.getPath();
-					// cr.openFileDescriptor(data.getData(), "r").
-					AssetFileDescriptor thePhoto = cr.openAssetFileDescriptor(
-							data.getData(), "r");
-					long numKiloBytes = thePhoto.getLength() / 1024;
-					InputStream photoStream = thePhoto.createInputStream();
-
-					Rect rect = new Rect(0, 0, 64, 64);
-					Options opt = new Options();
-					opt.inSampleSize = 2;
-					Bitmap bmp = BitmapFactory.decodeStream(photoStream, rect,
-							opt);
-
-					mPhotoPreviewImage.setImageBitmap(bmp);
-					//mPhotoInfoText.setText(numKiloBytes + " KBytes");
-					// uploadPhoto(photoStream);
-
-					showUploadBar();
-				} catch (FileNotFoundException e) {
-				} catch (IOException e) {
-				}
-			}
-			if (resultCode == RESULT_CANCELED) {
-
-			}
-			break;
-		}
-		}
 
 		Logger.l(Logger.DEBUG, LOG_TAG, "onActivityResult() done");
 	}
@@ -714,7 +611,7 @@ public class PostActivity extends BaseActivity {
 	static final int DIALOG_PUBLISHING_STREAM = 2;
 	
 	protected android.app.Dialog onCreateDialog(int id) {
-		ProgressDialog ad = new ProgressDialog(PostActivity.this);
+		ProgressDialog ad = new ProgressDialog(StreamPostQuickAction.this);
 		
 		switch(id){
 			case DIALOG_PROCESSING_IMAGE:{				
@@ -764,6 +661,7 @@ public class PostActivity extends BaseActivity {
 	}
 
 	public void showWrapper() {
+		/*
 		resetWaitLatch();
 		Animation anim = AnimationUtils.loadAnimation(this,
 				R.anim.scale_in);
@@ -774,17 +672,20 @@ public class PostActivity extends BaseActivity {
 		//anim.setDuration(mWrapperAnimDuration);
 		anim.setAnimationListener(mAnimationListener);
 		mMainWrapper.startAnimation(anim);
+		*/
 	}
 
 	public void hideWrapper() {
+		/*
 		resetWaitLatch();		
-		Animation anim = AnimationUtils.loadAnimation(PostActivity.this, R.anim.scale_out);
+		Animation anim = AnimationUtils.loadAnimation(StreamPostQuickAction.this, R.anim.scale_out);
 		Interpolator p = AnimationUtils.loadInterpolator(this, android.R.anim.anticipate_interpolator);        
 		//anim.setDuration(mWrapperAnimDuration);
 		anim.setDuration(400l);		
 		mAnimationListener.mType = ViewAnimationListener.HIDE;
 		anim.setAnimationListener(mAnimationListener);
-		mMainWrapper.startAnimation(anim);		
+		mMainWrapper.startAnimation(anim);
+		*/		
 	}
 
 	public void showSoftKey() {
@@ -795,7 +696,7 @@ public class PostActivity extends BaseActivity {
 					if(mWaitAnimationLatch != null){
 						mWaitAnimationLatch.await(WAIT_ANIM_MAX_MILLISECONDS,TimeUnit.MILLISECONDS);
 						if(mIsExit != null && !mIsExit.get()){	
-						App.INSTANCE.showVirtualKeyboard(mEditComment);
+							//App.INSTANCE.showVirtualKeyboard(mEditComment);
 						}
 					}
 				} catch (InterruptedException e) {
@@ -804,26 +705,14 @@ public class PostActivity extends BaseActivity {
 		}, 500l);
 	}
 
-	PostActivityInvocationData mInvocationData;
+	StreamPostQuickActionInvocationData mInvocationData;
 
 	private void getIntentExtras() {
 		Intent i = getIntent();
 		Bundle b = i.getExtras();
 		if (b != null) {
-			if (b
-					.containsKey(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT)) {
-				mInvocationData = b
-						.getParcelable(PostActivityInvocationData.XTRA_PARCELABLE_OBJECT);
-				if (mInvocationData.headerText != null) {
-					mHeaderText = mInvocationData.headerText;
-				}
-				if (mInvocationData.hintEditText != null) {
-					mHintEditText = mInvocationData.hintEditText;
-				}
-				mShowCommentBar = mInvocationData.showCommentBar;
-				mShowPhotoBar = mInvocationData.showPhotoBar;
-				mObjId = mInvocationData.objId;
-				mFocusedView = mInvocationData.focusedView;
+			if (b.containsKey(StreamPostQuickActionInvocationData.XTRA_PARCELABLE_OBJECT)) {
+				mInvocationData = b.getParcelable(StreamPostQuickActionInvocationData.XTRA_PARCELABLE_OBJECT);				
 			}
 		}
 	}
@@ -838,9 +727,10 @@ public class PostActivity extends BaseActivity {
 			return;
 		}
 
-		mProgressDialog.dismiss();
-		App.INSTANCE.hideVirtualKeyboard(mEditComment);
-		hideWrapper();
+
+
+		//hideWrapper();
+		/*
 		mDHT.h.postDelayed(new Runnable() {
 			@Override
 			public void run() {
@@ -851,6 +741,7 @@ public class PostActivity extends BaseActivity {
 				}
 			}
 		}, 500l);
+		*/
 		
 	}
 
@@ -889,57 +780,25 @@ public class PostActivity extends BaseActivity {
 	}
 
 	public void registerReceivers() {
-		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction(App.INTENT_POST_COMMENT);
-		intentFilter.addAction(App.INTENT_POST_STREAM);
-		registerReceiver(mBroadcastReceiver, intentFilter);
+		
 	}
 
 	public void unregisterReceivers() {
-		unregisterReceiver(mBroadcastReceiver);
+		
 	}
 
 	public static Intent getIntent(Context ctx) {
-		return new Intent(ctx, PostActivity.class);
+		Intent i = new Intent(ctx, StreamPostQuickAction.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+		return i;
 	}
 
 	private void postMessage(){
-		if(mInvocationData.postMode == MODE_POST_STREAM){
-			postStream();
-		}else if(mInvocationData.postMode == MODE_POST_COMMENT){
-			postComment();
-		}
+		
 	}
 	
 	private void postStream(){
-		Logger.l(Logger.DEBUG, LOG_TAG, "postStream()");
 		
-		String message = mEditComment.getText().toString();
-
-		if (message == null || message.trim().length() == 0) {
-			return;
-		}
-		
-		message = filter(message);
-
-		Bundle callbackDescriptor = new Bundle();
-		callbackDescriptor.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION,	App.INTENT_POST_STREAM);
-		mFacebook.publishStream(
-				R.id.outhandler_activity_post,
-				callbackDescriptor,
-				mInvocationData.uid,
-				mInvocationData.target_id,
-				message,
-				ManagerThread.CALLBACK_POST_STREAM,
-				BaseManagerThread.CALLBACK_SERVERCALL_ERROR,
-				BaseManagerThread.CALLBACK_TIMEOUT_ERROR,
-				1000l);
-		
-		showDialog(DIALOG_PUBLISHING_STREAM);
-		
-		//mProgressDialog.setTitle("Publishing");
-		//mProgressDialog.setMessage("Sending..");
-		//mProgressDialog.show();
 	}
 	
 	private String filter(String txt){

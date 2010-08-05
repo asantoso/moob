@@ -152,13 +152,14 @@ public class ApplicationDBHelper extends DBHelper{
 	*/
 
 	public long insertEvent(Event data, SQLiteDatabase db){
-		Logger.l(Logger.DEBUG,LOG_TAG,"inserting event: "+data.name);
+		//Logger.l(Logger.DEBUG,LOG_TAG,"########################### inserting event: "+data.name+", rsvp:"+data.rsvp_status);
     	try{    		
     		long rowId = db.insertOrThrow(EVENTS_TABLE, null, data.toContentValues(null));
     		return rowId;
     	}
     	catch (SQLException e) {
-    		e.printStackTrace();
+    		db.update(EVENTS_TABLE,data.toContentValues(null), "eid=?",new String[]{Long.toString(data.eid)} );
+    		//e.printStackTrace();
         }
     	return -1;
 	}
@@ -719,11 +720,18 @@ public class ApplicationDBHelper extends DBHelper{
 		return ret;		
 	}
 	
+	
+	/**
+	 * 
+	 * @param db
+	 * @param cutoff the cutoff date in unix-epoch format
+	 * @return
+	 */
 	public int truncateStreams(SQLiteDatabase db, long cutoff){
 		StringBuffer sb = new StringBuffer();
 		String whereClause;
 		sb.append(Stream.cn_updated_time)
-		.append("< ? ");
+		.append(" < ? ");
 		whereClause = sb.toString();
 		String whereArgs[] = new String[]{Long.toString(cutoff)};
 		int numRowsAffected = db.delete(STREAMS_TABLE,cutoff==0?null:whereClause, whereArgs);
@@ -747,6 +755,7 @@ public class ApplicationDBHelper extends DBHelper{
 		int numRowsAffected = db.delete(NOTIFICATIONS_TABLE,cutoff==0?null:whereClause, whereArgs);
 		return numRowsAffected;
 	}
+	
 	
 	public static int getFieldOffset(int sqlCode, int tableCode, int fieldCode){
 		int offset = 0;

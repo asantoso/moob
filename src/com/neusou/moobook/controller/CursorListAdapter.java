@@ -1,5 +1,7 @@
 package com.neusou.moobook.controller;
 
+import com.neusou.moobook.adapters.CursorRowMapper;
+
 import android.app.Activity;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
@@ -9,21 +11,29 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-public class CursorListAdapter extends BaseAdapter {
+public class CursorListAdapter<D> extends BaseAdapter {
 	
 	protected Cursor mData;
 	protected BaseListViewFactory<Cursor> mItemViewFactory;
 	protected int mPrimaryKeyIndex; 
 	protected LayoutInflater mLayoutInflater;
+	protected CursorRowMapper<D> mRowMapper;
+	
+	public CursorListAdapter(Activity ctx, BaseListViewFactory<Cursor> factory,
+			  int primaryKeyIndex
+		) {
+			mItemViewFactory = factory;
+			mPrimaryKeyIndex = primaryKeyIndex;
+			mLayoutInflater = ctx.getLayoutInflater();
+		}
 
 	public CursorListAdapter(Activity ctx, BaseListViewFactory<Cursor> factory,
-		  int primaryKeyIndex
+		  int primaryKeyIndex, CursorRowMapper<D> rowMapper
 	) {
-		this.mItemViewFactory = factory;
-		this.mPrimaryKeyIndex = primaryKeyIndex;
-		this.mLayoutInflater = ctx.getLayoutInflater();
-		//factory.setDataSetObserver(observer);
-		
+		mItemViewFactory = factory;
+		mPrimaryKeyIndex = primaryKeyIndex;
+		mLayoutInflater = ctx.getLayoutInflater();
+		mRowMapper = rowMapper;
 	}
 
 	public void setData(Cursor c){
@@ -42,15 +52,21 @@ public class CursorListAdapter extends BaseAdapter {
 	}
 
 	@Override
-	public Object getItem(int position) {
+	public D getItem(int position) {
 		
 		if (mData == null || mData.isClosed()) {
 			return null;
 		}
 		
-		return null;
+		if(mRowMapper != null){
+			mData.moveToPosition(position);
+			return mRowMapper.map(mData);
+		}
 		
+		return null;
 	}
+	
+	
 
 	@Override
 	public long getItemId(int position) {

@@ -1,4 +1,6 @@
-package com.neusou.moobook.activity;
+/*
+  package com.neusou.moobook.activity;
+ 
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -210,3 +212,4 @@ public class FriendListsActivity extends BaseActivity {
 	};
 	
 }
+*/

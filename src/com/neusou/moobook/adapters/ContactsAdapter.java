@@ -7,11 +7,13 @@ import android.widget.Filter;
 import android.widget.FilterQueryProvider;
 import android.widget.Filterable;
 
+import com.neusou.Logger;
 import com.neusou.moobook.controller.BaseListViewFactory;
 import com.neusou.moobook.controller.CursorListAdapter;
+import com.neusou.moobook.data.User;
 
-public class ContactsAdapter extends CursorListAdapter implements Filterable{
-	static final String LOG_TAG = "ContactsAdapter";
+public class ContactsAdapter extends CursorListAdapter<User> implements Filterable{
+	static final String LOG_TAG = Logger.registerLog(ContactsAdapter.class);
 	
 	FilterQueryProvider filterQueryProvider;
 	Cursor mNoFilterData;

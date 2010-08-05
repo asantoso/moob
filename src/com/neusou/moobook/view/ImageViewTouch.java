@@ -1,13 +1,9 @@
 package com.neusou.moobook.view;
 
-import com.neusou.Logger;
-import com.neusou.moobook.R;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -16,6 +12,8 @@ import android.graphics.Paint.Cap;
 import android.graphics.Path.Direction;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
+
+import com.neusou.moobook.R;
 
 public class ImageViewTouch extends ImageViewTouchBase {
  

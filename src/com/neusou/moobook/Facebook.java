@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,11 +57,12 @@ import com.neusou.moobook.thread.MoobookThread;
 
 public class Facebook {
 	
-	public static final String LOG_TAG = "Facebook";
+	public static final String LOG_TAG = "Facebook"; 
 	
 	public static final String api_rest_endpoint = "http://api.new.facebook.com/restserver.php";
 	public static final String login_endpoint = "https://www.facebook.com/login.php";
 	
+	public static final String wsmethod_auth_getSession = "auth.getSession";
 	public static final String wsmethod_auth_createtoken = "auth.createToken";	
 	public static final String wsmethod_users_getLoggedInUser = "users.getLoggedInUser";
 	public static final String wsmethod_fql_query = "fql.query";
@@ -82,12 +84,14 @@ public class Facebook {
 	
 	public static final String param_v = "v";
     public static final String param_method = "method";
+    public static final String param_generate_session_secret = "generate_session_secret";
 	public static final String param_call_id = "call_id";	
 	public static final String param_app_id = "app_id";
 	public static final String param_api_key = "api_key";
 	public static final String param_target_id = "target_id";
 	public static final String param_message = "message";
 	public static final String param_session_key = "session_key";
+	public static final String param_auth_token = "auth_token";
 	public static final String param_sig = "sig";
 	public static final String param_format = "format";
 	public static final String param_api_version = "v";
@@ -163,12 +167,15 @@ public class Facebook {
 	public static final String XTRA_FBURL_VERSION = "fburl.ver";
 	public static final String XTRA_FBURL_USERID = "fburl.uid";
 	public static final String XTRA_FBURL_STORYID = "fburl.storyid";	
+	public static final String XTRA_FBURL_EVENTID = "fburl.eventid";
 	public static final String XTRA_FBURL_OBJECTTYPE = "fbu.objtype";
 	public static final String XTRA_FBURL_OBJECTID = "fbu.objid";
 	public static final String XTRA_FBURL_PHOTOID = "fbu.photoid";	
 	public static final byte FBURL_OBJECTTYPE_STREAM = 1;
 	public static final byte FBURL_OBJECTTYPE_VIDEO = 2;
 	public static final byte FBURL_OBJECTTYPE_PHOTO = 3;	
+	public static final byte FBURL_OBJECTTYPE_PAGES = 4;
+	public static final byte FBURL_OBJECTTYPE_EVENT = 5;
 	public static final String FBURL_SCRIPT_PROFILE = "profile";
 	public static final String FBURL_SCRIPT_VIDEO = "video";
 	public static final String FBURL_VERSION_WALL = "wall";
@@ -818,6 +825,31 @@ public class Facebook {
 		executeFQL(data, 0);
 	}	
 	
+	public void getPhoto(int outHandlerKey, Bundle extraData, Collection<String> photoIds, int limit, int offset, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp, long timeoutMillisecs){
+		
+		Bundle data = new Bundle(extraData);
+		String pids = Util.join(photoIds, ",");
+		
+    	//
+    	TreeMap<String,String> map = new TreeMap<String,String>(); 
+		map.put(param_api_key, FBApp.api_key);
+		map.put(param_format, RESPONSE_FORMAT_JSON);
+		map.put(param_session_key, mSession.key);
+		map.put(param_method, wsmethod_stream_publish);
+		map.put(param_pid, pids);
+		    	
+		data.putSerializable(XTRA_METHODPARAMETERSMAP, map);		
+    	//    	
+		
+		data.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
+		data.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		data.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+		
+		executeRest(data, 0);
+
+	}
+	
 	/**
 	 * 
 	 * @param pid Photo Id
@@ -875,8 +907,6 @@ public class Facebook {
 
 	public FBWSResponse events_create(long eid, Event.RSVPStatus rsvpStatus) throws FBConnectionException{		
 				
-		RestMethod m = new RestMethod(true);
-		
 		TreeMap<String,String> map = new TreeMap<String,String>(); 
 		String eventInfo = "";
 		
@@ -904,7 +934,7 @@ public class Facebook {
 		Bundle data = new Bundle();		
 		data.putShortArray(App.XTRA_SESSION_USER_SELECTED_FIELDS, selectedFields);
 		data.putString(ManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_SESSIONUSER_PROFILE_RECEIVED);
-		getOneUserData(R.id.outhandler_app, data, String.valueOf(getSession().uid), selectedFields, ManagerThread.CALLBACK_GET_USERDATA, ManagerThread.CALLBACK_SERVERCALL_ERROR, ManagerThread.CALLBACK_TIMEOUT_ERROR);
+		getOneUserData(R.id.outhandler_app, data, String.valueOf(getCurrentSession().uid), selectedFields, ManagerThread.CALLBACK_GET_USERDATA, ManagerThread.CALLBACK_SERVERCALL_ERROR, ManagerThread.CALLBACK_TIMEOUT_ERROR);
 	}
 	
 	public void onSessionValidated(boolean isValid, int errCode, String errMessage){
@@ -913,7 +943,7 @@ public class Facebook {
 	
 	public void postComment(int outHandlerKey, Bundle inData, String comment, String post_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
 			
-		RestMethod m = new RestMethod(true);
+		RestMethod m = new RestMethod(true,true);
 		
 		TreeMap<String,String> map = new TreeMap<String,String>(); 
 		
@@ -1046,7 +1076,7 @@ public class Facebook {
 
 	public void deleteComment(int outHandlerKey, Bundle inData, String comment_id, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
 			
-		RestMethod m = new RestMethod(true);
+		RestMethod m = new RestMethod(true,true);
 		
 		TreeMap<String,String> map = new TreeMap<String,String>(); 
 		
@@ -1079,13 +1109,43 @@ public class Facebook {
 		m.execute(b);
 	}
 	
+	public void retrieveSession(int outHandlerKey, Bundle inData, String auth_token, int cbSuccessOp, int cbErrorOp, int cbTimeoutOp){
+		
+		RestMethod m = new RestMethod(false,false);
+		
+		TreeMap<String,String> map = new TreeMap<String,String>();
+		
+		map.put(param_api_key, FBApp.api_key);
+		map.put(param_auth_token, auth_token);
+		map.put(param_v, "1.0");
+		map.put(param_generate_session_secret, "1");
+		map.put(param_method, wsmethod_auth_getSession);
+		map.put(param_format, RESPONSE_FORMAT_JSON);
+		
+		Bundle b = new Bundle(inData);
+		b.putInt(XTRA_CALLBACK_SERVERCALL_ERROR_OPCODE, cbErrorOp);
+		b.putInt(XTRA_CALLBACK_SERVERCALL_SUCCESS_OPCODE, cbSuccessOp);
+		b.putInt(XTRA_CALLBACK_SERVERCALL_TIMEOUT_OPCODE, cbTimeoutOp);
+		b.putSerializable(XTRA_METHODPARAMETERSMAP, map);
+		b.putInt(XTRA_INTERNAL_OUTHANDLER_KEY, outHandlerKey);
+
+		m.execute(b);
+	}
+	
+	
+	
 	class RestMethod extends UserTask<Bundle, Void, Bundle>{
 		Bundle inData = null;
 		Exception mInvocationException; 
 		boolean mAutoBroadcastLogin;
-				
-		public RestMethod(boolean autoBroadCastLogin) {
+		boolean mRequireSessionCheck;		
+		boolean mRetryOnError;
+		static final int mMaxTries = 3;
+		
+		public RestMethod(boolean autoBroadCastLogin, boolean sessionCheck) {
 			mAutoBroadcastLogin = autoBroadCastLogin;
+			mRequireSessionCheck = sessionCheck;
+			mRetryOnError = true;
 		}
 		
 		protected Bundle doInBackground(Bundle... params) {
@@ -1096,10 +1156,9 @@ public class Facebook {
 				inData = params[0];
 				params[0] = null;
 				params = null;
-			}
-						
+			}						
 
-			if(!quickCheckSession(mSession, mAutoBroadcastLogin)){
+			if(mRequireSessionCheck && !quickCheckSession(mSession, mAutoBroadcastLogin)){
 				cancel(true);
 				onInvalidSession();
 				Bundle out = new Bundle(inData);
@@ -1236,7 +1295,18 @@ public class Facebook {
 						case FBWSErrorCodes.API_EC_PARAM_SIGNATURE:{
 							//re-invoke fql
 							Logger.l(Logger.ERROR, LOG_TAG, "[RestMethod] [onPostExecute()] signature error, requesting again.");
-							executeRest(result, mReExecuteWaitTime);
+						
+							if(mRetryOnError){
+								executeRest(result, mReExecuteWaitTime);
+								FBConnectionException error = new FBConnectionException("Retrying..");
+								onConnectionError(result, error);
+							}
+							
+							else{
+								FBConnectionException error = new FBConnectionException("Please try again.");
+								onConnectionError(result, error);
+							}
+							
 							return;
 						}
 						case FBWSErrorCodes.SESSIONEXPIRED:
@@ -1557,7 +1627,7 @@ public class Facebook {
 			public void run() {			
 				
 				final boolean broadcastLogin = executionDescriptors.getBoolean(XTRA_INTERNAL_BROADCASTLOGININTENT);
-				RestMethod rm = new RestMethod(broadcastLogin);
+				RestMethod rm = new RestMethod(broadcastLogin, true);
 				rm.setListener(mExecuteListener);
 				rm.execute(executionDescriptors);		
 				
@@ -1684,7 +1754,7 @@ public class Facebook {
 				linecount++;
 				response += line;
 				//Important log
-				//Log.d(LOG_TAG,"[line#:"+linecount+"] "+line);
+			//	Log.d(LOG_TAG,"[line#:"+linecount+"] "+line);
 			}
 										
 		} catch (MalformedURLException e) {			
@@ -1741,7 +1811,7 @@ public class Facebook {
     	mSession = session;
     }
     
-    public FBSession getSession(){
+    public FBSession getCurrentSession(){
     	return mSession;
     }
 
@@ -1946,14 +2016,50 @@ public class Facebook {
 	}
 	
 	 public static Bundle extractDataFromFacebookUrl(String url){
-	    	String regex = "/(\\w*).php\\?id=([\\d]*)&v=(\\w*)&story_fbid=(\\d*)";	    	
-	    	Pattern pattern = Pattern.compile(regex);
-	    	Matcher matcher = pattern.matcher(url);
+		 	String regex;
+		 	Pattern pattern;
+		 	Matcher matcher;
+		 	Bundle b = null;
+		 	
+		 	 ///////////// EVENT UPDATES
+			regex = "eid=(\\d*)";	    	
+	    	pattern = Pattern.compile(regex);
+	    	matcher = pattern.matcher(url);	    	
+	    	
+	    	if(matcher.find()){	    		
+	    		String eventId = matcher.group(1);	    		
+	    		b = new Bundle();	    	
+	    		b.putByte(XTRA_FBURL_OBJECTTYPE, FBURL_OBJECTTYPE_EVENT);
+	    		b.putString(XTRA_FBURL_EVENTID, eventId);	    		
+	    		Logger.l(Logger.DEBUG,"TEST", "eventId:"+eventId);	    		
+	    		return b;
+	    	}
+	    	
+		 ///////////// REPLIED COMMENTS ON PAGES
+			regex = "&story_fbid=(\\d*)";	    	
+	    	pattern = Pattern.compile(regex);
+	    	matcher = pattern.matcher(url);	    	
+	    	
+	    	
+	    	
+	    	if(matcher.find()){	    		
+	    		String storyId = matcher.group(1);	    		
+	    		b = new Bundle();	    	
+	    		b.putByte(XTRA_FBURL_OBJECTTYPE, FBURL_OBJECTTYPE_PAGES);
+	    		b.putString(XTRA_FBURL_STORYID, storyId);	    		
+	    		Logger.l(Logger.DEBUG,"TEST", "storyId:"+storyId);	    		
+	    		return b;
+	    	}
+		 
+	    	////////////////// STREAM STANDARD
+		 
+	    	regex = "/(\\w*).php\\?id=([\\d]*)&v=(\\w*)&story_fbid=(\\d*)";	    	
+	    	pattern = Pattern.compile(regex);
+	    	matcher = pattern.matcher(url);
 	    	
 	    	final int GROUP_SCRIPTNAME = 1;
 	    	
-	    	Bundle b = null;
-	    	
+	    		    	
 	    	if(matcher.find()){
 	    		String scriptName = matcher.group(GROUP_SCRIPTNAME);
 	    		String userId = matcher.group(2);
@@ -1974,6 +2080,8 @@ public class Facebook {
 	    		return b;
 	    	}
 	    	
+	    	////////////////// VIDEO
+	    	
 	    	String regexParseVideo = "/video.php\\?v=(\\d*)&?";
 	    	pattern = Pattern.compile(regexParseVideo);
 	    	matcher = pattern.matcher(url);
@@ -1990,6 +2098,7 @@ public class Facebook {
 	    		return b;
 	    	}
 	    	
+	    	////// PHOTO
 	    	
 	    	String regexParsePhoto = "/photo.php\\?pid=(\\d*)&id=(\\d*)";
 	    	//http://www.new.facebook.com/photo.php?pid=264896&id=100000425751479

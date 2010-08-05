@@ -2,16 +2,10 @@ package com.neusou.moobook.thread;
 
 import java.util.concurrent.CountDownLatch;
 
-import android.os.Bundle;
 import android.os.ConditionVariable;
 import android.os.Handler;
-import android.os.Message;
-
 
 import com.neusou.ProactiveThread;
-import com.neusou.Logger;
-import com.neusou.moobook.FBWSResponse;
-import com.neusou.moobook.Facebook;
 
 public abstract class MoobookThread extends ProactiveThread{
 	public static final String LOG_TAG = "MoobookThread";

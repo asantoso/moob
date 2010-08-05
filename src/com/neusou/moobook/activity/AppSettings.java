@@ -26,10 +26,9 @@ public class AppSettings extends PreferenceActivity implements
 OnSharedPreferenceChangeListener,
 OnPreferenceChangeListener,
 OnPreferenceClickListener
-
 {
 	
-	public static final String LOG_TAG = "AppSettings";
+	public static final String LOG_TAG = Logger.registerLog(AppSettings.class);
     
     CheckBoxPreference mEnableNotifsCheckBox;
     RingtonePreference mRingtoneList;
@@ -78,18 +77,18 @@ OnPreferenceClickListener
     	mEnableNotifsCheckBox = (CheckBoxPreference)(ps.findPreference(mResources.getString(R.string.preference_notification_enabled)));
     	mRingtoneList = (RingtonePreference)(ps.findPreference(mResources.getString(R.string.preference_notification_sound_resource)));
     	//mRingtoneCheckBox = (CheckBoxPreference)(ps.findPreference(mResources.getString(R.string.preference_notification_sound_enabled)));
-    	mClearLocalCache = (Preference)(ps.findPreference(mResources.getString(R.string.preference_cache_local_clear)));
-    	mClearSdCardCache = (Preference)(ps.findPreference(mResources.getString(R.string.preference_cache_sdcard_clear)));
-    	mSdCardCacheCheckBox = (CheckBoxPreference) (ps.findPreference(mResources.getString(R.string.preference_cache_sdcard_enabled)));
+    //	mClearLocalCache = (Preference)(ps.findPreference(mResources.getString(R.string.preference_cache_local_clear)));
+    	//mClearSdCardCache = (Preference)(ps.findPreference(mResources.getString(R.string.preference_cache_sdcard_clear)));
+    //	mSdCardCacheCheckBox = (CheckBoxPreference) (ps.findPreference(mResources.getString(R.string.preference_cache_sdcard_enabled)));
     	mPollingIntervalList =  (ListPreference) (ps.findPreference(mResources.getString(R.string.preference_notification_checkpollinginterval)));
     }
     
     private void initViews(){
     	  mEnableNotifsCheckBox.setOnPreferenceChangeListener(this);
     	  mRingtoneList.setOnPreferenceChangeListener(this);
-    	  mClearLocalCache.setOnPreferenceClickListener(this);
-    	  mClearSdCardCache.setOnPreferenceClickListener(this);
-    	  mSdCardCacheCheckBox.setOnPreferenceChangeListener(this);
+    	 // mClearLocalCache.setOnPreferenceClickListener(this);
+    	 // mClearSdCardCache.setOnPreferenceClickListener(this);
+    	 // mSdCardCacheCheckBox.setOnPreferenceChangeListener(this);
     	  mPollingIntervalList.setOnPreferenceChangeListener(this);
     }
         

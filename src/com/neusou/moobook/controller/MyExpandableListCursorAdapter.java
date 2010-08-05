@@ -8,11 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 
+import com.neusou.Logger;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 
 public abstract class MyExpandableListCursorAdapter extends BaseExpandableListAdapter{
         
-		static final String LOG_TAG = "MyExpandableListAdapter";	
+		static final String LOG_TAG =  Logger.registerLog(MyExpandableListCursorAdapter.class);	
         ApplicationDBHelper mDBHelper;    	
         Cursor groupDatastore;
         Cursor childDatastore; 

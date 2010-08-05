@@ -5,7 +5,6 @@
         android:persistent="true"
       >
 	
-	
 	<PreferenceCategory	
 	        android:title="Notifications" 
 	        android:summary="Global notification settings"
@@ -59,8 +58,8 @@
          />
             
     </PreferenceCategory>
-    
     	
+    	<!-- 
     <PreferenceCategory
             android:title="Feed" 
             android:summary="setting for feeds"
@@ -85,7 +84,8 @@
          	
          	
          	/>
-         
+          -->
+          
       <!--    	
          <ListPreference 
          	android:key="feeds_autoupdate_frequency"
@@ -96,10 +96,11 @@
          	android:entries="@array/polling_interval_entries"
         	android:entryValues="@array/polling_interval_entryvalues"         	
          	/>
+        </PreferenceCategory>
          	 -->
-    </PreferenceCategory>
+    
    
-    	
+    	<!--  
     <PreferenceCategory
             android:title="Views" 
             android:summary="Settings for views"
@@ -124,7 +125,10 @@
          	/>
          	
 	</PreferenceCategory>
-   	
+   	-->
+         	
+         	
+   	<!-- 
     <PreferenceCategory
             android:title="Cache" 
             android:summary="cache settings"
@@ -163,4 +167,6 @@
          	/>
          	
      </PreferenceCategory>
+      -->
+      
 </PreferenceScreen>

@@ -3,7 +3,6 @@ package com.neusou.moobook.activity;
 import java.lang.ref.WeakReference;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;

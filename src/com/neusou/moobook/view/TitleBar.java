@@ -8,6 +8,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextSwitcher;
+import android.widget.ViewSwitcher.ViewFactory;
 
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
@@ -40,6 +41,13 @@ public class TitleBar{
 	}
 	
 	public void initViews(){
+		mHeaderText.setFactory(new ViewFactory() {			
+			@Override
+			public View makeView() {
+				return mContext.getLayoutInflater().inflate(R.layout.t_topheadertext, null);
+			}
+		});
+		
 		mContext.registerForContextMenu(mProfileImage);
 		ContextMenuDescriptor cmd = new ContextMenuDescriptor();
 		cmd.type = App.CONTEXT_MENU_TOPHEADER_PROFILE;

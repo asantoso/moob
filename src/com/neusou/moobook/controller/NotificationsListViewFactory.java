@@ -1,20 +1,12 @@
 package com.neusou.moobook.controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.ListIterator;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.os.SystemClock;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -28,15 +20,11 @@ import com.neusou.moobook.Util;
 import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.FBApplication;
 import com.neusou.moobook.data.FBNotification;
-import com.neusou.moobook.data.Stream;
 import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
-import com.neusou.web.ImageUrlLoader2;
-import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
-import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
 
 public class NotificationsListViewFactory extends BaseListViewFactory<Cursor> {
-	static final String LOG_TAG = "NotificationsListViewFactory";
+	static final String LOG_TAG = Logger.registerLog(NotificationsListViewFactory.class);
 	
 	Activity ctx;
 	ApplicationDBHelper mDBHelper;

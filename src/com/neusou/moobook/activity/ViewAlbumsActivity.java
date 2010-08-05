@@ -39,10 +39,8 @@ import com.neusou.moobook.FBWSResponse;
 import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
 import com.neusou.moobook.Util;
-import com.neusou.moobook.controller.CursorListAdapter;
 import com.neusou.moobook.controller.StreamListViewFactory;
 import com.neusou.moobook.task.ProcessFriendsTask;
-import com.neusou.moobook.task.ProcessStreamTask;
 import com.neusou.moobook.thread.BaseManagerThread;
 import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.web.ImageUrlLoader;
@@ -65,7 +63,6 @@ public class ViewAlbumsActivity extends BaseActivity implements IAlbums{
 	
 	Facebook mFacebook;	
 	StreamListViewFactory mListViewItemFactory;
-	CursorListAdapter mListViewAdapter;	
 	TextSwitcher mTopHeaderText;
 	
 	Handler mThreadUIHandler;	

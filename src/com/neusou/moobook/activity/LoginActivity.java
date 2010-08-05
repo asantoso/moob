@@ -7,6 +7,8 @@ import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Enumeration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.json.JSONException;
@@ -385,16 +387,6 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 		mWebViewContainer.setVisibility(View.VISIBLE);
 		mWebView.setVisibility(View.VISIBLE);
 		
-		mTopHeaderText.setFactory(new ViewFactory() {
-			@Override
-			public View makeView() {
-				TextView t = new TextView(LoginActivity.this);
-				t = (TextView) mLayoutInflater.inflate(
-						R.layout.t_topheadertext, null);
-				return t;
-			}
-		});
-		
 		mNext.setVisibility(View.INVISIBLE);
 		mNext.setOnClickListener(mNextOnClick);
 	}
@@ -518,10 +510,10 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 						// TODO: refactor Toast string to xml file
 						Toast.makeText(LoginActivity.this,	"Successfully logged into Facebook", 2000)		.show();
 						Logger.l(Logger.DEBUG, LOG_TAG,"Successfully logged in to Facebook");
-						FBSession fbSession = parseFbLoginResponseUrl(url);					
+						String auth_token = parseAuthToken(url);					
 						flag_forwardToFacebookSignin = false; // toggle 
 						isLoadingPermissionPage = true;
-						onSuccessfulLogin(fbSession);
+						onSuccessfulLogin(auth_token);
 
 					} else if (isLoadingPermissionPage
 							&& !flag_permissionfinish_onnextpageload) {
@@ -686,60 +678,24 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 	 * Parses the session information contained in the url
 	 * 
 	 * @param url
-	 * @return FBSession the session instance
+	 * @return auth_token
 	 */
-	private FBSession parseFbLoginResponseUrl(String url) {
-		FBSession fbsession = new FBSession();
-	
-		Logger.l(Logger.DEBUG, LOG_TAG, "[parseFBLoginResponse()] "+url);
-		String decoded = URLDecoder.decode(url);
-		int q = decoded.indexOf("?");
-	
-		// remove everything before the ?, i.e: get the response query
-		// parameters
-		String args = decoded.substring(q + 1, decoded.length());
-	
-		// Log.d(LOG_TAG, args);
-		String args_arr[] = args.split("&", 2);
-	
-		try {
-			// remove parameter key name
-			fb_session_json = args_arr[0].substring(8, args_arr[0].length());
-			Logger.l(Logger.DEBUG, LOG_TAG, "raw json:" + fb_session_json);
-			JSONObject session = new JSONObject(fb_session_json);
-			fb_session_key = session.getString("session_key");
-			fb_session_uid = session.getLong("uid");
-			try {
-				fb_session_expires = Integer.parseInt(session
-						.getString("expires"));
-			} catch (NumberFormatException e) {
-				fb_session_expires = 0;
-			}
-			fb_session_secret = session.getString("secret");
-			fb_session_sig = session.getString("sig");
-	
-			/*
-			Log.d(LOG_TAG, "fb session key: " + fb_session_key);
-			Log.d(LOG_TAG, "fb session uid: " + fb_session_uid);
-			Log.d(LOG_TAG, "fb session expires: " + fb_session_expires);
-			Log.d(LOG_TAG, "fb session secret: " + fb_session_secret);
-			Log.d(LOG_TAG, "fb session sig: " + fb_session_sig);
-			Log.d(LOG_TAG, "fb session json: " + fb_session_json);
-			*/
-	
-		} catch (JSONException e) {
-			//Log.d(LOG_TAG, "JSONObject constructor error");
-			e.printStackTrace();
-			return null;
+	private String parseAuthToken(String url) {
+		
+		Logger.l(Logger.DEBUG, LOG_TAG, "[parseAuthToken()] "+url);
+		
+		//get the auth token
+		String regex = "auth_token=([\\w\\d]*)?&?";
+		Pattern regexAuthToken = Pattern.compile(regex);
+		Matcher authTokenMatcher = regexAuthToken.matcher(url);
+		if(authTokenMatcher.find()){
+			String auth_token = authTokenMatcher.group(1);
+			Logger.l(Logger.DEBUG, LOG_TAG, "auth_token="+auth_token);
+			return auth_token;
 		}
-	
-		fbsession.key = fb_session_key;
-		fbsession.uid = fb_session_uid;
-		fbsession.expires = fb_session_expires;
-		fbsession.secret = fb_session_secret;
-		fbsession.sig = fb_session_sig;
-		fbsession.json = fb_session_json;
-		return fbsession;
+		
+		return null;
+		
 	}
 
 	private String createFBPermissionRequestURL(String sessionJson, String permsCsv) {
@@ -764,16 +720,21 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 	}
 
 	// TODO: refactor string to xml
-	private void onSuccessfulLogin(FBSession session) {
-		Logger.l(Logger.DEBUG, LOG_TAG, "[onSuccessfulLogin()]");
-		Toast.makeText(LoginActivity.this, "Login successful", 1000).show();
+	private void onSuccessfulLogin(String auth_token) {
+		Logger.l(Logger.DEBUG, LOG_TAG, "[onSuccessfulLogin()] "+auth_token);		
+		App.INSTANCE.retrieveSession(auth_token);
+	}
+
+	private void onSessionRetrieved(){
+		/*
 		App.INSTANCE.saveSessionInfo(session);
 		mFacebook.setSession(session);
 		requestPermissions(session.json);
 		
 		App.INSTANCE.getSessionUserInfo();
+		*/
 	}
-
+	
 	private void onSuccessfulPermissionsRequest(boolean[] permissions) {
 		
 		//ApplicationDBHelper dbh = new ApplicationDBHelper(this);
@@ -807,13 +768,20 @@ public class LoginActivity extends BaseActivity implements CommonActivityReceive
 
 	private String createFBLoginURL(String apikey) {
 		
+		String url = "http://m.facebook.com/tos.php?"+
+		"&api_key="+apikey+
+		"&v=1.0"+
+		"&next="+"http://www.facebook.com/connect/login_success.html"+
+		"&cancel="+"http://www.facebook.com/connect/login_failure.html"+
+		"&session_key_only=true";
 		
+		
+		/*
 		String url = "http://www.facebook.com/login.php?api_key="
 				+ apikey
-				// +
-				// "&fbconnect=false&v=1.0&return_session=true&display=popup&next=http://www.facebook.com/connect/login_success.html&cancel_url=http://www.facebook.com/connect/login_failure.html&session_key_only=true";
-
-				+ "&v=1.0&return_session=true&display=popup&next=http://www.facebook.com/connect/login_success.html&cancel_url=http://www.facebook.com/connect/login_failure.html&session_key_only=true";
+				+ "&v=1.0&next=http://www.facebook.com/connect/login_success.html&cancel_url=http://www.facebook.com/connect/login_failure.html";
+*/
+				//+ "&v=1.0&return_session=true&display=popup&next=http://www.facebook.com/connect/login_success.html&cancel_url=http://www.facebook.com/connect/login_failure.html&session_key_only=true";
 
 		// req_perms=email,read_mailbox,publish_stream,read_stream,offline_access,create_event,rsvp_event,photo_upload,status_update,video_upload,create_note,share_item";
 		

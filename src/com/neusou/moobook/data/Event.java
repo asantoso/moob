@@ -1,9 +1,30 @@
 package com.neusou.moobook.data;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.neusou.Logger;
+import com.neusou.moobook.adapters.CursorRowMapper;
+
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
 
-public class Event {
+public class Event implements Parcelable{
+	
+	public static final ROWMAPPER RowMapper = new ROWMAPPER();
+	
+	public static final String LOG_TAG = Logger.registerLog(Event.class);
+	
+	static final class ROWMAPPER implements CursorRowMapper<Event>{
+		@Override
+		public Event map(Cursor c) {
+			return Event.parseCursor(c, null);
+		}		
+	}
+
 	
 	public enum RSVPStatus{
 		NOT_REPLIED("not_replied"),
@@ -43,7 +64,12 @@ public class Event {
 		}
 		
 		public boolean match(String rsvp){
-			return this.rsvp.compareTo(rsvp) == 0;
+			Log.d("Event", "Event rsvp match: "+rsvp);
+			try{
+				return rsvp.compareTo(rsvp) == 0;
+			}catch(NullPointerException e){
+				return false;
+			}
 		}
 	}
 	
@@ -89,6 +115,15 @@ public class Event {
 	public String privacy ; 	
 	public boolean hide_guest_list ;
 	public String rsvp_status;
+	
+	//this section below are not to be serialized
+	public String location_latitude;
+	public String location_longitude;
+	public String location_state;
+	public String location_country;
+	public String location_city;
+	public String location_street;
+	//
 	
 	public static final String cn_rowid = "event_rowid"; 
 	public static final String cn_eid = "eid"; 
@@ -150,6 +185,8 @@ public class Event {
 		s.hide_guest_list = c.getInt(col_hide_guest_list) == 1?true:false;
 		s.rsvp_status = c.getString(col_rsvp_status);
 		
+		parseVenue(s);
+		
 		return s;
 	}
 	
@@ -182,5 +219,142 @@ public class Event {
 			
 		return cv;
 	}
+	
+	
+	private static void parseVenue(Event evt){
+		try {
+			JSONObject loc = new JSONObject(evt.venue);
+		
+			try{
+				evt.location_city = loc.getString("longitude");
+				evt.location_city = loc.getString("latitude");
+			}catch(JSONException e){
+				Logger.l(Logger.DEBUG,LOG_TAG, e.getMessage());
+			}
+			try{
+				evt.location_city = loc.getString("city");
+				evt.location_state = loc.getString("state");
+				evt.location_country = loc.getString("country");
+				evt.location_street = loc.getString("street");
+			}catch(JSONException e){
+				Logger.l(Logger.DEBUG,LOG_TAG, e.getMessage());
+			}
+			
+		} catch (JSONException e) {		
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	// PARCELABLE IMPLEMENTATION
+		
+	public static final Creator CREATOR = new Creator();
+
+	public static final String XTRA_PARCELABLE_OBJECT = Event.class.getCanonicalName();
+
+
+	static class Creator implements Parcelable.Creator<Event> {
+
+		@Override
+		public Event createFromParcel(Parcel source) {
+			Event e = new Event();
+
+			e.eid = source.readLong();
+			e.name = source.readString();
+			e.tagline = source.readString();
+			e.nid = source.readInt();
+			e.pic_small = source.readString();
+			e.pic_big = source.readString();
+			e.pic = source.readString();
+			e.host = source.readString();
+			e.description = source.readString();
+			e.event_type = source.readString();
+			e.event_subtype = source.readString();
+			e.start_time = source.readLong();
+			e.end_time = source.readLong();
+			e.creator = source.readString();
+			e.update_time = source.readLong();
+			e.location = source.readString();
+			e.venue = source.readString();
+			e.privacy = source.readString();
+			e.hide_guest_list = source.readByte() == 1;
+			e.rsvp_status = source.readString();
+
+			Event.parseVenue(e);
+			
+			return e;
+		}
+
+		@Override
+		public Event[] newArray(int size) {
+			return null;
+		}
+
+	};
+
+	@Override
+	public int describeContents() {	
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+
+		dest.writeLong(eid);
+		dest.writeString(name);
+		dest.writeString(tagline);
+		dest.writeInt(nid);
+		dest.writeString(pic_small);
+		dest.writeString(pic_big);
+		dest.writeString(pic);
+		dest.writeString(host);
+		dest.writeString(description);
+		dest.writeString(event_type);
+		dest.writeString(event_subtype);
+		dest.writeLong(start_time);
+		dest.writeLong(end_time);
+		dest.writeString(creator);
+		dest.writeLong(update_time);
+		dest.writeString(location);
+		dest.writeString(venue);
+		dest.writeString(privacy);
+		dest.writeByte(hide_guest_list ? (byte) 1 : (byte) 0);
+		dest.writeString(rsvp_status);
+
+	}
+
+	
+	public String toString(){
+		
+		
+		return  
+		", eid:"+eid+
+		", name: "+name+
+		", tagline: "+tagline+
+		", nid: "+nid+
+		", pic_small: "+pic_small+
+		", pic_big: "+pic_big+
+		", pic: "+pic+
+		", host: "+host+
+		", description: "+description+
+		", event_type: "+event_type+
+		", event_subtype: "+event_subtype+
+		", start_time: "+start_time+
+		", end_time: "+end_time+
+		", creator: "+creator+
+		", update_time: "+update_time+
+		
+		", location:"+location+
+		", venue:"+venue+
+		", privacy:"+privacy+
+		", rsvp: "+rsvp_status;
+		
+
+	
+		
+	}
+	
+	
 	
 }

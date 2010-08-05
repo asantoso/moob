@@ -21,7 +21,7 @@ public class Prefs {
 	public static final String KEY_PERIODIC_CHECK_ENABLED = "periodic.update";
 	public static final boolean DEFAULT_PERIODIC_CHECK_ENABLED = true; 
 	public static final String KEY_PERIODIC_CHECK_INTERVAL = "periodic.update.interval";
-	public static final long DEFAULT_PERIODIC_CHECK_INTERVAL = 60*60000; //an hour in milliseconds 
+	public static final long DEFAULT_PERIODIC_CHECK_INTERVAL = 1*15*1000; //an hour in milliseconds 
 	public static final String KEY_STREAMS_MAX_UPDATE_ITEMS = "streams.max.update.items";	
 	public static final int DEFAULT_STREAMS_MAX_UPDATE_ITEMS = 15;  
 	public static final String KEY_STREAMS_LASTUPDATED = "streams.lastupdated"; //last update time in milliseconds since unix epoch 

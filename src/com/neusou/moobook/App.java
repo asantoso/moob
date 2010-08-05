@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.accounts.Account;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
@@ -23,13 +24,16 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.Service;
+import android.content.AbstractThreadedSyncAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.SyncResult;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -92,6 +96,8 @@ public class App extends Application {
 	public Resources mResources;
 	public ActionBar mActionBar;
 	
+	public static final String FLURRY_APPKEY = "QEKMRMJWSD6J8NZM929G";
+	
 	public Notification mNotification;
 	public UserTaskExecutionScope mExecScopeListViewTask =
 		new UserTaskExecutionScope("ListViewTask",5,1,5,TimeUnit.SECONDS,10);
@@ -117,6 +123,7 @@ public class App extends Application {
 	public static final String INTENT_PLAY_NOTIFICATIONS_SOUND = packageprefix+".intent.PLAY_NOTIFICATIONS_SOUND";
 	public static final String INTENT_STOP_NOTIFICATIONS_SOUND = packageprefix+".intent.STOP_NOTIFICATIONS_SOUND";
 	public static final String INTENT_DELETE_COMMENT = packageprefix+".intent.DELETE_COMMENT";
+	public static final String INTENT_SESSION_RETRIEVED = packageprefix+".intent.SESSION_RETRIEVED";
 	
 	//intent result (post processing)
 	public static final String INTENT_POST_COMMENT = packageprefix+".intent.POST_COMMENT";
@@ -222,6 +229,9 @@ public class App extends Application {
 	public static final String LOCALCACHEFILE_PROFILEIMAGE = "sessionuserprofileimage";
 	public static final String LOCALCACHEFILE_APPIGNORELIST = "appignorelist";
 	
+	public static final String DATEFORMAT_EVENT_DATE = "EEEE',' d MMMM yyyy";
+	public static final String DATEFORMAT_EVENT_TIME = "k:mm '('z 'GMT)'";
+	public static final String DATEFORMAT_EVENT_DATE_START_TIME = "EEEE',' d MMMM yyyy 'at' k:mm z";
 	
 	public static FBSession mFbSession;
 	
@@ -650,7 +660,7 @@ public class App extends Application {
 	
 	public void getWallPostsFromCloud(long created_date){
 		Logger.l(Logger.DEBUG, LOG_TAG, "[getWallPosts()] created_date: "+created_date);
-		FBSession session = mFacebook.getSession();
+		FBSession session = mFacebook.getCurrentSession();
 		
 		Bundle callbackData = new Bundle();
 		callbackData.putString(ManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_WALLPOSTS_UPDATED);
@@ -669,9 +679,21 @@ public class App extends Application {
 				
 	}
 	
+	public void retrieveSession(String auth_token){
+		Bundle callbackData = new Bundle();
+		callbackData.putString(BaseManagerThread.XTRA_CALLBACK_INTENT_ACTION, App.INTENT_SESSION_RETRIEVED);
+		Facebook.getInstance().retrieveSession(
+				R.id.outhandler_app, 
+				callbackData, 
+				auth_token,
+				ManagerThread.CALLBACK_SESSION_RETRIEVED, 
+				ManagerThread.CALLBACK_SERVERCALL_ERROR, 
+				ManagerThread.CALLBACK_TIMEOUT_ERROR);
+	}
+	
 	public void getWallPostsCommentsFromCloud(){
 		Logger.l(Logger.DEBUG, LOG_TAG, "[getWallPostsComments()]");
-		FBSession session = mFacebook.getSession();
+		FBSession session = mFacebook.getCurrentSession();
 		//get the first post entry
 		
 		Cursor c = mDBHelper.getStreams(mDB, Facebook.STREAMMODE_NEWSFEED, PROCESS_FLAG_STREAM_SESSIONUSER, session.uid, null, 1, 0);
@@ -850,6 +872,7 @@ public class App extends Application {
 				new Intent(this, NotificationsActivity.class),
 				Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
 		);
+				
 		notification.setLatestEventInfo(this, content_title, content_text, contentIntent);
 		boolean isVibrate = isNotificationVibrationEnabled();
 		if(isVibrate){
@@ -862,10 +885,12 @@ public class App extends Application {
 					};
 			
 		}
+		
+		
 		notification.when = System.currentTimeMillis();
 		notification.number = total;
-		notification.icon = android.R.drawable.ic_dialog_info;
-		//notification.flags = Notification.DEFAULT_LIGHTS;
+		notification.icon = R.drawable.moob_logo_32;
+
 		
 		if(isNotificationLedsEnabled()){
 			notification.ledARGB = 0xffff0000;
@@ -876,6 +901,8 @@ public class App extends Application {
 		
 		notification.audioStreamType = AudioManager.STREAM_NOTIFICATION;		
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
+		
+		
 		Intent deleteIntent = new Intent(INTENT_STOP_NOTIFICATIONS_SOUND);
 		PendingIntent deletePendingIntent = PendingIntent.getBroadcast(this, 0, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 		notification.deleteIntent = deletePendingIntent;
@@ -1028,7 +1055,7 @@ public class App extends Application {
     
     
     public static boolean isSessionUser(long userId){
-    	return(userId == Facebook.getInstance().getSession().uid);	
+    	return(userId == Facebook.getInstance().getCurrentSession().uid);	
     }
     
     public static Dialog createProfileMenuDialog(ContextProfileData cpd){
@@ -1096,29 +1123,41 @@ public class App extends Application {
     	}
     	
 		actorNameSM.setHeaderTitle(cpd.name);
-		MenuItem viewFeedMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE,0, res.getString(R.string.view_feed));
-		MenuItem viewWallMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE,0, res.getString(R.string.view_wall));		
-		MenuItem viewProfileMenuItem = actorNameSM.add(0,App.CONTEXT_MENUITEM_PROFILE,1, res.getString(R.string.view_profile));
-		MenuItem viewPhotosMenuItem = actorNameSM.add(0,App.CONTEXT_MENUITEM_PROFILE,2, res.getString(R.string.view_photos));
-		MenuItem viewTaggedPhotosMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE, 3, res.getString(R.string.view_tagged_photos));
-		
-
 		Intent i;
+		
+		//MenuItem viewFeedMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE,0, res.getString(R.string.view_feed));
+		/*
+		
 		i = new Intent(INTENT_ACTION_VIEW_FEED);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewFeedMenuItem.setIntent(i);
+		*/
+		
+		MenuItem viewWallMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE,0, res.getString(R.string.view_wall));		
+		//MenuItem viewProfileMenuItem = actorNameSM.add(0,App.CONTEXT_MENUITEM_PROFILE,1, res.getString(R.string.view_profile));
+		/*
+		i = new Intent(INTENT_ACTION_VIEW_PROFILE);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewProfileMenuItem.setIntent(i);
+		*/
+		
+		
+		//MenuItem viewPhotosMenuItem = actorNameSM.add(0,App.CONTEXT_MENUITEM_PROFILE,2, res.getString(R.string.view_photos));
+		/*
+		i = new Intent(INTENT_ACTION_VIEW_PHOTOS);
+		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
+		viewPhotosMenuItem.setIntent(i);
+		*/
+		
+		MenuItem viewTaggedPhotosMenuItem = actorNameSM.add(0, App.CONTEXT_MENUITEM_PROFILE, 3, res.getString(R.string.view_tagged_photos));
+		
+
+		
 		
 		i = new Intent(INTENT_ACTION_VIEW_WALL);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 		viewWallMenuItem.setIntent(i);
 		
-		i = new Intent(INTENT_ACTION_VIEW_PROFILE);
-		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
-		viewProfileMenuItem.setIntent(i);
-		
-		i = new Intent(INTENT_ACTION_VIEW_PHOTOS);
-		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
-		viewPhotosMenuItem.setIntent(i);
 		
 		i = new Intent(INTENT_ACTION_VIEW_TAGGED_PHOTOS);
 		i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
@@ -1128,7 +1167,7 @@ public class App extends Application {
 	
 	
 	public static ContextProfileData createSessionUserContextProfileData(){
-		FBSession fbSession = Facebook.getInstance().getSession();
+		FBSession fbSession = Facebook.getInstance().getCurrentSession();
 		ContextProfileData cpd = new ContextProfileData();
 		User sessionUser;
 		try{
@@ -1162,7 +1201,7 @@ public class App extends Application {
 		//MenuItem settings = menu.add(0,App.MENUITEM_SETTINGS, 6,"Settings");
 		
 		if(cpd == null){
-			FBSession fbSession = Facebook.getInstance().getSession();
+			FBSession fbSession = Facebook.getInstance().getCurrentSession();
 			cpd = new ContextProfileData();
 			User sessionUser;
 			try{
@@ -1211,14 +1250,14 @@ public class App extends Application {
 			
 				case App.MENUITEM_EVENTS:{
 					Intent viewEvents = EventsActivity.getIntent(ctx);
-					viewEvents.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+					viewEvents.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 					ctx.startActivity(viewEvents);
 					return true;
 				}
 				
 				case App.MENUITEM_NOTIFICATIONS:{
 					Intent viewNotificationsIntent = NotificationsActivity.getIntent(ctx);
-					viewNotificationsIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+					viewNotificationsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 					ctx.startActivity(viewNotificationsIntent);
 					return true;
 				}
@@ -1249,7 +1288,7 @@ public class App extends Application {
 				
 				case App.MENUITEM_NETWORKS:{				
 					Intent i = ViewContactsActivity.getIntent(ctx);
-					i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);					
+					i.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);					
 					i.putExtra(ContextProfileData.XTRA_PARCELABLE_OBJECT, cpd);
 					ctx.startActivity(i); 
 					return true;
@@ -1316,6 +1355,11 @@ public class App extends Application {
 			return false;
 			
 	    }
+	
+	public static void truncateOldData(){
+		
+		
+	}
 
 	public static boolean onContextItemSelected(Activity ctx, MenuItem item, ProgressDialog pd) {
 		
@@ -1360,5 +1404,21 @@ public class App extends Application {
 	}
 	
 	
+	 private static class SyncAdapterImpl extends AbstractThreadedSyncAdapter {
+	 	public SyncAdapterImpl() {
+	 		super(null, true);
+		}
+		 
+		 
+		@Override
+		public void onPerformSync(Account account, Bundle extras,
+				String authority, ContentProviderClient provider,
+				SyncResult syncResult) {
+			// TODO Auto-generated method stub
+			
+		}
+		 
+	 };
+	 
 	
 }

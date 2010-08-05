@@ -2,11 +2,17 @@ package com.neusou.moobook.adapters;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.neusou.Logger;
 import com.neusou.moobook.App;
@@ -18,15 +24,6 @@ import com.neusou.web.ImageUrlLoader2;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderInput;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderProgress;
 import com.neusou.web.ImageUrlLoader2.AsyncLoaderResult;
-
-import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.sax.RootElement;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableDataStore<JSONArray> >{
 
@@ -160,8 +157,8 @@ public class CommentsAdapter extends GenericPageableAdapter<JSONArray, PageableD
 		
 		// get reference to UI views
 		try{
-			itemTag = (ItemTag) convertView.getTag(TAG_ITEM_VIEW);
-			dataTag = (DataTag) convertView.getTag(TAG_ITEM_DATA);
+			itemTag = (CommentsAdapter.ItemTag) convertView.getTag(TAG_ITEM_VIEW);
+			dataTag = (CommentsAdapter.DataTag) convertView.getTag(TAG_ITEM_DATA);
 		}catch(Exception e){
 		}
 		

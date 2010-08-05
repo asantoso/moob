@@ -24,12 +24,13 @@ import com.neusou.moobook.model.database.ApplicationDBHelper;
 
 public class ResponseProcessor {
 
-	static final String LOG_TAG = "ResponseProcessor";
+	static final String LOG_TAG = Logger.registerLog(ResponseProcessor.class);
 
 	public static Notification showNotificaton(int total, FBNotification note,
 			NotificationManager nm, Context ctx) {
 		Logger.l(Logger.DEBUG, LOG_TAG, "[showNotications()]");
-		Notification notif = App.INSTANCE.createNotification("Moobook", note.title_text, total);
+		String appName = ctx.getResources().getString(R.string.app_name);
+		Notification notif = App.INSTANCE.createNotification(appName, note.title_text, total);
 		nm.notify(R.string.alarm_service_started, notif);
 		return notif;
 		//Vibrator vibrator = (Vibrator) (App.INSTANCE.getSystemService(Context.VIBRATOR_SERVICE));
@@ -114,6 +115,7 @@ public class ResponseProcessor {
 				String rsvp_status = att.getString(Event.cn_rsvp_status);
 				long eid = att.getLong("eid");
 				rsvp.put(eid, rsvp_status);
+				//Log.d("ResponseProcessor", "eid:"+eid+", rsvp_status:"+rsvp_status);
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}	
@@ -131,7 +133,7 @@ public class ResponseProcessor {
 				itemJson = events_member.getJSONObject(i);
 				long event_id = itemJson.getLong(Event.cn_eid);
 				if (db != null && db.isOpen()) {					
-					event = dbHelper.getEvent(db, event_id, event);
+					event = null;//dbHelper.getEvent(db, event_id, event);
 					if (event == null)
 					{
 						event = new Event();						
@@ -215,7 +217,7 @@ public class ResponseProcessor {
 						note.href = itemJson.getString(FBNotification.fields_href);
 						note.sender_id = itemJson.getLong(FBNotification.fields_sender_id);
 						note.app_id = itemJson.getLong(FBNotification.fields_app_id); 
-							
+						
 						FBApplication existingApp = dbHelper.getApplication(db,note.app_id, null);
 						remoteApp = applications.get(note.app_id);
 						if(existingApp != null){

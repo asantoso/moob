@@ -12,7 +12,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.util.AbstractCollection;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import org.w3c.dom.DOMException;
@@ -571,7 +574,7 @@ public class Util {
 	}
 	
 	public static String getNotNullString(String value){
-		if(value == null){
+		if(value == null || value.compareToIgnoreCase("null") == 0){
 			return "";
 		}
 		return value;
@@ -691,9 +694,25 @@ public class Util {
 			}	
 		);	
 	}
-	
-	
-	
+		
+	public static String join(Collection<String> s, String delimiter) {
+	    if (s == null || s.isEmpty()) return "";
+	    Iterator<String> iter = s.iterator();
+	    StringBuilder builder = new StringBuilder(iter.next());
+	    while( iter.hasNext() )
+	    {
+	        builder.append(delimiter).append(iter.next());
+	    }
+	    return builder.toString();
+	}
+
+	public static String getNotNull(String s, String alt){
+		if(s==null){
+			return alt;
+		}else{
+			return s;			
+		}
+	}
 
 
 }

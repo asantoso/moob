@@ -1,26 +1,29 @@
 package com.neusou.moobook.activity;
 
+import static com.neusou.moobook.activity.LifecycleFlags.ACTIVITYRESULT;
+import static com.neusou.moobook.activity.LifecycleFlags.DESTROY;
+import static com.neusou.moobook.activity.LifecycleFlags.LC_CREATE;
+import static com.neusou.moobook.activity.LifecycleFlags.LC_RESUME;
+import static com.neusou.moobook.activity.LifecycleFlags.PAUSE;
+import static com.neusou.moobook.activity.LifecycleFlags.POSTRESUME;
+import static com.neusou.moobook.activity.LifecycleFlags.RESTART;
+import static com.neusou.moobook.activity.LifecycleFlags.START;
+import static com.neusou.moobook.activity.LifecycleFlags.STOP;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 
+import com.flurry.android.FlurryAgent;
 import com.neusou.Logger;
-import static com.neusou.moobook.activity.LifecycleFlags.*;
+import com.neusou.moobook.App;
 
 public abstract class BaseActivity extends Activity {
 	protected static String lcloctag;
 	Resources mResources;
 	LayoutInflater mLayoutInflater;
-	protected boolean onCreate;
-	protected boolean onDestroy;
-	protected boolean onRestart;
-	protected boolean onResume;
-	protected boolean onStart;
-	protected boolean onPause;
 	
 	protected LifecycleFlags mLifecycleFlags = new LifecycleFlags();
 	
@@ -57,7 +60,6 @@ public abstract class BaseActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mLifecycleFlags.set(LC_CREATE);
-		onCreate = true;
 		lcloctag = this.getClass().getSimpleName();
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onCreate");
 		mResources = getResources();
@@ -78,17 +80,26 @@ public abstract class BaseActivity extends Activity {
 	
 	@Override
 	protected void onStart() {
-		super.onStart();
+		super.onStart();		
 		mLifecycleFlags.set(START);
-		onStart = true;
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onStart");
+		super.onStart();
+		FlurryAgent.onStartSession(this, App.FLURRY_APPKEY);
 	}
+	
+	@Override
+	protected void onStop() {
+		mLifecycleFlags.set(STOP);
+		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onStop");
+		super.onStop();
+		FlurryAgent.onEndSession(this);
+	}
+	
 	@Override
 	protected void onRestart() {
 		super.onRestart();
 		mLifecycleFlags.set(RESTART);
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onRestart");
-		onRestart = true;		
 	}
 	@Override
 	protected void onResume() {
@@ -101,14 +112,12 @@ public abstract class BaseActivity extends Activity {
 		super.onPostResume();
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onPostResume");
 		mLifecycleFlags.clearAndSet(POSTRESUME);
-		onResume = true;		
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		mLifecycleFlags.clearAndSet(DESTROY);
-		onDestroy = true;
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onDestroy, isFinishing?"+isFinishing());		
 	}
 	
@@ -116,7 +125,6 @@ public abstract class BaseActivity extends Activity {
 	protected void onPause() {	
 		super.onPause();
 		mLifecycleFlags.set(PAUSE);
-		onPause = true;		
 		Logger.l(Logger.DEBUG,lcloctag,"#lifecycle->onPause, isFinishing?"+isFinishing());
 	}
 	

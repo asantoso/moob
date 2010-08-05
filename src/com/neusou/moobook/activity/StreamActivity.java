@@ -4,11 +4,14 @@ import static com.neusou.moobook.App.MENUITEM_CLEAR_STREAM;
 import static com.neusou.moobook.App.MENUITEM_REFRESH_STREAM;
 import static com.neusou.moobook.App.MENUITEM_TOGGLE_MODE;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 
+import android.R.anim;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
@@ -20,7 +23,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -28,11 +30,14 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.Window;
@@ -46,11 +51,9 @@ import android.widget.ExpandableListView;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ViewSwitcher.ViewFactory;
 
 import com.admob.android.ads.AdView;
 import com.neusou.Logger;
-import com.neusou.Utility;
 import com.neusou.async.UserTask.Status;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBSession;
@@ -69,7 +72,6 @@ import com.neusou.moobook.data.ContextMenuDescriptor;
 import com.neusou.moobook.data.ContextProfileData;
 import com.neusou.moobook.data.ProcessedData;
 import com.neusou.moobook.data.Stream;
-import com.neusou.moobook.data.User;
 import com.neusou.moobook.model.database.ApplicationDBHelper;
 import com.neusou.moobook.task.ProcessStreamMultiQueryTask;
 import com.neusou.moobook.thread.ManagerThread;
@@ -109,7 +111,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 	static final int CALLBACK_PROCESS_WSRESPONSE_HAS_ERRORCODE = 130;
 
 	static final String XTRA_ONRESUME_FORCESTREAMSUPDATE = App.packageprefix
-			+ ".xtra.onresume.autorefresh";
+			+ ".xtra.on.autorefresh";
 	static final String XTRA_DIRTYPOSTS = App.packageprefix
 			+ ".xtra.dirty.posts.ids";
 	public static final String XTRA_STREAMMODE = App.packageprefix
@@ -160,7 +162,9 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 	ProgressDialog mProgressDialog;
 	Handler mUIHandler;
 
-	public static final int REQUESTCODE_POST_STREAM = 1;
+	static final int REQUESTCODE_POST_STREAM = 1;
+	static final int REQUESTCODE_SHOW_QUICKACTION = 2;
+	
 	static boolean mIsStreamsUpdateFinished = true;
 	static final String INTENT_ACTION_SET_DIRTY_POSTS = "intent.action.set.dirty.posts";
 	static final IntentFilter mUpdateDirtyRowsIF = new IntentFilter(
@@ -290,9 +294,14 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 		} else {
 			resolveCursor(null);
 		}
+		
 		updateListView();
 
 		if (isTimeToUpdate()) {
+			fetchStreamsFromCloud(false);
+		}
+		
+		if(mStreamsCursor.getCount() == 0){
 			fetchStreamsFromCloud(false);
 		}
 
@@ -333,7 +342,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 		Logger.l(Logger.DEBUG, LOG_TAG,"getIntentExtras()");
 		Intent i = getIntent();
 		try{
-			FBSession fbSession = Facebook.getInstance().getSession();
+			FBSession fbSession = Facebook.getInstance().getCurrentSession();
 			//mUserId = i.getLongExtra(StreamActivity.XTRA_USERID,fbSession.uid);
 		}catch(NullPointerException e){			
 		}
@@ -378,9 +387,110 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 	}
 
 	CommonActivityReceiver mCommonReceiver;
-	
-	protected void initObjects() {
+	GestureDetector.OnGestureListener mGestureListener;
+	View.OnTouchListener mOnGroupViewTouchListener;
+	GestureDetector mGestureDetector;
+	WeakReference<View> mLastTouchedGroupView;
+	WeakReference<StreamListViewFactory.GroupViewHolder> mLastTouchedGroupViewData;
 
+	protected void initObjects() {		
+		
+		mOnGroupViewTouchListener = new View.OnTouchListener(){
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {				
+				mLastTouchedGroupView = new WeakReference<View>(v);
+				mLastTouchedGroupViewData = new WeakReference<StreamListViewFactory.GroupViewHolder>((StreamListViewFactory.GroupViewHolder)v.getTag(R.id.tag_streamsadapter_item_view));
+				if(mGestureDetector != null){
+					boolean isConsumed = mGestureDetector.onTouchEvent(event);
+					return isConsumed;		
+				}
+				return false;
+			}
+			
+		};
+		
+		mGestureListener = new GestureDetector.OnGestureListener() {
+			
+			@Override
+			public boolean onSingleTapUp(MotionEvent e) {
+				
+				String name = "";
+				if(mLastTouchedGroupView != null){
+					name = mLastTouchedGroupView.toString();
+					Log.d(LOG_TAG, "onSingleTapUp.  "+name);
+					StreamListViewFactory.GroupViewHolder data = mLastTouchedGroupViewData.get();
+					if(data != null){					
+						doOnGroupClick(mLastTouchedGroupView.get(), data.getPosition());
+					}
+					return true;
+				}	
+				return false;
+				/*
+				Intent showQuickAction = StreamPostQuickAction.getIntent(StreamActivity.this);
+				StreamPostQuickActionInvocationData spqa = new StreamPostQuickActionInvocationData();
+				View v = mLastTouchedGroupView.get();
+				spqa.top = v.getTop();
+				spqa.left = v.getLeft();
+				spqa.right = v.getRight();	
+				spqa.height = v.getHeight();
+				spqa.width = v.getWidth();
+				spqa.bottom = v.getBottom();
+				
+				Log.d(LOG_TAG,"top:"+spqa.top+", LEFT:"+spqa.left);
+				showQuickAction.putExtra(StreamPostQuickActionInvocationData.XTRA_PARCELABLE_OBJECT, spqa);
+				startActivityForResult(showQuickAction, REQUESTCODE_SHOW_QUICKACTION);
+				return true;
+				*/
+			}
+			
+			@Override
+			public void onShowPress(MotionEvent e) {
+				Log.d(LOG_TAG, "onShowPress");
+				
+				View v = mLastTouchedGroupView.get();
+				if(v != null){
+					
+				}				
+				
+			}
+			
+			@Override
+			public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+					float distanceY) {
+				//Log.d(LOG_TAG, "onScroll dx:"+distanceX+", dy:"+distanceY);
+				
+				return true;
+			}
+			
+			@Override
+			public void onLongPress(MotionEvent e) {
+				Log.d(LOG_TAG, "onLongPress");
+				View v = mLastTouchedGroupView.get();
+				if(v != null){
+					int top = v.getTop();
+					int bottom = v.getBottom();
+					Log.d(LOG_TAG, "top: "+top+", bottom: "+bottom);
+					openContextMenu(v);
+				}
+			}
+			
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+					float velocityY) {
+				Log.d(LOG_TAG, "onFling");
+				return true;
+			}
+			
+			@Override
+			public boolean onDown(MotionEvent e) {
+				Log.d(LOG_TAG, "onDown");				
+				return true;
+			}
+		};
+		mGestureDetector = new GestureDetector(mGestureListener);
+		
+		
 		mCommonReceiver = new CommonActivityReceiver(this);
 		
 		mCommonReceiver.selfRegister(this);
@@ -420,7 +530,10 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 						+ ApplicationDBHelper.START_STREAM_INDEX_GETALL_STREAMPOSTS_AND_USERBASIC);
 		mListViewFactory = new StreamListViewFactory(this);
 		mListViewFactory.setDataSetObserver(mListViewAdapter.getObserver());
-		mListViewAdapter.setViewFactory(mListViewFactory);
+		mListViewAdapter.setViewFactory(mListViewFactory);		
+		mListViewFactory.setGestureDetector(mGestureDetector);
+		mListViewFactory.setGroupViewOnTouchListener(mOnGroupViewTouchListener);
+	
 
 		mContextMenuItemListener = new MenuItem.OnMenuItemClickListener() {
 
@@ -600,9 +713,9 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 				}else{
 					invdata.focusedView = PostActivity.COMPONENT_COMMENTBAR;
 					invdata.target_id = Long.toString(mContextProfileData.actorId);					
-					invdata.uid = String.valueOf(Facebook.getInstance().getSession().uid);					
+					invdata.uid = String.valueOf(Facebook.getInstance().getCurrentSession().uid);					
 					invdata.showCommentBar = true;
-					invdata.hintEditText = "enter message to ";
+					invdata.hintEditText = "type a message.. ";
 					invdata.headerText = "Write a message on "
 						+mContextProfileData.name
 						+"'s wall";
@@ -695,83 +808,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 					@Override
 					public boolean onGroupClick(ExpandableListView parent,
 							View v, int groupPosition, long id) {
-						Logger.l(Logger.DEBUG, LOG_TAG,
-								"[onGroupClick()] groupPosition:"
-										+ groupPosition);
-
-						GroupData groupData = (GroupData) v
-								.getTag(R.id.tag_streamsadapter_item_data);
-
-						int numMedias0 = -1;
-						int numMedias1 = -1;
-
-						if (groupData == null) {
-							Logger.l(Logger.DEBUG, LOG_TAG, "groupdata null");
-						} else if (groupData.processedData == null) {
-							Logger.l(Logger.DEBUG, LOG_TAG,
-									"processedAttachmentData null");
-						}
-
-						try {
-							Logger.l(Logger.DEBUG, LOG_TAG,
-									"groupdata message: "
-											+ groupData.message.length());
-						} catch (Exception e) {
-
-						}
-
-						try {
-							numMedias0 = groupData.processedData.mAttachment.mNumMedias;
-						} catch (Exception e) {
-							Logger.l(Logger.DEBUG, LOG_TAG, "error: "
-									+ e.getMessage());
-						}
-
-						try {
-							ArrayList<AttachmentMedia> mediaList = (ArrayList<AttachmentMedia>) groupData.processedData.mAttachment.mAttachmentMediaList;
-							if (mediaList == null) {
-								Logger.l(Logger.DEBUG, LOG_TAG,
-										"mediaList null");
-							}
-
-							numMedias1 = mediaList.size();
-						} catch (Exception e) {
-							Logger.l(Logger.DEBUG, LOG_TAG, "error: "
-									+ e.getMessage());
-						}
-
-						Logger.l(Logger.DEBUG, LOG_TAG, "num0: " + numMedias0
-								+ ", num1:" + numMedias1);
-
-						Attachment att = new Attachment();
-						att.parseJson(groupData.attachmentJson);
-
-						Logger.l(Logger.DEBUG, LOG_TAG,
-								"attachment mediaType: " + att.mMediaType);
-						Logger.l(Logger.DEBUG, LOG_TAG, "attachment name: "
-								+ att.mName);
-						Logger.l(Logger.DEBUG, LOG_TAG, "raw attachment json: "
-								+ groupData.attachmentJson);
-
-						// Logger.l(Logger.DEBUG, LOG_TAG,
-						// "attachment json: "+groupData.attachmentJson);
-
-						ArrayList<AttachmentMedia> mediaList;
-						try {
-							mediaList = (ArrayList<AttachmentMedia>) groupData.processedData.mAttachment.mAttachmentMediaList;
-							int numMedias = mediaList.size();
-							for (int i = 0; i < numMedias; i++) {
-								Logger.l(Logger.DEBUG, LOG_TAG, "media #" + i
-										+ ", src:" + mediaList.get(i).src);
-							}
-						} catch (Exception e) {
-						}
-
-						showPost(groupPosition);
-						return true;// returning false won't consume the event
-						// completely hence this will produce a bug
-						// where viewcommentsactivity won't be
-						// launched everytime
+						return doOnGroupClick(v,groupPosition);
 					}
 
 				});
@@ -802,22 +839,89 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 
 				});
 
-		mTopHeaderText.setFactory(new ViewFactory() {
-			@Override
-			public View makeView() {
-
-				TextView t = new TextView(StreamActivity.this);
-				t = (TextView) mLayoutInflater.inflate(
-						R.layout.t_topheadertext, null);
-				return t;
-			}
-		});
-		
 		App.initAdMob(mAdView, mUIHandler);
 		
 
 	}
 
+	private boolean doOnGroupClick(View v, int groupPosition){
+		Logger.l(Logger.DEBUG, LOG_TAG,	"[onGroupClick()] groupPosition:"+ groupPosition);
+
+		GroupData groupData = (GroupData) v
+				.getTag(R.id.tag_streamsadapter_item_data);
+
+		int numMedias0 = -1;
+		int numMedias1 = -1;
+
+		if (groupData == null) {
+			Logger.l(Logger.DEBUG, LOG_TAG, "groupdata null");
+		} else if (groupData.processedData == null) {
+			Logger.l(Logger.DEBUG, LOG_TAG,
+					"processedAttachmentData null");
+		}
+
+		try {
+			Logger.l(Logger.DEBUG, LOG_TAG,
+					"groupdata message: "
+							+ groupData.message.length());
+		} catch (Exception e) {
+
+		}
+
+		try {
+			numMedias0 = groupData.processedData.mAttachment.mNumMedias;
+		} catch (Exception e) {
+			Logger.l(Logger.DEBUG, LOG_TAG, "error: "
+					+ e.getMessage());
+		}
+
+		try {
+			ArrayList<AttachmentMedia> mediaList = (ArrayList<AttachmentMedia>) groupData.processedData.mAttachment.mAttachmentMediaList;
+			if (mediaList == null) {
+				Logger.l(Logger.DEBUG, LOG_TAG,
+						"mediaList null");
+			}
+
+			numMedias1 = mediaList.size();
+		} catch (Exception e) {
+			Logger.l(Logger.DEBUG, LOG_TAG, "error: "
+					+ e.getMessage());
+		}
+
+		Logger.l(Logger.DEBUG, LOG_TAG, "num0: " + numMedias0
+				+ ", num1:" + numMedias1);
+
+		Attachment att = new Attachment();
+		att.parseJson(groupData.attachmentJson);
+
+		Logger.l(Logger.DEBUG, LOG_TAG,
+				"attachment mediaType: " + att.mMediaType);
+		Logger.l(Logger.DEBUG, LOG_TAG, "attachment name: "
+				+ att.mName);
+		Logger.l(Logger.DEBUG, LOG_TAG, "raw attachment json: "
+				+ groupData.attachmentJson);
+
+		// Logger.l(Logger.DEBUG, LOG_TAG,
+		// "attachment json: "+groupData.attachmentJson);
+
+		ArrayList<AttachmentMedia> mediaList;
+		try {
+			mediaList = (ArrayList<AttachmentMedia>) groupData.processedData.mAttachment.mAttachmentMediaList;
+			int numMedias = mediaList.size();
+			for (int i = 0; i < numMedias; i++) {
+				Logger.l(Logger.DEBUG, LOG_TAG, "media #" + i
+						+ ", src:" + mediaList.get(i).src);
+			}
+		} catch (Exception e) {
+		}
+
+		showPost(groupPosition);
+		return true;// returning false won't consume the event
+		// completely hence this will produce a bug
+		// where viewcommentsactivity won't be
+		// launched everytime	
+	}
+	
 	private void switchMode() {
 		if (mStreamMode == Facebook.STREAMMODE_LIVEFEED) {
 			mStreamMode = Facebook.STREAMMODE_NEWSFEED;
@@ -1058,9 +1162,8 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 
 		}
 			
-		SubMenu clearDB = menu.addSubMenu(0, MENUITEM_CLEAR_STREAM, 0,
-				"Clear stream");
-		clearDB.setIcon(android.R.drawable.ic_popup_disk_full);
+		//SubMenu clearDB = menu.addSubMenu(0, MENUITEM_CLEAR_STREAM, 0,"Clear stream");
+		//clearDB.setIcon(android.R.drawable.ic_popup_disk_full);
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -1116,7 +1219,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 
 	private int getProcessFlag(){
 		
-		if(mContextProfileData.actorId == Facebook.getInstance().getSession().uid){
+		if(mContextProfileData.actorId == Facebook.getInstance().getCurrentSession().uid){
 			
 			return App.PROCESS_FLAG_STREAM_SESSIONUSER;
 		}		
@@ -1248,6 +1351,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 	}
 
 	private boolean isTimeToUpdate() {
+						
 		SharedPreferences sp = getSharedPreferences(Prefs.PREF_MAIN, 0);
 		long lastTime = sp.getLong(Prefs.KEY_STREAMS_LASTUPDATED, 0);
 		long now = new Date().getTime();
@@ -1309,7 +1413,7 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 			return;
 		}
 
-		if (mFacebook.getSession() == null) {
+		if (mFacebook.getCurrentSession() == null) {
 			Toast.makeText(this, "Session is null", 1000).show();
 		}
 
@@ -1408,8 +1512,17 @@ public class StreamActivity extends BaseActivity implements CommonActivityReceiv
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if(requestCode == REQUESTCODE_POST_STREAM){
-			
+			if(resultCode == Activity.RESULT_OK){
+				//Toast.makeText(StreamActivity.this, "Message published" , 2000).show();
+				fetchStreamsFromCloud(false);
+			}
 		}
+		if(requestCode == REQUESTCODE_SHOW_QUICKACTION){
+			if(resultCode == Activity.RESULT_OK){
+				
+			}
+		}
+		
 	}
 
 	@Override

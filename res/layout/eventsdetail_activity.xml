@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"	
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:background="#00000000"
+	android:isScrollContainer="false"
+	
+>
+       
+<include layout="@layout/custom_title" />
+
+<LinearLayout android:orientation="vertical"
+	android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_below="@+id/topheader_container"
+    android:padding="5dip"
+>
+
+
+<TextView android:id="@+id/name" style="@style/eventd.text.name"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+ />
+<TextView android:id="@+id/tagline" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<ImageView android:id="@+id/image" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<TextView android:id="@+id/time" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<TextView android:id="@+id/venue" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<TextView android:id="@+id/location" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<TextView android:id="@+id/host" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<TextView android:id="@+id/type" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+<TextView android:id="@+id/description" style="@style/eventd.text"
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+/>
+
+<Button android:id="@+id/getcomments" 
+	android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:text="View comments"
+/>
+
+
+
+</LinearLayout> 
+ 
+ 
+</RelativeLayout>
+

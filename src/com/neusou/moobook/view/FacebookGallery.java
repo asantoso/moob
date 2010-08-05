@@ -1,13 +1,11 @@
 package com.neusou.moobook.view;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.GestureDetector.OnGestureListener;
 import android.widget.ZoomButtonsController;
 
 public class FacebookGallery extends ViewGroup implements GestureDetector.OnGestureListener {

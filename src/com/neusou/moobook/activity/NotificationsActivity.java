@@ -21,6 +21,7 @@ import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.moobook.view.ActionBar;
 import com.neusou.web.PagingInfo;
 
+import android.app.Notification;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -152,6 +153,7 @@ public class NotificationsActivity extends BaseActivity{
 		mActionBar = new ActionBar();
 		mActionBar.bindViews(this);
 		mActionBar.hideButton(ActionBar.BUTTON_POST);
+		mActionBar.hideButton(ActionBar.BUTTON_RELOAD);
 		mActionBar.setOnReloadClick(new View.OnClickListener() {
 			
 			@Override
@@ -171,7 +173,7 @@ public class NotificationsActivity extends BaseActivity{
 		mFacebook.registerOutHandler(R.id.outhandler_activity_notifications, mWorkerThread.getInHandler());
 		
 		mListViewFactory = new NotificationsListViewFactory(this, mListView);
-		mListAdapter = new CursorListAdapter(this, mListViewFactory, FBNotification.col_rowid);
+		mListAdapter = new CursorListAdapter<Notification>(this, mListViewFactory, FBNotification.col_rowid);
 		mTopHeaderText.setFactory(new ViewFactory() {
 			@Override
 			public View makeView() {
@@ -210,10 +212,25 @@ public class NotificationsActivity extends BaseActivity{
 		}
 	}
 	
-	public void showComments(Bundle data){
+	public void forward(Bundle data){
 		byte objectType = data.getByte(Facebook.XTRA_FBURL_OBJECTTYPE);
 		
 		switch(objectType){
+			
+			case Facebook.FBURL_OBJECTTYPE_EVENT:{
+				String eid = data.getString(Facebook.XTRA_FBURL_EVENTID);
+				Intent i = EventsActivity.getIntent(this);
+				i.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+				startActivity(i);
+				break;
+			}
+			
+			case Facebook.FBURL_OBJECTTYPE_PAGES:{
+				String oid = data.getString(Facebook.XTRA_FBURL_STORYID);
+				App.showPost(NotificationsActivity.this, oid);
+				break;
+			}
+			
 			case Facebook.FBURL_OBJECTTYPE_STREAM:{
 				String oid = data.getString(Facebook.XTRA_FBURL_OBJECTID);
 				App.showPost(NotificationsActivity.this, oid);
@@ -291,7 +308,7 @@ public class NotificationsActivity extends BaseActivity{
 							//String story_id = data.getString(Facebook.XTRA_FBURL_STORYID);
 							//String user_id = data.getString(Facebook.XTRA_FBURL_USERID);
 							
-							showComments(data);
+							forward(data);
 							/*
 							if(version.equals(Facebook.FBURL_VERSION_WALL) && 
 								scriptName.equals(Facebook.FBURL_SCRIPT_PROFILE)){

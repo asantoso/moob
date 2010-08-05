@@ -17,7 +17,11 @@ import android.database.DataSetObserver;
 import android.database.StaleDataException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.BatteryManager;
 import android.provider.ContactsContract;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -168,6 +172,16 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 		}
 
 	};
+	
+	GestureDetector mGestureDetector;
+	public void setGestureDetector(GestureDetector dd){
+		mGestureDetector = dd;
+	}
+	
+	View.OnTouchListener mGroupViewOnTouchLst;
+	public void setGroupViewOnTouchListener(View.OnTouchListener lst){
+		mGroupViewOnTouchLst = lst;
+	}
 	
 	View.OnClickListener mProfileImageOnClickListener = new View.OnClickListener() {
 
@@ -590,9 +604,14 @@ public class StreamListViewFactory extends BaseExpandableListViewFactory<Cursor,
 				groupViewHolder.mediaimages[i].setOnClickListener(mMediaImageOnClickListener);
 			}
 			
-			groupViewHolder.profileImage.setOnClickListener(mProfileImageOnClickListener);
+			
+			//groupViewHolder.profileImage.setOnClickListener(mProfileImageOnClickListener);
+			
 			
 		}
+		
+		convertView.setOnTouchListener(mGroupViewOnTouchLst);
+		
 	
 		// hide the attachment and media images containers
 		//groupViewHolder.attachmentContainer.setVisibility(View.INVISIBLE);

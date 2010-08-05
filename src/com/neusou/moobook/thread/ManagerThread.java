@@ -10,10 +10,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.widget.Toast;
 
-import com.neusou.Logger;
 import com.neusou.LazyThread;
+import com.neusou.Logger;
 import com.neusou.async.UserTask;
 import com.neusou.moobook.App;
 import com.neusou.moobook.FBWSResponse;
@@ -61,7 +60,8 @@ public class ManagerThread extends BaseManagerThread {
 	
 	public static final int CALLBACK_GET_COMMENTS_FINISHED = 20;
 	public static final int CALLBACK_PROCESS_STREAMS_FINISH = 21;
-
+	public static final int CALLBACK_SESSION_RETRIEVED = 22;
+	
 	public static final int MESSAGE_UPDATE_TAGS = 30;
 	public static final int MESSAGE_DISMISS_DIALOG = 31;
 	public static final int MESSAGE_PARSE_PHOTOS = 32;
@@ -264,6 +264,22 @@ public class ManagerThread extends BaseManagerThread {
 		Logger.l(Logger.DEBUG, LOG_TAG, "[doBusiness()] code:" + code);
 
 		switch (code) {
+		
+		case CALLBACK_SESSION_RETRIEVED:{
+			String parsed;
+			try {
+				parsed = fbresponse.jsonArray.toString(2);
+				Logger.l(Logger.DEBUG, LOG_TAG, "[callback_session_retrieved]: "
+						+ parsed);
+			
+				broadcastResult(data);
+			}
+			catch(JSONException e){
+					
+			}
+			break;
+		}
+		
 		case CALLBACK_GET_PHOTO_ATTR:{
 			String parsed;
 			try {

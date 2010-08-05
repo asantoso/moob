@@ -3,6 +3,7 @@ package com.neusou.moobook.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.widget.ImageView;
@@ -10,6 +11,7 @@ import android.widget.Toast;
 
 import com.neusou.Logger;
 import com.neusou.moobook.App;
+import com.neusou.moobook.Facebook;
 import com.neusou.moobook.R;
 import com.neusou.moobook.data.MediaImageTag;
 import com.neusou.web.ImageUrlLoader2;
@@ -24,10 +26,37 @@ public class DisplayImageActivity extends BaseActivity{
 	public static final String XTRA_MEDIAIMAGETAGS = "xtra.mediaimagetags";
 		
 	DisplayImageActivityInvocationData mInvocationData;
-	
+	ImageView mImageView;
 	int mCurrentIndex;
 	int mNumMedia;
 			
+
+	AsyncListener mImgAsyncListener = new AsyncListener() {
+		
+		@Override
+		public void onPublishProgress(final AsyncLoaderProgress progress) {
+			runOnUiThread(new Runnable() {				
+				@Override
+				public void run() {
+					progress.imageView.setImageBitmap(progress.bitmap);					
+				}
+			});			
+		};
+		
+		@Override
+		public void onPreExecute() {
+		}
+		
+		@Override
+		public void onPostExecute(AsyncLoaderResult result) {
+		}
+		
+		@Override
+		public void onCancelled() {
+		}
+		
+	};
+	
 	public static Intent getIntent(Context ctx) {
 		return new Intent(ctx, DisplayImageActivity.class);
 	}
@@ -108,31 +137,42 @@ public class DisplayImageActivity extends BaseActivity{
 		loadImage(mInvocationData.mSelectedIndex);
 	}
 	
-	AsyncListener mImgAsyncListener = new AsyncListener() {
-		
-		@Override
-		public void onPublishProgress(final AsyncLoaderProgress progress) {
-			runOnUiThread(new Runnable() {				
-				@Override
-				public void run() {
-					progress.imageView.setImageBitmap(progress.bitmap);					
-				}
-			});			
-		};
-		
-		@Override
-		public void onPreExecute() {
-		}
-		
-		@Override
-		public void onPostExecute(AsyncLoaderResult result) {
-		}
-		
-		@Override
-		public void onCancelled() {
-		}
-		
-	};
+	@Override
+	protected void bindViews() {	
+		super.bindViews();		
+		mImageView = (ImageView) findViewById(R.id.image);
+	}
+
+	@Override
+	protected void initViews() {	
+		super.initViews();
+	}
+	
+	@Override
+	protected void initObjects() {
+		super.initObjects();
+		Facebook.getInstance().registerOutHandler(R.id.outhandler_activity_displayimage, mUiHandler);
+	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {	
+		super.onSaveInstanceState(outState);
+	}
+	
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {	
+		super.onRestoreInstanceState(savedInstanceState);
+	}
+	
+	public void getIntentExtras() {
+		Intent i = getIntent();
+		mInvocationData = i.getParcelableExtra(DisplayImageActivityInvocationData.XTRA_PARCELABLE_OBJECT);
+	//	Log.d("getIntentExtras. ", " number of media tags: "+mInvocationData.mNumMediaImageTags);
+	//	Log.d("getIntentExtras. ", " length of media tags: "+mInvocationData.mMediaImageTags.length);
+	}
+	
+	
+
 	public void loadImage(int index){
 		if(index < mNumMedia && index >= 0) {
 		ImageUrlLoader2.AsyncLoaderInput input = new ImageUrlLoader2.AsyncLoaderInput();
@@ -149,39 +189,13 @@ public class DisplayImageActivity extends BaseActivity{
 		}
 	}
 	
-	@Override
-	protected void bindViews() {	
-		super.bindViews();		
-		mImageView = (ImageView) findViewById(R.id.image);
+	public void getFullImages(){
+		//mInvocationData.mMediaImageTags[0].
+		
+	//	Facebook.getInstance().getPhoto(R.id.outhandler_activity_displayimage, extraData, photoIds, limit, offset, cbSuccessOp, cbErrorOp, cbTimeoutOp, timeoutMillisecs);
 	}
 	
-	public void getIntentExtras() {
-		Intent i = getIntent();
-		mInvocationData = i.getParcelableExtra(DisplayImageActivityInvocationData.XTRA_PARCELABLE_OBJECT);
-	//	Log.d("getIntentExtras. ", " number of media tags: "+mInvocationData.mNumMediaImageTags);
-	//	Log.d("getIntentExtras. ", " length of media tags: "+mInvocationData.mMediaImageTags.length);
-	}
-	
-	@Override
-	protected void initViews() {	
-		super.initViews();
-	}
-	
-	@Override
-	protected void initObjects() {
-		super.initObjects();
-	}
-	
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {	
-		super.onSaveInstanceState(outState);
-	}
-	
-	@Override
-	protected void onRestoreInstanceState(Bundle savedInstanceState) {	
-		super.onRestoreInstanceState(savedInstanceState);
-	}
-	
-	ImageView mImageView;
-	
+	Handler mUiHandler = new Handler(){
+		
+	};
 }

@@ -47,7 +47,8 @@
   <item type="id" name="outhandler.activity.gallery" />   
   <item type="id" name="outhandler_activity_viewcontacts" />
   <item type="id" name="outhandler_activity_viewalbums" />
-  <item type="id" name="outhandler_activity_notifications" />         
+  <item type="id" name="outhandler_activity_notifications" />
+  <item type="id" name="outhandler_activity_displayimage" />         
   
   
   

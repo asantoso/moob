@@ -181,7 +181,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 		
 		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);		  
 	
-		mActionBar.setUserId(Facebook.getInstance().getSession().uid);
+		mActionBar.setUserId(Facebook.getInstance().getCurrentSession().uid);
 		//mActionBar.setUserName(mUserInSession.name);
 		
 		mActionBar.setOnAddClick(new View.OnClickListener() {
@@ -220,7 +220,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 	protected void onDestroy() {
 		super.onDestroy();
 		mCommonReceiver.selfUnregister(this);		
-		if(!onResume){ //strange activity lifecycle. onDestroy is called immediately after onResume() when the previous starting activity started this activity inside the onResume code.
+		if(! mLifecycleFlags.is(LifecycleFlags.LC_RESUME)){ //strange activity lifecycle. onDestroy is called immediately after onResume() when the previous starting activity started this activity inside the onResume code.
 			return;
 		}				
 	}
@@ -333,7 +333,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 				}
 				
 				else if(action.equals(App.INTENT_WALLPOSTS_UPDATED)){
-					FBSession session = mFacebook.getSession();
+					FBSession session = mFacebook.getCurrentSession();
 					mStreamsCursor = App.INSTANCE.mDBHelper.getWallPosts(App.INSTANCE.mDB, App.PROCESS_FLAG_STREAM_SESSIONUSER, session.uid, 1, 0);					
 					int numPosts = mStreamsCursor.getCount();				
 					Logger.l(Logger.DEBUG,LOG_TAG,"numPosts:"+numPosts);					
@@ -407,7 +407,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 			public void onClick(View v) {
 				Logger.l(Logger.DEBUG,LOG_TAG,"onPostVideo");		
 				Intent viewAlbumsIntent = new Intent(HomeActivity.this, ViewAlbumsActivity.class);
-				viewAlbumsIntent.putExtra(ViewAlbumsActivity.XTRA_FACEBOOKUSERID, mFacebook.getSession().uid);
+				viewAlbumsIntent.putExtra(ViewAlbumsActivity.XTRA_FACEBOOKUSERID, mFacebook.getCurrentSession().uid);
 				viewAlbumsIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
 				startActivity(viewAlbumsIntent);
 			}
@@ -770,7 +770,7 @@ public class HomeActivity extends BaseActivity implements CommonActivityReceiver
 				break;
 			}
 			case App.MENUITEM_USER_WALL:{		
-				FBSession session = Facebook.getInstance().getSession();
+				FBSession session = Facebook.getInstance().getCurrentSession();
 				Toast.makeText(this.getApplicationContext(), Long.toString(session.uid), 3000).show();
 				App.showUserWall(HomeActivity.this, session.uid, mUserInSession.name);
 				/*

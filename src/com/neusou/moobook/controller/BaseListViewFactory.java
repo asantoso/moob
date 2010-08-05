@@ -27,7 +27,6 @@ implements android.widget.AbsListView.RecyclerListener, IStatefulListView
 		public void onMovedToForeground();
 	}
 	
-	//protected Activity mActivity;	
 	protected volatile List<Long> mAsyncLoadingState = Collections.synchronizedList(new ArrayList<Long>(10));
 	protected volatile Object mCreateViewLock = new Object();
 	protected DataSetObserver mDataSetObserver;

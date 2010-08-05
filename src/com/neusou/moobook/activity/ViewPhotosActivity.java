@@ -63,7 +63,7 @@ public class ViewPhotosActivity extends BaseActivity implements IPhotosGallery{
 	int MY_DATA_CHECK_CODE = 9000;
 	Facebook mFacebook;	
 	StreamListViewFactory mListViewItemFactory;
-	CursorListAdapter mListViewAdapter;	
+	//CursorListAdapter mListViewAdapter;	
 	
 	TextSwitcher mTopHeaderText;
 	//Button mTestBtn;

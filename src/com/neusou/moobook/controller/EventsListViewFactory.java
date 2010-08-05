@@ -16,15 +16,15 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.neusou.Logger;
 import com.neusou.moobook.App;
 import com.neusou.moobook.R;
-import com.neusou.moobook.Util;
 import com.neusou.moobook.data.BaseRowViewHolder;
 import com.neusou.moobook.data.Event;
 
 public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 
-	static final String LOG_TAG = "EventsListViewFactory";
+	static final String LOG_TAG = Logger.registerLog(EventsListViewFactory.class);
 	static final String dateFormat = "EEEE',' d MMMM yyyy 'at' k:mm z";
 	LayoutInflater mLayoutInflater;
 	Resources mResources;
@@ -101,7 +101,8 @@ public class EventsListViewFactory extends BaseListViewFactory<Cursor> {
 		}
 		Event event = null;
 		event = Event.parseCursor(ds, event);
-
+		Logger.l(Logger.DEBUG, "Event", "event to string: "+event.toString());
+		
 		if (event != null) {
 			if(tag.title != null && event != null){
 				tag.title.setText(event.name);

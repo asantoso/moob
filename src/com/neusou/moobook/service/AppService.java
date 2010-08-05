@@ -19,7 +19,7 @@ import com.neusou.moobook.data.User;
 import com.neusou.moobook.task.ResponseProcessor;
 
 public class AppService extends WakefulIntentService {
-	static final String LOG_TAG = "AppService";
+	static final String LOG_TAG = Logger.registerLog(AppService.class);
 
 	static final int CALLBACK_SERVERCALL_ERROR = 1110;
 	static final int CALLBACK_TIMEOUT_ERROR = 1111;
@@ -63,7 +63,7 @@ public class AppService extends WakefulIntentService {
 		FBWSResponse response;
 
 		try {
-			FBSession session = mFacebook.getSession();
+			FBSession session = mFacebook.getCurrentSession();
 			if(session != null){
 				response = mFacebook.getNotifications(session.uid, 0);
 			}else{

@@ -10,6 +10,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SyncAdapterType;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -42,26 +43,13 @@ import com.neusou.moobook.controller.EventsListViewFactory;
 import com.neusou.moobook.data.Event;
 import com.neusou.moobook.data.Event.RSVPStatus;
 import com.neusou.moobook.task.ResponseProcessor;
+import com.neusou.moobook.thread.ManagerThread;
 import com.neusou.async.UserTask;
 
 public class EventsActivity extends BaseActivity {
 
-	static final int CALLBACK_SERVERCALL_ERROR = 999;
-	static final int CALLBACK_TIMEOUT_ERROR = 9991;
-	static final int CALLBACK_PROCESS_WSRESPONSE_HAS_ERRORCODE = 130;
-	static final int CALLBACK_GET_COMMENTS_MQ = 1000;
-	static final int CALLBACK_POSTCOMMENT = 1001;
-	static final int CALLBACK_DELETECOMMENT = 1002;
-
 	static final int UIMETHOD_RELOADEVENTS = 2;
-
-	static final int UICALLBACK_ADMOB_ONRECEIVE = 50;
-	static final int UICALLBACK_ADMOB_ONFAILRECEIVE = 51;
-
-	// static final byte DIALOG_LOADINGCOMMENTS = 1;
-	static final byte DIALOG_POSTINGCOMMENT = 2;
-	static final byte DIALOG_DELETINGCOMMENT = 3;
-
+	
 	static final byte MENUITEM_REFRESH = 0;
 	static final byte MENUITEM_DELETE = 1;
 
@@ -88,7 +76,7 @@ public class EventsActivity extends BaseActivity {
 	AdView mAdView;
 	String post_id;
 	ListView mListView;
-	CursorListAdapter mListAdapter;
+	CursorListAdapter<Event> mListAdapter;
 	TextSwitcher mTopHeaderText;
 
 	
@@ -105,12 +93,12 @@ public class EventsActivity extends BaseActivity {
 
 			switch (code) {
 
-			case UICALLBACK_ADMOB_ONFAILRECEIVE: {
+			case ManagerThread.CALLBACK_ADMOB_ONFAILRECEIVE: {
 				mAdView.setVisibility(View.GONE);
 				break;
 			}
 
-			case UICALLBACK_ADMOB_ONRECEIVE: {
+			case ManagerThread.CALLBACK_ADMOB_ONRECEIVE: {
 				mAdView.setVisibility(View.VISIBLE);
 				break;
 			}
@@ -197,7 +185,7 @@ public class EventsActivity extends BaseActivity {
 	protected void onPrepareDialog(int id, Dialog dialog) {
 		super.onPrepareDialog(id, dialog);
 		ProgressDialog d = (ProgressDialog) dialog;
-
+/*
 		switch (id) {
 
 		case DIALOG_DELETINGCOMMENT: {
@@ -211,6 +199,7 @@ public class EventsActivity extends BaseActivity {
 			break;
 		}
 		}
+		*/
 	}
 
 	protected void bindViews() {
@@ -240,10 +229,11 @@ public class EventsActivity extends BaseActivity {
 	}
 
 	
-	
 	protected void initViews() {
+		
 		mListViewFactory = new EventsListViewFactory(this);
-		mListAdapter = new CursorListAdapter(this, mListViewFactory, Event.col_eid);
+			
+		mListAdapter = new CursorListAdapter<Event>(this, mListViewFactory, Event.col_eid, Event.RowMapper);
 		mListView.setAdapter(mListAdapter);
 		
 		registerForContextMenu(mListView);
@@ -269,6 +259,21 @@ public class EventsActivity extends BaseActivity {
 		} catch (Exception e) {
 
 		}
+		
+		mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> adapter, View v, int position,
+					long arg3) {
+								
+				Event e = mListAdapter.getItem(position);
+				Intent i = EventDetailsActivity.getIntent(EventsActivity.this);
+				i.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+				i.putExtra(Event.XTRA_PARCELABLE_OBJECT, e);
+				startActivity(i);
+			}			
+			
+		});
 		
 		mListView
 				.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -305,6 +310,12 @@ public class EventsActivity extends BaseActivity {
 		}
 	}
 
+	private void onStartUpdatingEvents() {
+		mIsCommentsUpdateFinished = false;
+		setTitle("moobook");
+		mTopHeaderText.setText("Loading events from cloud..");
+	}
+
 	private void onFinishUpdatingEvents() {
 		mIsCommentsUpdateFinished = true;
 		hideLoadingIndicator();
@@ -323,12 +334,6 @@ public class EventsActivity extends BaseActivity {
 
 	private void resetHeaderText() {
 		mTopHeaderText.setText("Events");
-	}
-
-	private void onStartUpdatingEvents() {
-		mIsCommentsUpdateFinished = false;
-		setTitle("moobook");
-		mTopHeaderText.setText("Loading events from cloud..");
 	}
 
 	class GetEventsTask extends UserTask<Void, Void, Void> {
@@ -376,7 +381,7 @@ public class EventsActivity extends BaseActivity {
 		FBWSResponse fbwsresponse = null;
 		
 		try{
-		 fbwsresponse = mFacebook.getEvents(mFacebook.getSession().uid, start_time);
+		 fbwsresponse = mFacebook.getEvents(mFacebook.getCurrentSession().uid, start_time);
 		}catch(FBConnectionException e){
 			return;
 		}

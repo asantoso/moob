@@ -1,7 +1,6 @@
 package com.neusou.moobook.pool;
 
 import com.neusou.util.Poolable;
-import com.neusou.util.PoolableManager;
 
 public class AttachmentPool<Attachment> implements Poolable<Attachment> {
 
